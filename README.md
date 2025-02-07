@@ -1,5 +1,4 @@
 # SEMA_MAMA-APP
-# SEMA-MAMA-APP
 
 ## Project Description
 Sema Mama is a digital health platform that provides accessible, community-driven support for mothers experiencing postpartum depression in Nairobi, Kenya. Unlike existing solutions, Sema Mama offers multilingual, culturally sensitive SMS-based support, real-time emotional assistance through voice and video calls, and integration with local health workers to allow for sustained support of mental health.
