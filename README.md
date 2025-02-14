@@ -19,8 +19,7 @@ Before you begin, ensure that you have the following installed:
 ## Getting Started
 1. **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/sema-mama-django.git
-    cd sema-mama-django
+    git clone https://github.com/otienodiana/SEMA_MAMA-APP.git
     ```
 2. **Create a Virtual Environment:**
     ```bash
@@ -40,7 +39,7 @@ Before you begin, ensure that you have the following installed:
     ```plaintext
     DEBUG=True
     SECRET_KEY=your_secret_key
-    DATABASE_URL=postgres://user:password@localhost:5432/sema_mama_db
+    DATABASE_URL=Mysql://user:password@localhost:5432/sema_mama_db
     ```
     Replace `your_secret_key` with a secure secret key for Django.
 6. **Apply Migrations:**

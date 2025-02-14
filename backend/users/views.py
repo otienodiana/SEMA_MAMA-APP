@@ -9,6 +9,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.views import APIView
 
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]  # Only logged-in users can access this
+
+    def get(self, request):
+        user = request.user  # Get the logged-in user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
 User = get_user_model()
 
 # Register a new user (Allow any user to register)
