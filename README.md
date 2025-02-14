@@ -7,19 +7,22 @@ Sema Mama is a digital health platform that provides accessible, community-drive
 Sema Mama fills in the gaps through direct emotional support using voice and video calls so that mothers get to professionals and peers in need. Besides, it also provides multilingual, culturally relevant SMS-based mental health support that is easily accessible and free of cost, enabling guidance and assurance among women from low-resource areas. Working together with community-based health workers, Sema Mama facilitates further follow-up on mental health screening and interventions at household levels so that the mothers continue to get help. Consequently, Sema Mama ensures these postpartum mental health support systems are made accessible to every expectant mother, regardless of distance or status.
 
 ## GitHub Repository Link
-[GitHub Repository](https://github.com/your-username/sema-mama-django)
-
+[[GitHub Repository](https://github.com/your-username/sema-mama-django)
+](https://github.com/otienodiana/SEMA_MAMA-APP.git)
 ## Prerequisites
 Before you begin, ensure that you have the following installed:
 - [Python](https://www.python.org/) (version 3.11.4)
 - [pip](https://pip.pypa.io/) (Python package installer)
 - [Django](https://www.djangoproject.com/) (version 4.2.7)
-- PostgreSQL (for database management)
+- MySQL (for database management)
+- Node.js (if working with the frontend)
+- Git (for version control)
+- WSL (if using Windows)
 
 ## Getting Started
 1. **Clone the repository:**
     ```bash
-    git clone https://github.com/otienodiana/SEMA_MAMA-APP.git
+    git clone [https://github.com/otienodiana/SEMA_MAMA-APP.git](https://github.com/otienodiana/SEMA_MAMA-APP.git)
     ```
 2. **Create a Virtual Environment:**
     ```bash
@@ -38,10 +41,14 @@ Before you begin, ensure that you have the following installed:
     Create a `.env` file in the root directory and add the following:
     ```plaintext
     DEBUG=True
-    SECRET_KEY=your_secret_key
-    DATABASE_URL=Mysql://user:password@localhost:5432/sema_mama_db
-    ```
-    Replace `your_secret_key` with a secure secret key for Django.
+SECRET_KEY=your_secret_key_here
+DATABASE_NAME=sema_mama_db
+DATABASE_USER=Diana
+DATABASE_PASSWORD=Dee0000!
+DATABASE_HOST=localhost
+DATABASE_PORT=3306
+ALLOWED_HOSTS=127.0.0.1,localhost,172.17.146.93
+
 6. **Apply Migrations:**
     ```bash
     python manage.py migrate
@@ -63,8 +70,8 @@ Before you begin, ensure that you have the following installed:
 - Visit `http://127.0.0.1:8000` in your web browser to access the SEMA-MAMA Django app.
 
 ## Designs
-- **Figma Mockups:** *(Provide link or screenshots of UI/UX designs)*
-- **Screenshots of the App:** *(Include main interface screenshots here)*
+- **Figma Mockups:[** *(Provide link or screenshots of UI/UX designs)*](https://www.figma.com/proto/dnECuP1wGtoMQXviV5sMqd/Desktop-Designs-%3A-Healthcare-Consultation-(Community)?node-id=32-2&p=f&t=A9wLhlGXN3Q54tWz-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=32%3A2)
+  
 
 ## Deployment Plan (Using Docker)
 The Sema Mama app will be deployed using Docker for containerization. Below are the steps for deployment:
@@ -88,7 +95,6 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 ```
 
 ### 2. Create a `docker-compose.yml` File
-```yaml
 version: '3'
 services:
   web:
@@ -100,16 +106,17 @@ services:
     env_file:
       - .env
   db:
-    image: postgres:latest
+    image: mysql:latest
     environment:
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: sema-mama-db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      MYSQL_DATABASE: sema_mama_db
+      MYSQL_USER: Diana
+      MYSQL_PASSWORD: Dee0000!
+      MYSQL_ROOT_PASSWORD: Dee0000!
+    ports:
+      - "3306:3306"
 volumes:
-  postgres_data:
-```
+  mysql_data:
+
 
 ### 3. Build and Run Docker Containers
 ```bash
@@ -117,7 +124,10 @@ docker-compose up --build -d
 ```
 
 ### 4. Deploy to Cloud Provider (DigitalOcean)
-
+Install Docker on the server
+bash
+Copy
+sudo apt update && sudo apt install docker docker-compose -y
 #### Push Docker Image to Docker Hub:
 ```bash
 docker login
