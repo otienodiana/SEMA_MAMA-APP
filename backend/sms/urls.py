@@ -1,6 +1,7 @@
 from django.urls import path
-from . import views
+from .views import SendSMSView, SMSHistoryView
 
 urlpatterns = [
-    path('', views.example_sms_view, name='example-sms'),
+    path('send/', SendSMSView.as_view(), name='send_sms'),
+    path('history/', SMSHistoryView.as_view(), name='sms_history'),
 ]

@@ -1,7 +1,18 @@
-from django.shortcuts import render
+from rest_framework import generics, permissions
+from .models import SMSMessage
+from .serializers import SMSMessageSerializer
 
-# Create your views here.
-from django.http import JsonResponse
+class SendSMSView(generics.CreateAPIView):
+    queryset = SMSMessage.objects.all()
+    serializer_class = SMSMessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-def example_sms_view(request):
-    return JsonResponse({'message': 'SMS API is working!'})
+    def perform_create(self, serializer):
+        serializer.save(sender=self.request.user, status='sent')
+
+class SMSHistoryView(generics.ListAPIView):
+    serializer_class = SMSMessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return SMSMessage.objects.filter(sender=self.request.user)

@@ -1,7 +1,6 @@
 from django.urls import path
-from .views import home 
+from .views import SettingDetailView
 
 urlpatterns = [
-    path('', home, name='home'),  # Home page
-    
+    path('settings/', SettingDetailView.as_view(), name='user-settings'),
 ]

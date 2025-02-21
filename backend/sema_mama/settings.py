@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'sms',
     'analytics',
     'api',
+    'appointments',
 
     
 ]

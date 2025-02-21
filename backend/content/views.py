@@ -1,6 +1,16 @@
-from django.shortcuts import render
+from rest_framework import generics, permissions
+from .models import Content
+from .serializers import ContentSerializer
 
-from django.http import JsonResponse
+class ContentListCreateView(generics.ListCreateAPIView):
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-def example_view(request):
-    return JsonResponse({'message': 'Content API working!'})
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
+
+class ContentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    permission_classes = [permissions.IsAuthenticated]

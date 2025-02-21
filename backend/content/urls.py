@@ -1,7 +1,7 @@
 from django.urls import path
-from . import views
+from .views import ContentListCreateView, ContentDetailView
 
 urlpatterns = [
-    # Example endpoint (Update with your actual views)
-    path('', views.example_view, name='example-view'),
+    path('contents/', ContentListCreateView.as_view(), name='content-list-create'),
+    path('contents/<int:pk>/', ContentDetailView.as_view(), name='content-detail'),
 ]

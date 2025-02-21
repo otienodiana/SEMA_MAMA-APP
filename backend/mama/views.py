@@ -1,4 +1,13 @@
-from django.http import HttpResponse
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from .models import Setting
+from .serializers import SettingSerializer
 
-def home(request):
-    return HttpResponse("<h1>Welcome to Sema Mama API</h1><p>checking backend endpoints</p>")
+class SettingDetailView(generics.RetrieveUpdateAPIView):
+    serializer_class = SettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        # Get or create settings for the logged-in user
+        setting, created = Setting.objects.get_or_create(user=self.request.user)
+        return setting
