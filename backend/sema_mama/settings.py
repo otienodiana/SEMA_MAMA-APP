@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'analytics',
     'api',
     'appointments',
+    'corsheaders',
 
     
 ]
@@ -70,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'sema_mama.urls'
@@ -106,6 +108,11 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Allow frontend URL (if using React)
+]
 
 # settings.py
 SIMPLE_JWT = {

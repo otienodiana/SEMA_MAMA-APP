@@ -1,15 +1,14 @@
-import './App.css';
-import AppointmentForm from './components/AppointmentForm';
+import Login from "./components/Login";
+import Register from "./components/Register";
 
-const App = () => {
+function App() {
   return (
     <div>
-      
-      <div className="p-6">
-        <AppointmentForm />
-      </div>
+      <h1>Welcome to Sema Mama</h1>
+      <Login />
+      <Register />
     </div>
   );
-};
+}
 
 export default App;

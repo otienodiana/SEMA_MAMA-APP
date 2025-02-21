@@ -11,4 +11,5 @@ urlpatterns = [
     path('users/', get_users, name='list_users'),  # Fetch Users (Protected)
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh Token
     path('protected/', ProtectedView.as_view(), name='protected_view'),
+    path('users/', get_users, name='list_users'),
 ]

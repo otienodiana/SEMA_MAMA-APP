@@ -15,9 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path,include
 
+def home_view(request):
+    return JsonResponse({"message": "Welcome to Sema Mama Backend!"})
+
 urlpatterns = [
+    path('', home_view),
     path('', include('mama.urls')),  # Serve home page from mama app
     path('admin/', admin.site.urls),
     path('api/', include('mama.urls')),

@@ -8,6 +8,7 @@ from .serializers import UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.views import APIView
+from django.http import JsonResponse
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Only logged-in users can access this
@@ -69,3 +70,10 @@ class ProtectedView(APIView):
 
     def get(self, request):
         return Response({"message": "You are authorized!"})
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])  # Make sure this is correct
+def get_users(request):
+    users = User.objects.all()
+    serializer = UserSerializer(users, many=True)
+    return JsonResponse(serializer.data, safe=False)
