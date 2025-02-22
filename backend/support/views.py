@@ -1,49 +1,59 @@
 from rest_framework import generics, permissions
-from .models import Forum, SupportGroup, Post, Comment
-from .serializers import ForumSerializer, SupportGroupSerializer, PostSerializer, CommentSerializer
+from .models import Forum, Post, Comment
+from .serializers import PostSerializer, CommentSerializer
+from rest_framework.response import Response
+from rest_framework import status
 
-# List all forums and create a new one
-class ForumListCreateView(generics.ListCreateAPIView):
-    queryset = Forum.objects.all()
-    serializer_class = ForumSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-# List all posts in a forum and create a new post
 class PostListCreateView(generics.ListCreateAPIView):
+    """List all posts in a forum or create a new post."""
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        forum_id = self.kwargs["forum_id"]
-        return Post.objects.filter(forum_id=forum_id)
+        forum_id = self.kwargs.get("forum_id")
+        return Post.objects.filter(forum_id=forum_id).order_by("-created_at")
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        forum_id = self.kwargs.get("forum_id")
+        serializer.save(user=self.request.user, forum_id=forum_id)
 
-# List all comments for a post and create a new comment
+
 class CommentListCreateView(generics.ListCreateAPIView):
+    """List all comments for a post or add a comment."""
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        post_id = self.kwargs["post_id"]
-        return Comment.objects.filter(post_id=post_id)
+        post_id = self.kwargs.get("post_id")
+        return Comment.objects.filter(post_id=post_id).order_by("created_at")
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        post_id = self.kwargs.get("post_id")
+        serializer.save(user=self.request.user, post_id=post_id)
 
-# List all support groups and create a new one
+
+class ForumListCreateView(generics.ListCreateAPIView):
+    """List all forums or create a new one."""
+    queryset = Forum.objects.all().order_by("-created_at")
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
 class SupportGroupListCreateView(generics.ListCreateAPIView):
-    queryset = SupportGroup.objects.all()
-    serializer_class = SupportGroupSerializer
+    """List all support groups or create a new one."""
+    queryset = SupportGroup.objects.all().order_by("-created_at")
+    serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-# Add a user to a support group
+
 class JoinSupportGroupView(generics.UpdateAPIView):
-    queryset = SupportGroup.objects.all()
-    serializer_class = SupportGroupSerializer
+    """Allow users to join a support group."""
     permission_classes = [permissions.IsAuthenticated]
 
-    def perform_update(self, serializer):
-        group = self.get_object()
-        group.members.add(self.request.user)
+    def post(self, request, pk):
+        try:
+            support_group = SupportGroup.objects.get(pk=pk)
+            support_group.members.add(request.user)
+            return Response({"message": "Successfully joined the group"}, status=status.HTTP_200_OK)
+        except SupportGroup.DoesNotExist:
+            return Response({"error": "Support group not found"}, status=status.HTTP_404_NOT_FOUND)
