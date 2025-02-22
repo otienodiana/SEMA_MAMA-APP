@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function Register() {
   const [username, setUsername] = useState("");
@@ -8,6 +9,7 @@ function Register() {
   const [isHealthcareProvider, setIsHealthcareProvider] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const navigate = useNavigate(); // Initialize navigate
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -29,8 +31,13 @@ function Register() {
     const data = await response.json();
 
     if (response.ok) {
-      setSuccess("Registration successful!");
+      setSuccess("Registration successful! Redirecting to login...");
       console.log("Registration successful:", data);
+
+      // Redirect to login page after 2 seconds
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } else {
       setError(data.error || JSON.stringify(data)); // Show detailed errors
     }
