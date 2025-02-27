@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "./auth.css"; // Import the CSS file
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function Register() {
   const [username, setUsername] = useState("");
@@ -10,7 +9,7 @@ function Register() {
   const [isHealthcareProvider, setIsHealthcareProvider] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Initialize navigate
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -35,94 +34,102 @@ function Register() {
       setSuccess("Registration successful! Redirecting to login...");
       console.log("Registration successful:", data);
 
+      // Redirect to login page after 2 seconds
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } else {
-      setError(data.error || JSON.stringify(data));
+      setError(data.error || JSON.stringify(data)); // Show detailed errors
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="register-box">
-        <h2 style={{ fontSize: "24px", fontWeight: "500", color: "#102851" }}>Register</h2>
+    <div style={{
+      backgroundColor: "rgba(239, 245, 254, 1)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      minHeight: "500px",
+      padding: "20px",
+      maxWidth: "738px",
+      margin: "0 auto",
+    }}>
+      <h2 style={{ fontSize: "24px", fontWeight: "500", color: "#102851" }}>Register</h2>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>{success}</p>}
 
-        <form onSubmit={handleRegister} style={{ width: "100%" }}>
-          <div style={{ marginBottom: "16px" }}>
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
-            />
-          </div>
+      <form onSubmit={handleRegister} style={{ width: "100%" }}>
+        <div style={{ marginBottom: "16px" }}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
+          />
+        </div>
 
-          <div style={{ marginBottom: "16px" }}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
-            />
-          </div>
+        <div style={{ marginBottom: "16px" }}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
+          />
+        </div>
 
-          <div style={{ marginBottom: "16px" }}>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
-            />
-          </div>
+        <div style={{ marginBottom: "16px" }}>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
+          />
+        </div>
 
-          <div style={{ marginBottom: "16px" }}>
-            <input
-              type="text"
-              placeholder="Phone Number"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
-            />
-          </div>
+        <div style={{ marginBottom: "16px" }}>
+          <input
+            type="text"
+            placeholder="Phone Number"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
+          />
+        </div>
 
-          <div style={{ marginBottom: "16px", display: "flex", alignItems: "center" }}>
-            <input
-              type="checkbox"
-              checked={isHealthcareProvider}
-              onChange={(e) => setIsHealthcareProvider(e.target.checked)}
-              style={{ marginRight: "8px" }}
-            />
-            <label>Are you a healthcare provider?</label>
-          </div>
+        <div style={{ marginBottom: "16px", display: "flex", alignItems: "center" }}>
+          <input
+            type="checkbox"
+            checked={isHealthcareProvider}
+            onChange={(e) => setIsHealthcareProvider(e.target.checked)}
+            style={{ marginRight: "8px" }}
+          />
+          <label>Are you a healthcare provider?</label>
+        </div>
 
-          <button
-            type="submit"
-            style={{
-              padding: "12px 24px",
-              backgroundColor: "rgba(232, 240, 255, 1)",
-              width: "100%",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#102851",
-            }}
-          >
-            Register
-          </button>
-        </form>
-      </div>
+        <button
+          type="submit"
+          style={{
+            padding: "12px 24px",
+            backgroundColor: "rgba(232, 240, 255, 1)",
+            width: "100%",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "16px",
+            fontWeight: "600",
+            color: "#102851",
+          }}
+        >
+          Register
+        </button>
+      </form>
     </div>
   );
 }

@@ -20,6 +20,7 @@ import DashboardHome from "./components/DashboardHome";
 import ForumDetails from "./components/ForumDetails";
 import ForumPosts from "./components/ForumPosts";
 import PostDetail from "./components/PostDetail";
+import Resources from "./components/Resources";
 
 function App() {
   return (
@@ -31,7 +32,8 @@ function App() {
           <Route path="about" element={<AboutUs />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
-          <Route path="community" element={<Community />} /> {/* ✅ Community Page Added */}
+          <Route path="community" element={<Community />} /> 
+          <Route path="/resources" element={<Resources />} />{/* ✅ Community Page Added */}
         </Route>
 
         {/* ✅ Dashboard Routes (For Logged-in Users) */}

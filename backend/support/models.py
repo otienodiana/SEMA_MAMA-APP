@@ -6,11 +6,17 @@ VISIBILITY_CHOICES = [
     ("private", "Private"),
 ]
 
-
 class Forum(models.Model):
+    """Forum categories for discussions."""
     name = models.CharField(max_length=255)
     description = models.TextField()
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="forums")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="forums",
+        null=True,  # Temporarily allow NULL values
+        blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default="public")  # ✅ Public or Private
 
@@ -26,9 +32,11 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)  # ✅ Track edits
 
+    class Meta:
+        db_table = 'forum'
+
     def __str__(self):
         return f"{self.title} by {self.user.username}"
-
 
 class Comment(models.Model):
     """Comments on forum posts."""
