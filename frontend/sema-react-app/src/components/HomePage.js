@@ -24,7 +24,7 @@ const HomePage = () => {
           Join a community of mothers & experts for guidance, support, and health resources.
         </p>
 
-        {!isAuthenticated && <Link to="/register" className="join-button">Join Now</Link>}
+        {!isAuthenticated && <Link to="/login" className="join-button">Join Now</Link>}
       </section>
 
       {/* Floating Images with Descriptions */}

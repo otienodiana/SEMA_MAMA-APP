@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import { getForums } from "../services/forumService";
 import "./Community.css";
 
-// 📸 Import Images
+// Import Images
 import dep1 from "../assets/dep1.jpg";
 import dep2 from "../assets/dep2.jpg";
 import dep3 from "../assets/dep3.jpg";
 import dep4 from "../assets/dep4.jpg";
 import dep5 from "../assets/dep5.jpg";
 
-// 🏷️ Map forums to images
+// Map forums to images
 const forumImages = {
   "Tech Talk": dep1,
   "Health & Wellness": dep2,
@@ -71,7 +71,7 @@ const Community = () => {
 
       {loading ? (
         <p>Loading forums...</p>
-      ) (
+      ) : forums.length === 0 ? (
         <p>No forums available. <Link to="/dashboard/create-forum">Create one!</Link></p>
       ) : (
         <div className="forum-list">

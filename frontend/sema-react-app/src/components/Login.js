@@ -39,6 +39,11 @@ function Login() {
     }
   };
 
+  // Navigate to registration page
+  const navigateToRegister = () => {
+    navigate("/register");
+  };
+
   return (
     <div
       style={{
@@ -111,6 +116,17 @@ function Login() {
             Login
           </button>
         </form>
+
+        {/* Register link */}
+        <p style={{ marginTop: "10px" }}>
+          Don't have an account?{" "}
+          <span
+            style={{ color: "#102851", cursor: "pointer", textDecoration: "underline" }}
+            onClick={navigateToRegister}
+          >
+            Register here
+          </span>
+        </p>
       </div>
     </div>
   );
