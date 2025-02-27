@@ -1,49 +1,47 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
+import "./HomePageStyles.css";
+import Navbar from "./Navbar";  
+import floatingImage1 from "../assets/dep1.jpg";
+import floatingImage2 from "../assets/dep2.jpg";
+import floatingImage3 from "../assets/dep3.jpg";
+
+
 
 const HomePage = () => {
   const isAuthenticated = localStorage.getItem("userToken"); // Check if user is logged in
 
   return (
-    <div style={{
-      background: "linear-gradient(81deg, #E7F0FF 9.01%, rgba(232, 241, 255, 0.47) 89.11%)",
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      textAlign: "center",
-      padding: "50px"
-    }}>
-     
+    <div className="home-container">
+      {/* ✅ Add Navbar Here */}
+      <Navbar />
 
       {/* Hero Section */}
-      <section style={{ maxWidth: "800px" }}>
-        <h1 style={{ fontSize: "36px", fontWeight: "600", color: "#102851", lineHeight: "1.5" }}>
-          Welcome to SEMA MAMA APP
-        </h1>
-        <p style={{ fontSize: "20px", color: "rgba(92, 97, 105, 1)", marginTop: "20px" }}>
-          We are here to talk, listen, and feel your emotions.
-        </p>
-        <p style={{ fontSize: "24px", color: "#333", marginTop: "20px" }}>
+      <section className="hero-section">
+        <h1 className="title">Welcome to SEMA MAMA APP</h1>
+        <p className="description">We are here to talk, listen, and feel your emotions.</p>
+        <p className="highlight-text">
           Join a community of mothers & experts for guidance, support, and health resources.
         </p>
-        {!isAuthenticated && (
-          <Link to="/register">
-            <button style={{
-              backgroundColor: "#102851",
-              color: "white",
-              border: "none",
-              padding: "12px 24px",
-              fontSize: "18px",
-              borderRadius: "5px",
-              marginTop: "20px",
-              cursor: "pointer"
-            }}>
-              Join Now
-            </button>
-          </Link>
-        )}
+
+        {!isAuthenticated && <Link to="/register" className="join-button">Join Now</Link>}
       </section>
+
+      {/* Floating Images with Descriptions */}
+      <div className="image-container">
+        <div className="image-box">
+          <img src={floatingImage1} alt="Mother sharing advice" className="floating-image" />
+          <p className="image-description">Mother sharing advice</p>
+        </div>
+        <div className="image-box">
+          <img src={floatingImage2} alt="Community discussion" className="floating-image" />
+          <p className="image-description">Community discussion</p>
+        </div>
+        <div className="image-box">
+          <img src={floatingImage3} alt="Healthcare expert guidance" className="floating-image" />
+          <p className="image-description">Healthcare expert guidance</p>
+        </div>
+      </div>
     </div>
   );
 };
