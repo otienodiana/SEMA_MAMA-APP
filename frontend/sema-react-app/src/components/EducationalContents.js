@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
 import axios from "axios";
+import "./EducationalContents.css";
 
 const ContentsPage = () => {
   const [resources, setResources] = useState([]);
@@ -7,19 +9,17 @@ const ContentsPage = () => {
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Check if user is authenticated
   const [uploading, setUploading] = useState(false); // For tracking file upload status
+  const [selectedResource, setSelectedResource] = useState(null); // ✅ Added for viewing
+  const navigate = useNavigate(); // ✅ Initialize 
 
   useEffect(() => {
-    // Check if the user is authenticated by checking for a token in localStorage
     const token = localStorage.getItem("token");
     if (token) {
       setIsAuthenticated(true);
-      // Fetch resources (content) only if authenticated
       const fetchResources = async () => {
         try {
-          const response = await axios.get("http://localhost:8000/api/contents/", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          const response = await axios.get("http://localhost:8000/api/content/contents/", {
+            headers: { Authorization: `Bearer ${token}` },
           });
           setResources(response.data);
           setLoading(false);
@@ -28,52 +28,64 @@ const ContentsPage = () => {
           setLoading(false);
         }
       };
-
       fetchResources();
     } else {
-      setError("You are not authenticated.");
+      setError("Repeat");
       setLoading(false);
     }
   }, []);
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("access");
 
-    // Append the file and other fields to FormData
-    formData.append("file", e.target.file.files[0]);
-    formData.append("title", e.target.title.value);
-    formData.append("description", e.target.description.value);
+    if (!token) {
+      setError("You are not authenticated.");
+      return;
+    }
+
+    const formData = new FormData();
+    const fileInput = e.target.file;
+    if (!fileInput.files.length) {
+      setError("Please select a file.");
+      return;
+    }
+
+    formData.append("file", fileInput.files[0]);
+    formData.append("title", e.target.title.value.trim());
+    formData.append("description", e.target.description.value.trim());
     formData.append("content_type", e.target.content_type.value);
 
     setUploading(true);
+    setError(null);
 
     try {
-      const response = await axios.post("http://localhost:8000/api/contents/upload", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setResources([...resources, response.data]); // Add the new resource to the list
-      setUploading(false);
+      const response = await axios.post(
+        "http://localhost:8000/api/content/contents/upload/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setResources((prevResources) => [...prevResources, response.data]);
       alert("File uploaded successfully!");
     } catch (err) {
+      setError(err.response?.data?.detail || "Error uploading the file.");
+    } finally {
       setUploading(false);
-      setError("Error uploading the file.");
     }
   };
 
   const handleDelete = async (id) => {
-    const token = localStorage.getItem("token");
-
+    const token = localStorage.getItem("access");
     try {
-      await axios.delete(`http://localhost:8000/api/contents/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await axios.delete(`http://localhost:8000/api/content/contents/${id}/delete/`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      // Remove the deleted resource from the list
       setResources(resources.filter((resource) => resource.id !== id));
       alert("Resource deleted successfully!");
     } catch (err) {
@@ -81,15 +93,87 @@ const ContentsPage = () => {
     }
   };
 
-  const handleUpdate = (id) => {
-    // Handle the update logic, could open a modal or redirect to an update page
-    console.log("Update functionality is not implemented yet for resource id: ", id);
+  const handleView = async (id) => {
+    try {
+      const token = localStorage.getItem("access");
+      const response = await axios.get(`http://localhost:8000/api/content/contents/${id}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSelectedResource(response.data);
+      navigate(`/content/${id}`); // Navigate to the content detail page
+    } catch (err) {
+      setError("Error fetching content details.");
+    }
+  };
+
+  const handleCloseView = () => {
+    setSelectedResource(null);
+  };
+
+  // ✅ Moved inside `ContentsPage`
+  const handleUpdate = async (id) => {
+    const token = localStorage.getItem("access");
+    const resourceToUpdate = resources.find((res) => res.id === id);
+    if (!resourceToUpdate) {
+      alert("Resource not found.");
+      return;
+    }
+
+    const newTitle = prompt("Enter new title:", resourceToUpdate.title);
+    const newDescription = prompt("Enter new description:", resourceToUpdate.description);
+
+    if (!newTitle || !newDescription) {
+      alert("Title and description cannot be empty.");
+      return;
+    }
+
+    const updatedData = { title: newTitle, description: newDescription };
+
+    try {
+      const response = await axios.patch(
+        `http://localhost:8000/api/content/contents/${id}/`,
+        updatedData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setResources(resources.map((res) => (res.id === id ? response.data : res)));
+      alert("Resource updated successfully!");
+    } catch (err) {
+      alert(`Failed to update resource: ${JSON.stringify(err.response?.data)}`);
+    }
+  };
+
+  // ✅ Moved inside `ContentsPage`
+  const handleDownload = async (fileUrl, fileName) => {
+    try {
+      const absoluteUrl = fileUrl.startsWith("http") ? fileUrl : `http://localhost:8000${fileUrl}`;
+      const response = await axios.get(absoluteUrl, {
+        responseType: "blob",
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+
+      const blob = new Blob([response.data]);
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      alert("Failed to download file.");
+    }
   };
 
   return (
     <div className="content-page">
-      <h1>Manage Resources</h1>
-      <p>Manage your uploaded resources here.</p>
+      
+      <h1>SEMAmama Resources</h1>    
+       
+
 
       {loading ? (
         <p>Loading resources...</p>
@@ -103,22 +187,38 @@ const ContentsPage = () => {
             <div className="resource-card" key={resource.id}>
               <h3>{resource.title}</h3>
               <p>{resource.description}</p>
+
               {resource.content_type === "video" && <video src={resource.file} controls />}
               {resource.content_type === "image" && <img src={resource.file} alt={resource.title} />}
-              {resource.content_type === "document" && <a href={resource.file} target="_blank" rel="noopener noreferrer">Download</a>}
-              {resource.content_type === "other" && <p>File type not supported for preview</p>}
 
-              {/* Render update and delete buttons for authenticated users */}
-              <div className="resource-actions">
-                <button onClick={() => handleUpdate(resource.id)}>Update</button>
-                <button onClick={() => handleDelete(resource.id)}>Delete</button>
-              </div>
+              <button onClick={() => handleDownload(resource.file, resource.title)}>Download</button>
+              <button onClick={() => handleView(resource.id)}>View</button>
+              <button onClick={() => handleUpdate(resource.id)}>Update</button>
+              <button onClick={() => handleDelete(resource.id)}>Delete</button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Upload section (visible for authenticated users only) */}
+      {/* ✅ Content Details Section */}
+      {selectedResource && (
+        <div className="content-details">
+          <h2>{selectedResource.title}</h2>
+          <p>{selectedResource.description}</p>
+
+          {selectedResource.content_type === "video" && <video src={selectedResource.file} controls />}
+          {selectedResource.content_type === "image" && <img src={selectedResource.file} alt={selectedResource.title} />}
+          {selectedResource.content_type === "document" && (
+            <a href={selectedResource.file} download>
+              Download Document
+            </a>
+          )}
+
+          <button onClick={handleCloseView}>Close</button>
+        </div>
+      )}
+
+      {/* Upload Section */}
       <div className="upload-section">
         <h2>Upload a New Resource</h2>
         <form onSubmit={handleUpload}>
@@ -131,9 +231,7 @@ const ContentsPage = () => {
             <option value="image">Image</option>
             <option value="other">Other</option>
           </select>
-          <button type="submit" disabled={uploading}>
-            {uploading ? "Uploading..." : "Upload"}
-          </button>
+          <button type="submit" disabled={uploading}>{uploading ? "Uploading..." : "Upload"}</button>
         </form>
       </div>
     </div>

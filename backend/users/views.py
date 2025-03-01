@@ -48,21 +48,27 @@ class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
 
 #  Alternative Custom Login (returns JWT)
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def custom_login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
+    username = request.data.get("username")
+    password = request.data.get("password")
 
     user = authenticate(username=username, password=password)
     if user:
         refresh = RefreshToken.for_user(user)
         return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email
+            }
         }, status=status.HTTP_200_OK)
-    
-    return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 #  Get all users (Protected)
 @api_view(['GET'])

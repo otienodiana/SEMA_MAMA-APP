@@ -1,0 +1,57 @@
+/* ContentDetail.css */
+.content-detail {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .content-detail h2 {
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .content-detail p {
+    color: #555;
+    font-size: 16px;
+  }
+  
+  .content-detail video, 
+  .content-detail img {
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+    border-radius: 5px;
+  }
+  
+  .content-detail a {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 15px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  
+  .content-detail a:hover {
+    background: #0056b3;
+  }
+  
+  .content-detail button {
+    margin-top: 20px;
+    padding: 10px 15px;
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .content-detail button:hover {
+    background: #cc0000;
+  }
+  

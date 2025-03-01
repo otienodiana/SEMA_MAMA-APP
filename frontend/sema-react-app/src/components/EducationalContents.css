@@ -1,73 +1,183 @@
-/* Dashboard Layout */
-.dashboard-container {
-    display: flex;
-    height: 100vh;
-    font-family: Arial, sans-serif;
+/* General Page Styling */
+.content-page {
+  max-width: 1000px;
+  max-height: 500;
+  margin: 40px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: "Arial", sans-serif;
+  color: #333;
+}
+
+/* Header */
+.content-page h1 {
+  text-align: center;
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+/* Resources List */
+.resources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+/* Resource Card */
+.resource-card {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  width: 200px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease-in-out;
+}
+
+.resource-card:hover {
+  transform: translateY(-5px);
+}
+
+.resource-card h3 {
+  font-size: 1.2rem;
+  color: #222;
+}
+
+.resource-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* Media Elements */
+.resource-card video,
+.resource-card img {
+  width: 100%;
+  max-height: 150px;
+  border-radius: 5px;
+  margin-top: 10px;
+  object-fit: cover;
+}
+
+/* Buttons */
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  font-weight: bold;
+}
+
+/* Resource Actions - Button Container */
+.resource-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+/* Update Button */
+.resource-actions button:nth-child(1) {
+  background: #ffc107;
+  color: #222;
+}
+
+.resource-actions button:nth-child(1):hover {
+  background: #e0a800;
+}
+
+/* Delete Button */
+.resource-actions button:nth-child(2) {
+  background: #dc3545;
+  color: white;
+}
+
+.resource-actions button:nth-child(2):hover {
+  background: #c82333;
+}
+
+/* Download Button */
+.resource-card button {
+  background: #007bff;
+  color: white;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.resource-card button:hover {
+  background: #0056b3;
+}
+
+/* Upload Section */
+.upload-section {
+  background: #f5f5f5;
+  padding: 20px;
+  margin-top: 30px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.upload-section h2 {
+  font-size: 1.5rem;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+/* Upload Form */
+.upload-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.upload-section input,
+.upload-section textarea,
+.upload-section select {
+  width: 80%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+/* Upload Button */
+.upload-section button {
+  background: #28a745;
+  color: white;
+  font-size: 1rem;
+  padding: 10px 15px;
+  width: 80%;
+}
+
+.upload-section button:hover {
+  background: #218838;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .resource-card {
+    width: 100%;
   }
-  
-  /* Sidebar */
-  .sidebar {
-    width: 250px;
-    background-color: #2C3E50;
-    color: white;
-    padding: 20px;
-    display: flex;
+
+  .upload-section input,
+  .upload-section textarea,
+  .upload-section select {
+    width: 100%;
+  }
+
+  /* Stack buttons for smaller screens */
+  .resource-actions {
     flex-direction: column;
+    gap: 5px;
   }
-  
-  .logo {
-    text-align: center;
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 20px;
+
+  .resource-actions button {
+    width: 100%;
   }
-  
-  .nav-list {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .nav-list li {
-    padding: 15px 10px;
-    transition: background 0.3s;
-  }
-  
-  .nav-list li a {
-    color: white;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-  }
-  
-  .nav-list .active {
-    background-color: #1ABC9C;
-  }
-  
-  /* Main Content */
-  .main-content {
-    flex-grow: 1;
-    padding: 20px;
-    background-color: #ECF0F1;
-  }
-  
-  .content-card {
-    background: white;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .read-more-btn {
-    background-color: #1ABC9C;
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  
-  .read-more-btn:hover {
-    background-color: #16A085;
-  }
-  
+}

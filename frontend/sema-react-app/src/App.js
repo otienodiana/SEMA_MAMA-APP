@@ -21,6 +21,7 @@ import ForumDetails from "./components/ForumDetails";
 import ForumPosts from "./components/ForumPosts";
 import PostDetail from "./components/PostDetail";
 import Resources from "./components/Resources";
+import ContentDetail from "./components/ContentDetail";
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
           <Route path="forum/:forumId/posts" element={<ForumPosts />} />
           <Route path="forum/:forumId/posts/:postId" element={<PostDetail />} />
           <Route path="educational-contents" element={<EducationalContents />} />
+          <Route path="content/:id" element={<ContentDetail />} />
           <Route path="logout" element={<Logout />} />
         </Route>
       </Routes>
