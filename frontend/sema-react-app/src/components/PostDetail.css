@@ -1,43 +1,177 @@
-.post-detail-container {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+.more-options {
+  position: relative; /* Ensures dropdown positions correctly */
+  display: inline-block; /* Prevents collapse */
 }
 
-h2 {
+.dropdown-menu {
+  position: absolute;
+  top: 30px; /* Pushes menu below button */
+  right: 0; /* Aligns menu to the right */
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  width: 150px;
+  z-index: 100; /* Ensures dropdown is above other elements */
+}
+
+
+/* General container styling */
+.post-detail-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: "Arial", sans-serif;
+}
+
+/* Title styling */
+.post-title {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 10px;
   text-align: center;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
+/* Content styling */
+.post-content {
+  font-size: 18px;
+  color: #555;
+  line-height: 1.6;
   margin-bottom: 20px;
 }
 
-textarea {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+/* Author info */
+.post-meta {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 20px;
 }
 
-button {
+/* Buttons */
+.post-actions button {
   background-color: #007bff;
   color: white;
-  padding: 10px;
   border: none;
-  cursor: pointer;
+  padding: 8px 12px;
   border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: 0.3s;
 }
 
-button:hover {
+.post-actions button:hover {
   background-color: #0056b3;
 }
 
-.error {
-  color: red;
+/* Comments section */
+.comments-section {
+  margin-top: 30px;
+}
+
+.comment {
+  background: #f9f9f9;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border-left: 4px solid #007bff;
+}
+
+.comment strong {
+  color: #007bff;
+}
+
+/* Comment Form */
+.comment-form textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  margin-top: 10px;
+}
+
+.comment-form button {
+  background-color: #28a745;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.comment-form button:hover {
+  background-color: #218838;
+}
+
+/* Back button */
+.back-button {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: block;
+  width: fit-content;
+  margin-bottom: 20px;
+}
+
+.back-button:hover {
+  background: #cc0000;
+}
+
+.more-options {
+  position: relative;
+  display: inline-block;
+}
+
+.more-button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  width: 150px;
+}
+
+.dropdown-menu button {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-size: 14px;
+}
+
+.dropdown-menu button:hover {
+  background: #f5f5f5;
+}
+
+.dropdown-menu {
+  display: block !important;
+  background: yellow; /* Just to see if it's appearing */
+}
+
+.post-header {
+  overflow: visible !important;
 }

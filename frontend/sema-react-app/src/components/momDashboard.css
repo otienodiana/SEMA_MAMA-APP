@@ -1,0 +1,116 @@
+/* Sidebar */
+.mom-dashboard-nav {
+  width: 250px;
+  background-color: #2C3E50; /* Dark blue */
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow-y: auto;
+}
+
+/* Logo */
+.mom-dashboard-logo {
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: white;
+}
+
+/* Navigation List */
+.mom-dashboard-nav ul {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly; /* Equal spacing */
+  height: 100%; /* Full height for even distribution */
+}
+
+.mom-dashboard-nav li {
+  width: 100%;
+  text-align: center;
+}
+
+/* Navigation Links */
+.mom-dashboard-nav li a {
+  color: white;
+  text-decoration: none;
+  display: block;
+  padding: 12px 0;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+/* Highlight Active Link */
+.mom-dashboard-nav li a:hover,
+.mom-dashboard-nav .active {
+  background-color: #1ABC9C; /* Green highlight */
+}
+
+/* Adjust Header */
+.mom-dashboard-header {
+  position: fixed;
+  top: 0;
+  left: 250px;
+  width: calc(100% - 250px);
+  background-color: #34495E;
+  color: white;
+  padding: 1.2rem;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+/* Content Section */
+.mom-dashboard-content {
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #ECF0F1;
+  margin-left: 270px;
+  margin-top: 70px;
+  border-radius: 15px;
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+  width: 75%;
+  min-height: 60vh;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .mom-dashboard-nav {
+      width: 60px;
+      padding: 10px;
+  }
+
+  .mom-dashboard-header {
+      left: 60px;
+      width: calc(100% - 60px);
+  }
+
+  .mom-dashboard-content {
+      margin-left: 80px;
+  }
+
+  .mom-dashboard-logo {
+      font-size: 16px;
+  }
+
+  .mom-dashboard-nav ul {
+      height: auto;
+      justify-content: start;
+  }
+
+  .mom-dashboard-nav li a {
+      font-size: 14px;
+      padding: 8px;
+  }
+}

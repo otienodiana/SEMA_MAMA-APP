@@ -6,7 +6,7 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isHealthcareProvider, setIsHealthcareProvider] = useState(false);
+  const [role, setRole] = useState("mom"); // Default role
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate(); // Initialize navigate
@@ -24,7 +24,7 @@ function Register() {
         email,
         password,
         phone_number: phoneNumber,
-        is_healthcare_provider: isHealthcareProvider,
+        role, // ✅ Send role instead of is_healthcare_provider
       }),
     });
 
@@ -103,14 +103,18 @@ function Register() {
           />
         </div>
 
-        <div style={{ marginBottom: "16px", display: "flex", alignItems: "center" }}>
-          <input
-            type="checkbox"
-            checked={isHealthcareProvider}
-            onChange={(e) => setIsHealthcareProvider(e.target.checked)}
-            style={{ marginRight: "8px" }}
-          />
-          <label>Are you a healthcare provider?</label>
+        {/* ✅ Add a dropdown for selecting the user role */}
+        <div style={{ marginBottom: "16px" }}>
+          <label>Select your role:</label>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            style={{ padding: "12px", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
+          >
+            <option value="mom">Mom</option>
+            <option value="healthcare_provider">Healthcare Provider</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
 
         <button

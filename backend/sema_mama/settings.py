@@ -43,13 +43,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mama',
     'rest_framework',
+    
     'users',
     'content',
-    'support',
     'sms',
     'analytics',
     'api',
     'appointments',
+    'community',
     
 
     

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "./AuthContext"; // Import AuthContext
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -7,47 +8,71 @@ function Login() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth(); // Access login function
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
+    setError(null); // Reset error state
+  
     try {
       const response = await fetch("http://127.0.0.1:8000/api/users/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-
+  
       const data = await response.json();
+      console.log("🔍 Full API Response:", data); // Log entire API response
+  
+      if (!response.ok) {
+        console.error(" Login failed:", data);
+        setError("Invalid credentials. Please try again.");
+        return;
+      }
+  
+      if (!data.user) {
+        console.error(" No user data found in response", data);
+        setError("Login failed: No user data received.");
+        return;
+      }
 
-      if (response.ok) {
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        setSuccess("Login successful!");
-        setTimeout(() => {
+      if (!data.access) {
+        console.error("⚠️ No token received from API", data);
+        setError("Login failed: No token received.");
+        return;
+      }
+  
+      console.log("✅ Token received:", data.access);
+      localStorage.setItem("token", data.token);
+  
+      console.log(" User role received:", data.user.role);
+      login(data.user); // Store user in context
+  
+      // Redirect based on role
+      switch (data.user.role) {
+        case "admin":
+          navigate("/dashboard");
+          break;
+        case "healthcare_provider":
+          navigate("/dashboard/analytics");
+          break;
+        case "mom":
           navigate("/dashboard/profile");
-        }, 1000);
-      } else {
-        setError(data.error || "Invalid username or password!");
+          break;
+        default:
+          setError("Unknown role detected. Please contact support.");
       }
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      console.error(" Network or Server Error:", err);
+      setError("Server error. Please try again later.");
     }
   };
-
-  // Navigate to registration page
-  const navigateToRegister = () => {
-    navigate("/register");
-  };
+  
 
   return (
     <div
       style={{
-        backgroundImage: "url('/background.jpg')", // ✅ Update this path
+        backgroundImage: "url('/background.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh",
@@ -117,15 +142,12 @@ function Login() {
           </button>
         </form>
 
-        {/* Register link */}
-        <p style={{ marginTop: "10px" }}>
+        {/* Don't have an account? Register link */}
+        <p style={{ marginTop: "15px" }}>
           Don't have an account?{" "}
-          <span
-            style={{ color: "#102851", cursor: "pointer", textDecoration: "underline" }}
-            onClick={navigateToRegister}
-          >
+          <Link to="/register" style={{ color: "#102851", fontWeight: "bold" }}>
             Register here
-          </span>
+          </Link>
         </p>
       </div>
     </div>

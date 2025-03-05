@@ -1,116 +1,223 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { getForums } from "../services/forumService";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Community.css";
 
-// Import Images
-import dep1 from "../assets/dep1.jpg";
-import dep2 from "../assets/dep2.jpg";
-import dep3 from "../assets/dep3.jpg";
-import dep4 from "../assets/dep4.jpg";
-import dep5 from "../assets/dep5.jpg";
-
-// Map forums to images
-const forumImages = {
-  "Tech Talk": dep1,
-  "Health & Wellness": dep2,
-  "Gaming Zone": dep3,
-  "Business Hub": dep4,
-  "Education & Learning": dep5,
-};
-
-// Function to get an image based on forum name
-const getForumImage = (forumName) => forumImages[forumName] || dep1; // Default image
+const BASE_URL = "http://localhost:8000/api/community";
 
 const Community = () => {
-  const [forums, setForums] = useState([]);
-  const [loading, setLoading] = useState(true);
+    const [role, setRole] = useState("");
+    const [forums, setForums] = useState([]);
+    const [joinedForums, setJoinedForums] = useState([]);
+    const [newForumName, setNewForumName] = useState("");
+    const [newForumDescription, setNewForumDescription] = useState("");
+    const [newForumVisibility, setNewForumVisibility] = useState("public");
+    const [newForumPicture, setNewForumPicture] = useState(null);
+    const [posts, setPosts] = useState([]);  
+    const navigate = useNavigate();
+    const token = localStorage.getItem("access");
 
-  useEffect(() => {
-    getForums()
-      .then((response) => {
-        setForums(response.data.length ? response.data : [
-          {
-            id: "default",
-            name: "General Discussion",
-            description: "A place to talk about everything!",
-            visibility: "public",
-          },
-          {
-            id: "mothers",
-            name: "MOTHERS",
-            description: "A forum for mothers to share experiences and support each other.",
-            visibility: "public",
-          },
-          {
-            id: "siastas",
-            name: "SIASTAS",
-            description: "A community for women to empower and uplift each other.",
-            visibility: "public",
-          }
-        ]);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching forums:", error);
-        setLoading(false);
-      });
-  }, []);
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            if (!token) {
+                setRole("guest");
+                setJoinedForums([]);
+                return;
+            }
 
-  return (
-    <div className="community-container">
-      <h1>Community</h1>
-      <p>Join a forum, create your own, and start discussing!</p>
+            try {
+                const response = await fetch(`${BASE_URL}/users/user-role/`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                });
 
-      {/* Create Forum Button */}
-      <div className="create-forum-container">
-        <Link to="/dashboard/create-forum" className="create-forum-button">
-          Create a Forum
-        </Link>
-      </div>
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
 
-      {loading ? (
-        <p>Loading forums...</p>
-      ) : forums.length === 0 ? (
-        <p>No forums available. <Link to="/dashboard/create-forum">Create one!</Link></p>
-      ) : (
-        <div className="forum-list">
-          {forums.map((forum) => (
-            <div className="forum-card" key={forum.id}>
-              <img src={getForumImage(forum.name)} alt={forum.name} className="forum-image" />
-              <div className="forum-info">
-                <h3>{forum.name}</h3>
-                <p>{forum.description}</p>
-                <p className="visibility">{forum.visibility.toUpperCase()}</p>
-              </div>
-              <Link to={`/forums/${forum.id}`} className="join-button">
-                Join Forum
-              </Link>
-            </div>
-          ))}
+                setRole(data.role || "guest");
+                setJoinedForums(data.joinedForums || []);
+            } catch (error) {
+                console.error("Error fetching user role:", error);
+                setRole("guest");
+                setJoinedForums([]);
+            }
+        };
+
+        fetchUserRole();
+    }, [token]);
+
+    useEffect(() => {
+        const fetchForums = async () => {
+            try {
+                const response = await fetch(`${BASE_URL}/forums/`);
+                if (!response.ok) throw new Error(`Error fetching forums: ${response.status}`);
+                
+                const data = await response.json();
+                setForums(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Error fetching forums:", error);
+                setForums([]);
+            }
+        };
+
+        fetchForums();
+    }, [token]);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const response = await fetch(`${BASE_URL}/posts/`);
+                if (!response.ok) throw new Error(`Error fetching posts: ${response.status}`);
+                
+                const data = await response.json();
+                setPosts(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Error fetching posts:", error);
+                setPosts([]);
+            }
+        };
+
+        fetchPosts();
+    }, []);
+
+    const joinForum = async (forumId) => {
+        if (!token) {
+            alert("You need to be logged in to join a forum!");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${BASE_URL}/forums/${forumId}/join/`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (!response.ok) throw new Error("Failed to join forum.");
+            setJoinedForums((prev) => [...prev, forumId]);
+            alert("Joined forum successfully!");
+        } catch (error) {
+            console.error("Error joining forum:", error);
+            alert("Error joining forum. Please try again.");
+        }
+    };
+
+    const createForum = async (e) => {
+        e.preventDefault();
+        if (!token) {
+            alert("You need to be logged in to create a forum!");
+            return;
+        }
+    
+        try {
+            let response;
+            let formData;
+            const createdAt = new Date().toISOString();
+    
+            if (newForumPicture) {
+                formData = new FormData();
+                formData.append("name", newForumName);
+                formData.append("description", newForumDescription);
+                formData.append("visibility", newForumVisibility);
+                formData.append("profile_picture", newForumPicture);
+                formData.append("created_at", createdAt);
+    
+                response = await fetch(`${BASE_URL}/forums/`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                    },
+                    body: formData,
+                });
+            } else {
+                response = await fetch(`${BASE_URL}/forums/`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        name: newForumName,
+                        description: newForumDescription,
+                        visibility: newForumVisibility,
+                        created_at: createdAt, 
+                    }),
+                });
+            }
+    
+            const data = await response.json();
+    
+            if (!response.ok) {
+                alert(`Error: ${data.detail || JSON.stringify(data)}`);
+                throw new Error(data.detail || "Error creating forum.");
+            }
+    
+            setForums((prev) => [...prev, data]);
+            setNewForumName("");
+            setNewForumDescription("");
+            setNewForumVisibility("public");
+            setNewForumPicture(null);
+            alert("Forum created successfully!");
+        } catch (error) {
+            console.error("Error creating forum:", error);
+            alert(error.message || "Error creating forum. Please try again.");
+        }
+    };
+
+    const viewForumPosts = (forumId) => {
+        navigate(`/community/forums/${forumId}/posts`);
+    };
+
+    return (
+        <div className="community-container">
+            <h1>Welcome to the Community</h1>
+            <p>Your are A : <strong>{role}</strong></p>
+
+            <h2>Available Forums</h2>
+            {forums.length === 0 ? (
+                <p>No forums available.</p>
+            ) : (
+                <div className="forums-grid">
+                    {forums.map((forum) => (
+                        <div key={forum?.id} className="forum-card">
+                            {forum.profile_picture && (
+                                <img src={`http://localhost:8000${forum.profile_picture}`} alt={forum.name} />
+                            )}
+                            <h3>{forum.name}</h3>
+                            <p>{forum.members?.length || 0} members</p>
+                            <small>Created on: {forum.created_at ? new Date(forum.created_at).toLocaleDateString() : "N/A"}</small>
+                            {joinedForums.includes(forum.id) ? (
+                                <button onClick={() => viewForumPosts(forum.id)}>View Posts</button>
+                            ) : (
+                                <button onClick={() => joinForum(forum.id)}>Join Forum</button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <h2>Recent Posts</h2>
+            {posts.length === 0 ? (
+                <p>No posts available.</p>
+            ) : (
+                <div className="posts-grid">
+                    {posts.map((post) => (
+                        <div key={post?.id} className="post-card">
+                            {post.image && <img src={`http://localhost:8000${post.image}`} alt={post.title} />}
+                            <h3>{post.title}</h3>
+                            <p>{post.content.length > 100 ? `${post.content.substring(0, 100)}...` : post.content}</p>
+                            <div className="post-meta">By {post.author} | {new Date(post.created_at).toLocaleDateString()}</div>
+                            <button onClick={() => navigate(`/posts/${post.id}`)}>Read More</button>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
-      )}
-
-      {/* Featured Forum Section */}
-      <div className="featured-forums">
-        <h2>Featured Forums</h2>
-        <div className="featured-forum-list">
-          <div className="featured-forum-card">
-            <img src={dep2} alt="Health & Wellness" />
-            <h3>Health & Wellness</h3>
-            <p>A forum for health-conscious individuals and caregivers to share tips and support.</p>
-            <Link to="/forums/health" className="join-button">Join Now</Link>
-          </div>
-          <div className="featured-forum-card">
-            <img src={dep3} alt="Tech Talk" />
-            <h3>Baby Healthcare</h3>
-            <p>Is your baby getting enough sleep?....</p>
-            <Link to="/forums/tech" className="join-button">Join Now</Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Community;

@@ -10,6 +10,13 @@ from rest_framework.views import APIView
 from django.http import JsonResponse
 from .serializers import UserSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.generics import UpdateAPIView
+from rest_framework.response import Response
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import get_user_model
+
+
 
 
 User = get_user_model()
@@ -57,17 +64,24 @@ def custom_login(request):
     user = authenticate(username=username, password=password)
     if user:
         refresh = RefreshToken.for_user(user)
-        return Response({
+        response_data = {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
-            "user": {
+            "user": {  
                 "id": user.id,
                 "username": user.username,
-                "email": user.email
+                "email": user.email,
+                "role": user.role,  # ✅ Ensure this is returned
+                "phone_number": user.phone_number,
+                "age": user.age,
             }
-        }, status=status.HTTP_200_OK)
+        }
+        print("✅ Backend Response:", response_data)  # Debugging
+        return Response(response_data, status=status.HTTP_200_OK)
 
+    print("⚠️ Invalid credentials")
     return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 
 #  Get all users (Protected)
@@ -88,3 +102,46 @@ class ProtectedView(APIView):
 
     def get(self, request):
         return Response({"message": "You are authorized!"})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_role(request):
+    """Retrieve the role of the authenticated user"""
+    user = request.user  # Get the logged-in user
+    return Response({"role": user.role}, status=200)  # ✅ Use `user.role`
+
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Customize JWT response to include user data"""
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+
+        if not user:
+            raise serializers.ValidationError("Invalid username or password.")
+
+        # Ensure user role exists
+        user_role = getattr(user, "role", None)
+        if user_role is None:
+            raise serializers.ValidationError("User role not found.")
+
+        data["user"] = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user_role,  # Make sure 'role' exists
+        }
+        return data
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+from rest_framework.parsers import MultiPartParser, FormParser
+
+class UserProfileUpdateView(UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    parser_classes = (MultiPartParser, FormParser)  # ✅ Enable file uploads
