@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, generics, permissions
 from .models import Forum, Post, Comment
 
 class ForumSerializer(serializers.ModelSerializer):
@@ -42,3 +42,7 @@ class CommentSerializer(serializers.ModelSerializer):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
 
+class CreateForumView(generics.CreateAPIView):
+    queryset = Forum.objects.all()
+    serializer_class = ForumSerializer
+    permission_classes = [permissions.IsAuthenticated]

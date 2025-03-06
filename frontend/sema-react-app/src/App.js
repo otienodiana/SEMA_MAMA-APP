@@ -82,7 +82,7 @@ function App() {
               <Route path="profile" element={<Profile />} /> 
               <Route path="educational-contents" element={<EducationalContents />} />
               <Route path="content/:id" element={<ContentDetail />} />
-              <Route path="appointments" element={<Appointments />} />
+              
               <Route path="logout" element={<Logout />} />
             </Route>
             <Route path="community/forums/:forumId/posts" element={<ForumPosts />} />

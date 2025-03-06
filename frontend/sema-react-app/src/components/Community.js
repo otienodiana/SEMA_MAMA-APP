@@ -16,6 +16,7 @@ const Community = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem("access");
 
+    // Fetch User Role & Joined Forums
     useEffect(() => {
         const fetchUserRole = async () => {
             if (!token) {
@@ -48,6 +49,7 @@ const Community = () => {
         fetchUserRole();
     }, [token]);
 
+    // Fetch All Forums
     useEffect(() => {
         const fetchForums = async () => {
             try {
@@ -65,6 +67,7 @@ const Community = () => {
         fetchForums();
     }, [token]);
 
+    // Fetch All Posts
     useEffect(() => {
         const fetchPosts = async () => {
             try {
@@ -72,6 +75,8 @@ const Community = () => {
                 if (!response.ok) throw new Error(`Error fetching posts: ${response.status}`);
                 
                 const data = await response.json();
+                console.log("Fetched Posts:", data);
+
                 setPosts(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error("Error fetching posts:", error);
@@ -82,6 +87,7 @@ const Community = () => {
         fetchPosts();
     }, []);
 
+    // Join Forum
     const joinForum = async (forumId) => {
         if (!token) {
             alert("You need to be logged in to join a forum!");
@@ -106,6 +112,7 @@ const Community = () => {
         }
     };
 
+    // Create Forum
     const createForum = async (e) => {
         e.preventDefault();
         if (!token) {
@@ -117,6 +124,14 @@ const Community = () => {
             let response;
             let formData;
             const createdAt = new Date().toISOString();
+    
+            console.log("📢 Submitting forum data:", {
+                name: newForumName,
+                description: newForumDescription,
+                visibility: newForumVisibility,
+                profile_picture: newForumPicture ? newForumPicture.name : "No image",
+                created_at: createdAt, 
+            });
     
             if (newForumPicture) {
                 formData = new FormData();
@@ -168,54 +183,68 @@ const Community = () => {
         }
     };
 
-    const viewForumPosts = (forumId) => {
-        navigate(`/community/forums/${forumId}/posts`);
-    };
-
     return (
         <div className="community-container">
             <h1>Welcome to the Community</h1>
-            <p>Your are A : <strong>{role}</strong></p>
+            <p>Your role: <strong>{role}</strong></p>
 
+            {/* Create Forum Form */}
+            {role !== "guest" && (
+                <div className="create-forum">
+                    <h2>Create a New Forum</h2>
+                    <form onSubmit={createForum}>
+                        <input 
+                            type="text" 
+                            placeholder="Forum Name" 
+                            value={newForumName} 
+                            onChange={(e) => setNewForumName(e.target.value)} 
+                            required 
+                        />
+                        <textarea 
+                            placeholder="Forum Description" 
+                            value={newForumDescription} 
+                            onChange={(e) => setNewForumDescription(e.target.value)} 
+                            required 
+                        />
+                        <select value={newForumVisibility} onChange={(e) => setNewForumVisibility(e.target.value)}>
+                            <option value="public">Public</option>
+                            <option value="private">Private</option>
+                        </select>
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => setNewForumPicture(e.target.files[0])} 
+                        />
+                        <button type="submit">Create Forum</button>
+                    </form>
+                </div>
+            )}
+
+            {/* Forum List */}
             <h2>Available Forums</h2>
-            {forums.length === 0 ? (
-                <p>No forums available.</p>
-            ) : (
-                <div className="forums-grid">
-                    {forums.map((forum) => (
-                        <div key={forum?.id} className="forum-card">
-                            {forum.profile_picture && (
-                                <img src={`http://localhost:8000${forum.profile_picture}`} alt={forum.name} />
-                            )}
-                            <h3>{forum.name}</h3>
-                            <p>{forum.members?.length || 0} members</p>
-                            <small>Created on: {forum.created_at ? new Date(forum.created_at).toLocaleDateString() : "N/A"}</small>
-                            {joinedForums.includes(forum.id) ? (
-                                <button onClick={() => viewForumPosts(forum.id)}>View Posts</button>
-                            ) : (
-                                <button onClick={() => joinForum(forum.id)}>Join Forum</button>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
+            <div className="forums-grid">
+                {forums.map((forum) => (
+                    <div key={forum?.id} className="forum-card">
+                        <h3>{forum.name}</h3>
+                        {joinedForums.includes(forum.id) ? (
+                            <button onClick={() => navigate(`/community/forums/${forum.id}/posts`)}>View Posts</button>
+                        ) : (
+                            <button onClick={() => joinForum(forum.id)}>Join Forum</button>
+                        )}
+                    </div>
+                ))}
+            </div>
 
+            {/* Posts Section */}
             <h2>Recent Posts</h2>
-            {posts.length === 0 ? (
-                <p>No posts available.</p>
-            ) : (
-                <div className="posts-grid">
-                    {posts.map((post) => (
-                        <div key={post?.id} className="post-card">
-                            {post.image && <img src={`http://localhost:8000${post.image}`} alt={post.title} />}
-                            <h3>{post.title}</h3>
-                            <p>{post.content.length > 100 ? `${post.content.substring(0, 100)}...` : post.content}</p>
-                            <div className="post-meta">By {post.author} | {new Date(post.created_at).toLocaleDateString()}</div>
-                            <button onClick={() => navigate(`/posts/${post.id}`)}>Read More</button>
-                        </div>
-                    ))}
-                </div>
-            )}
+            <div className="posts-grid">
+                {posts.map((post) => (
+                    <div key={post?.id} className="post-card">
+                        <h3>{post.title}</h3>
+                        <button onClick={() => navigate(`/posts/${post.id}`)}>Read More</button>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };

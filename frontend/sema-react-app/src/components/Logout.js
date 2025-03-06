@@ -21,7 +21,7 @@ const Logout = () => {
 
       {/* Main Content */}
       <div className="main-content">
-        <h1>🚪 Logout</h1>
+        <h1> Logout</h1>
         <p>Are you sure you want to log out?</p>
         <button className="logout-btn" onClick={handleLogout}>Confirm Logout</button>
       </div>
