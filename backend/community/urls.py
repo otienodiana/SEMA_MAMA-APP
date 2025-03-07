@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import ForumListView
-from .views import ForumPostListCreateView, ForumListView, PostLikeView, PostDeleteView, PostCommentsView
+from .views import ForumPostListCreateView, ForumListView, PostLikeView, PostDeleteView, PostCommentsView, is_member_of_forum
 
 from .views import (
     ForumViewSet, PostViewSet, CommentViewSet, 
@@ -32,4 +32,5 @@ urlpatterns = [
     path('posts/<int:pk>/comments/', PostCommentsView.as_view(), name='post-comments'),
     path('forums/<int:forum_id>/join/', join_forum, name='join-forum'),
     path('users/user-role/', get_user_role, name='user-role'),
+    path("forums/<int:forum_id>/is-member/", is_member_of_forum, name="is-member-of-forum"),
 ]

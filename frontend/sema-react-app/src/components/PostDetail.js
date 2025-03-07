@@ -201,9 +201,9 @@ const PostDetail = () => {
                                             {user && comment.user.username === user.username && (
                                                 <div className="comment-actions">
                                                     <button onClick={() => setEditingComment(comment.id) || setEditedCommentText(comment.content)}>
-                                                        ✏️ Edit
+                                                         Edit
                                                     </button>
-                                                    <button onClick={() => handleDeleteComment(comment.id)}>🗑️ Delete</button>
+                                                    <button onClick={() => handleDeleteComment(comment.id)}> Delete</button>
                                                 </div>
                                             )}
                                         </>

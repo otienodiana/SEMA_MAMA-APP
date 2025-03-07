@@ -119,7 +119,7 @@ const ForumPosts = () => {
     let token = localStorage.getItem("access");
     const post = posts.find(p => p.id === postId);
     if (!post) {
-        alert("❌ Post not found!");
+        alert(" Post not found!");
         return;
     }
 
@@ -130,7 +130,7 @@ const ForumPosts = () => {
         user: editUserId || post.user?.id     // Ensure this exists
     };
 
-    console.log("📤 Sending Data:", requestData); // ✅ Debugging step
+    console.log(" Sending Data:", requestData); // ✅ Debugging step
 
     try {
         const response = await fetch(`http://localhost:8000/api/community/posts/${postId}/`, {
@@ -146,16 +146,16 @@ const ForumPosts = () => {
 
         if (!response.ok) {
             console.error("🚨 API Error:", responseText);  // ✅ Log the actual error
-            alert(`❌ Failed to update post: ${responseText}`);
+            alert(` Failed to update post: ${responseText}`);
             return;
         }
 
-        // ✅ Update the post in the state
+        //  Update the post in the state
         setPosts(posts.map(post => 
             post.id === postId ? { ...post, title: editTitle, content: editContent } : post
         ));
 
-        alert("✅ Post updated successfully!");
+        alert(" Post updated successfully!");
         setShowEditModal(false);
     } catch (error) {
         console.error(" Fetch Error:", error);

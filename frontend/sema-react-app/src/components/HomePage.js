@@ -31,15 +31,15 @@ const HomePage = () => {
       <div className="image-container">
         <div className="image-box">
           <img src={floatingImage1} alt="Mother sharing advice" className="floating-image" />
-          <p className="image-description">Mother sharing advice</p>
+          <p className="image-description">Mother and Baby Corner</p>
         </div>
         <div className="image-box">
           <img src={floatingImage2} alt="Community discussion" className="floating-image" />
-          <p className="image-description">Community discussion</p>
+          <p className="image-description">Feeling Depressed</p>
         </div>
         <div className="image-box">
           <img src={floatingImage3} alt="Healthcare expert guidance" className="floating-image" />
-          <p className="image-description">Healthcare expert guidance</p>
+          <p className="image-description">Baby Health</p>
         </div>
       </div>
     </div>

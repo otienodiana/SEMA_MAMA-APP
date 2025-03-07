@@ -148,19 +148,14 @@ class CommentDetailView(RetrieveUpdateDestroyAPIView):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def join_forum(request, forum_id):
-    user = request.user
     forum = get_object_or_404(Forum, id=forum_id)
-    
-    if user in forum.members.all():
-        return Response({"message": "Already a member"}, status=status.HTTP_400_BAD_REQUEST)
-    
+    user = request.user
+
+    if forum.members.filter(id=user.id).exists():
+        return Response({"detail": "You are already a member of this forum."}, status=400)
+
     forum.members.add(user)
-
-    # Return updated list of joined forums
-    joined_forums = user.forums.values_list("id", flat=True)
-    return Response({"message": "Successfully joined forum", "joinedForums": list(joined_forums)}, status=status.HTTP_200_OK)
-    
-
+    return Response({"message": "Successfully joined the forum!"}, status=200)
 
 class ForumListView(ListAPIView):
     queryset = Forum.objects.all()
@@ -392,3 +387,12 @@ class PostDetailView(RetrieveUpdateDestroyAPIView):  # ✅ Supports GET, PUT, DE
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     http_method_names = ['get', 'patch', 'delete']
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def is_member_of_forum(request, forum_id):
+    """Check if the logged-in user is a member of the given forum."""
+    forum = get_object_or_404(Forum, id=forum_id)
+    is_member = forum.members.filter(id=request.user.id).exists()
+    return Response({"is_member": is_member})
