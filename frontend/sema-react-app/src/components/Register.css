@@ -1,0 +1,88 @@
+body {
+  background-color: #83a5eb;
+}
+
+.register-container {
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 600px;  /* Increased from 500px */
+  padding: 80px;      /* Increased from 60px */
+  max-width: 800px;   /* Increased from 738px */
+  margin: 100px auto;  /* Changed from 40px to 100px to move container down */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.register-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #008DC9;
+  margin-bottom: 30px;
+}
+
+.register-form {
+  width: 100%;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-input,
+.form-select {
+  padding: 14px;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid #E6E6E6;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #008DC9;
+  box-shadow: 0 0 0 2px rgba(0, 141, 201, 0.1);
+}
+
+.form-select {
+  background-color: white;
+}
+
+.role-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #444444;
+  font-weight: 500;
+}
+
+.submit-button {
+  padding: 14px 24px;
+  background-color: #008DC9;
+  width: 100%;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #0077AC;
+}
+
+.error-message {
+  color: #D72F3F;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.success-message {
+  color: #2D8A3E;
+  margin-bottom: 16px;
+  font-weight: 500;
+}

@@ -16,7 +16,7 @@ urlpatterns = [
     path('api/users/', include('users.urls')),  # Authentication, Profiles
     path('api/content/', include('content.urls')),  # Educational content
     path('api/community/', include('community.urls')),  # Postpartum Support, Forums
-    path('api/sms/', include('sms.urls')),  # SMS-based Support
+    
     path('api/analytics/', include('analytics.urls')),  # User engagement tracking
     path('api/appointments/', include('appointments.urls')),  # Appointments
 ]

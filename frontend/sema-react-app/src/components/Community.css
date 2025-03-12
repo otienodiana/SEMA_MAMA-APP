@@ -1,7 +1,7 @@
 /* General Styles */
 body {
   font-family: Arial, sans-serif;
-  background-color: #FCEBE3; /* Soft Peach */
+  background-color: #F5F5F5; /* Light Grey */
   margin: 0;
   padding: 0;
 }
@@ -11,20 +11,21 @@ body {
   max-width: 900px;
   margin: 20px auto;
   padding: 20px;
-  background: #FAF3E0; /* Light Cream */
+  background: #FFFFFF; /* White */
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Header */
 h1 {
   text-align: center;
-  color: #D46C4E; /* Warm Terracotta */
+  color: #003366; /* WHO Deep Blue */
+  font-size: 28px;
 }
 
 p {
   text-align: center;
-  color: #6B4226; /* Deep Brown */
+  color: #2C3E50; /* Darker Blue */
 }
 
 /* ================= */
@@ -40,7 +41,7 @@ p {
 
 /* Forum Card */
 .forum-card {
-  background: #F4D1C4; /* Soft Coral */
+  background: #EAF2F8; /* Light Blue Tint */
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -48,7 +49,8 @@ p {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease-in-out;
+  border: 2px solid #0072CE; /* WHO Blue */
 }
 
 .forum-card:hover {
@@ -62,24 +64,25 @@ p {
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 10px;
+  border: 2px solid #0072CE; /* WHO Blue */
 }
 
 /* Forum Details */
 .forum-card h3 {
   margin: 10px 0;
   font-size: 18px;
-  color: #6B4226; /* Deep Brown */
+  color: #003366; /* WHO Deep Blue */
 }
 
 .forum-card p {
   font-size: 14px;
-  color: #4D331F; /* Rich Brown */
+  color: #2C3E50; /* Darker Blue */
   margin-bottom: 10px;
 }
 
 /* Buttons */
 button {
-  background: #D46C4E; /* Warm Terracotta */
+  background: #0072CE; /* WHO Blue */
   color: white;
   border: none;
   padding: 10px 15px;
@@ -87,15 +90,16 @@ button {
   cursor: pointer;
   transition: 0.3s;
   font-size: 14px;
+  font-weight: bold;
 }
 
 button:hover {
-  background: #B5543D; /* Deeper Terracotta */
+  background: #0057A4; /* Darker WHO Blue */
 }
 
 /* Create Forum Form */
 .create-forum-card {
-  background: #EADBC8; /* Light Warm Beige */
+  background: #F0F5F5; /* Soft Grey-White */
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -105,33 +109,36 @@ button:hover {
 
 .create-forum-card h2 {
   margin-bottom: 15px;
-  color: #6B4226; /* Deep Brown */
+  color: #003366; /* WHO Deep Blue */
 }
 
 /* Form Inputs */
 input, textarea, select {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin: 5px 0;
-  border: 1px solid #B9A08A; /* Soft Tan */
+  border: 2px solid #BDC3C7; /* Light Grey Border */
   border-radius: 8px;
+  background: #ECF0F1; /* Light Grey */
+  font-size: 16px;
 }
 
 textarea {
   resize: vertical;
 }
 
-input[type="file"] {
-  border: none;
+input:focus, textarea:focus {
+  border-color: #0072CE; /* WHO Blue */
+  background: #FFFFFF;
 }
 
 /* Submit Button */
 button[type="submit"] {
-  background: #1ABC9C; /* Soft Green */
+  background: #0072CE; /* WHO Blue */
 }
 
 button[type="submit"]:hover {
-  background: #129178; /* Deep Green */
+  background: #0057A4; /* Darker WHO Blue */
 }
 
 /* ======================= */
@@ -148,13 +155,14 @@ button[type="submit"]:hover {
 
 /* Post Card */
 .post-card {
-  background: #FAE5D3; /* Light Warm Orange */
+  background: #EAF2F8; /* Light Blue Tint */
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 15px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease-in-out;
+  border: 2px solid #0072CE; /* WHO Blue */
 }
 
 .post-card:hover {
@@ -173,27 +181,27 @@ button[type="submit"]:hover {
 /* Post Title */
 .post-card h3 {
   font-size: 18px;
-  color: #6B4226; /* Deep Brown */
+  color: #003366; /* WHO Deep Blue */
   margin-bottom: 8px;
 }
 
 /* Post Content */
 .post-card p {
   font-size: 14px;
-  color: #4D331F; /* Rich Brown */
+  color: #2C3E50; /* Darker Blue */
   margin-bottom: 10px;
 }
 
 /* Post Metadata */
 .post-meta {
   font-size: 12px;
-  color: #777;
+  color: #7F8C8D; /* Grey */
   margin-top: 5px;
 }
 
 /* Read More Button */
 .post-card button {
-  background: #E67E22; /* Warm Orange */
+  background: #0072CE; /* WHO Blue */
   border: none;
   padding: 8px;
   color: white;
@@ -204,5 +212,16 @@ button[type="submit"]:hover {
 }
 
 .post-card button:hover {
-  background: #D35400; /* Deeper Orange */
+  background: #0057A4; /* Darker WHO Blue */
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+  .community-container {
+    width: 90%;
+  }
+
+  .forum-card, .post-card {
+    padding: 15px;
+  }
 }

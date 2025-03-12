@@ -40,10 +40,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    #"daphne",
     'django.contrib.staticfiles',
     'mama',
     'rest_framework',
     
+    #"channels",
     'users',
     'content',
     'sms',
@@ -99,6 +101,20 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'sema_mama.wsgi.application'
+
+#ASGI_APPLICATION = "sema_mama.asgi.application"
+
+# Redis for real-time message storage
+#CHANNEL_LAYERS = {
+    #"default": {
+        #"BACKEND": "channels.layers.RedisChannelLayer",
+    #    "CONFIG": {
+          #  "hosts": [("127.0.0.1", 6379)],  # Local Redis server
+   #     },
+   # }
+#}
+
+
 
 
 # Database

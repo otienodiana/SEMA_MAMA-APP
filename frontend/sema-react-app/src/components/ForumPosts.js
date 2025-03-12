@@ -19,6 +19,8 @@ const ForumPosts = () => {
     const [editForumId, setEditForumId] = useState(null);
     const [editUserId, setEditUserId] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [message, setMessage] = useState(null);
+
     
 
     useEffect(() => {
@@ -42,18 +44,57 @@ const ForumPosts = () => {
         }
     }
 
-    async function fetchPosts() {
+    async function fetchPosts(forumId) {
         let token = localStorage.getItem("access");
-        if (!token) return;
+        if (!token) {
+            console.error("No access token found in localStorage.");
+            return;
+        }
+        
+        if (!forumId) {
+            console.error("fetchPosts called with an invalid forumId:", forumId);
+            return;
+        }
+    
         try {
+            setError(null);
             setLoading(true);
-            const response = await fetch("http://localhost:8000/api/community/forums/2/posts/", {
+            setMessage(null);  // Clear any previous messages
+    
+            console.log(`Fetching posts for forumId: ${forumId}`);
+    
+            const response = await fetch(`http://localhost:8000/api/community/forums/${forumId}/posts/`, {
                 method: "GET",
-                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                headers: { 
+                    "Authorization": `Bearer ${token}`, 
+                    "Content-Type": "application/json" 
+                },
             });
-            if (!response.ok) throw new Error("Failed to fetch posts");
-            const data = await response.json();
+    
+            const text = await response.text(); // Get raw response for debugging
+            console.log("Raw API response:", text);
+    
+            if (!response.ok) {
+                console.error(`Fetch failed with status: ${response.status} ${response.statusText}`);
+                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+            }
+    
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (parseError) {
+                console.error("Error parsing JSON response:", parseError);
+                throw new Error("Invalid JSON response from server.");
+            }
+    
+            if (!Array.isArray(data)) {
+                console.warn("Unexpected response format, expected an array:", data);
+                data = [];
+            }
+    
             setPosts(data);
+            setMessage("Posts updated successfully! ✅");  // ✅ Success message
+    
         } catch (error) {
             console.error("Error fetching posts:", error);
             setError(error.message);
@@ -61,6 +102,11 @@ const ForumPosts = () => {
             setLoading(false);
         }
     }
+    
+    
+    
+    
+    
 
     async function handlePostSubmit(e) {
         e.preventDefault();

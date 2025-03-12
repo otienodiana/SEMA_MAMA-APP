@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import RegisterUserView, get_users, LoginView, custom_login, ProtectedView, UserProfileView, get_user_role # Add the user role API
+from .views import RegisterUserView, get_users, LoginView, custom_login, ProtectedView, UserProfileView, get_user_role,  get_moms# Add the user role API
 from .views import CustomTokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -13,4 +13,7 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh Token
     path('protected/', ProtectedView.as_view(), name='protected_view'),  # Example protected endpoint
     path("user-role/", get_user_role, name="get_user_role"),  # Add the user role API
+    
+
+    path('moms/', get_moms, name='list_moms'),  # Add this line
 ]

@@ -12,6 +12,10 @@ const Profile = () => {
 
   // ✅ Fetch user profile from API
   const fetchUserProfile = useCallback(async () => {
+    let token = localStorage.getItem("access"); // Get token from localStorage
+
+    console.log("🔍 Stored Token:", token); // ✅ Debugging: Check if the correct token is stored
+
     if (!token) {
       setError("No authentication token found.");
       setLoading(false);
@@ -32,13 +36,19 @@ const Profile = () => {
       }
 
       const data = await response.json();
+      console.log("✅ API Response:", data); // ✅ Debugging: Check what data is returned
+
       setUser(data);
     } catch (err) {
+      console.error("❌ Error fetching profile:", err);
       setError("Failed to load user data.");
     } finally {
       setLoading(false);
     }
-  }, [token]);
+}, [token]);
+
+  
+  
 
   useEffect(() => {
     fetchUserProfile();

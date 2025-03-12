@@ -1,19 +1,21 @@
 import React from "react";
 import { Outlet, Link } from "react-router-dom";
-import "./providerDashboard.css"; // ✅ Import the CSS file
+import "./providerDashboard.css"; // ✅ Import CSS file
 
 function ProviderDashboard() {
   return (
     <div className="provider-dashboard-container">
-      <header className="provider-dashboard-header">
-        Welcome to Healthcare Provider Dashboard
-      </header>
+      <header className="provider-dashboard-header">Healthcare Provider Dashboard</header>
 
       <nav className="provider-dashboard-nav">
         <ul>
-          <li><Link to="analytics">Analytics</Link></li>
+          <li><Link to="">Dashboard</Link></li> {/* Default Route */}
           <li><Link to="profile">Profile</Link></li>
-          <li><Link to="educational-contents">Educational Contents</Link></li>
+          <li><Link to="/dashboard/provider/appointments">Appointments</Link></li>
+          
+          <li><Link to="educational-contents">Health Corner</Link></li>
+          <li><Link to="community">Community</Link></li>
+          <li><Link to="settings">Settings</Link></li>
           <li><Link to="logout">Logout</Link></li>
         </ul>
       </nav>

@@ -47,6 +47,11 @@ class ForumViewSet(viewsets.ModelViewSet):
     serializer_class = ForumSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]  # Anyone can view, only logged-in users can create
     parser_classes = [MultiPartParser, FormParser]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+        
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
@@ -107,6 +112,7 @@ class ForumListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
 
 class ForumDetailView(RetrieveAPIView):
     queryset = Forum.objects.all()
@@ -396,3 +402,12 @@ def is_member_of_forum(request, forum_id):
     forum = get_object_or_404(Forum, id=forum_id)
     is_member = forum.members.filter(id=request.user.id).exists()
     return Response({"is_member": is_member})
+
+
+class ForumCreateView(generics.CreateAPIView):
+    queryset = Forum.objects.all()
+    serializer_class = ForumSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)  # Ensure `created_by` is set

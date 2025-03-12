@@ -1,6 +1,8 @@
 import React from "react";
 import { Outlet, Link } from "react-router-dom";
 import "./momDashboard.css"; // ✅ Import the CSS file
+import MomAppointments from "./MomAppointments";
+
 
 function MomDashboard() {
   return (
@@ -14,7 +16,7 @@ function MomDashboard() {
           <li><Link to="resources">Resources</Link></li>
           
           <li><Link to="Settings">Settings</Link></li>
-          <li><Link to="appointments">Appointments</Link></li>
+          <li><Link to="appointments">MomAppointments</Link></li>
           <li><Link to="logout">Logout</Link></li>
         </ul>
       </nav>

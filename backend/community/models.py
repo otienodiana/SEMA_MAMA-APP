@@ -11,7 +11,7 @@ class Forum(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField()
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, default=1)  # Set default user ID
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_forums')  
     created_at = models.DateTimeField(auto_now_add=True)
     profile_picture = models.ImageField(upload_to='forum_pictures/', null=True, blank=True)  # Profile picture for the forum
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="forums", blank=True)  

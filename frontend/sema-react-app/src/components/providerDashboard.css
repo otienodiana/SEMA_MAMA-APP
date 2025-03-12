@@ -1,92 +1,325 @@
-/* General Dashboard Styling */
+:root {
+  --who-blue: #005C99;
+  --who-light-blue: #007BFF;
+  --who-yellow: #FFCC00;
+  --who-dark-blue: #003366;
+  --who-gray: #F4F4F4;
+  --who-text: #333333;
+}
+
+/* 🌿 Full Layout */
 .provider-dashboard-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: start;
-    height: 100vh;
-    background-color: #e3f2fd; /* Light Blue Background */
-    font-family: "Poppins", sans-serif;
-  }
-  
-  /* Dashboard Header */
-  .provider-dashboard-header {
-    width: 100%;
-    background-color: #1565c0; /* Deep Blue */
-    color: white;
-    padding: 1.5rem;
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: bold;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
-  }
-  
-  /* Navigation Menu */
+  display: flex;
+  height: 100vh;
+  background-color: var(--who-gray); /* Soft Lavender */
+}
+
+/* 🌊 Sidebar */
+.provider-dashboard-nav {
+  width: 250px;
+  background: var(--who-dark-blue); /* Deep Teal */
+  color: white;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow-y: auto;
+}
+
+/* 📌 Sidebar Logo */
+.provider-dashboard-logo {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #FFD700; /* Golden Yellow */
+}
+
+/* 📋 Sidebar Navigation */
+.provider-dashboard-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 100%;
+}
+
+.provider-dashboard-nav li {
+  width: 100%;
+  text-align: center;
+}
+
+.provider-dashboard-nav li a {
+  color: white;
+  text-decoration: none;
+  display: block;
+  padding: 0.5rem 1rem;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ✨ Active Link Highlight */
+.provider-dashboard-nav li a:hover,
+.provider-dashboard-nav .active {
+  background-color: var(--who-yellow); /* Mint Green */
+  color: var(--who-dark-blue); /* Deep Teal */
+}
+
+/* 📌 Main Content Area */
+.provider-dashboard-main {
+  flex-grow: 1;
+  margin-left: 250px;
+  width: calc(100% - 250px);
+}
+
+/* 🔷 Header */
+.provider-dashboard-header {
+  position: fixed;
+  top: 0;
+  left: 250px;
+  width: calc(100% - 250px);
+  background-color: var(--who-blue); /* Navy Blue */
+  color: white;
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 📂 Dashboard Content */
+.provider-dashboard-content {
+  flex-grow: 1;
+  padding: 2rem;
+  background-color: white;
+  margin-top: 80px;
+  border-radius: 15px;
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+  width: 75%;
+  min-height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 🗂 Appointments Page */
+.provider-appointments-container {
+  width: 80%;
+  max-width: 800px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+/* ✅ Success Buttons */
+.btn-success {
+  background-color: #98FB98; /* Mint Green */
+  color: #004F59;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.btn-success:hover {
+  background-color: #6BCB77; /* Slightly deeper green */
+}
+
+/* ⚠️ Danger Buttons */
+.btn-danger {
+  background-color: #FF6F61; /* Coral */
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.btn-danger:hover {
+  background-color: #E63946; /* Darker Coral */
+}
+
+/* 📱 Mobile Responsive */
+@media (max-width: 768px) {
   .provider-dashboard-nav {
-    background-color: #ffffff; /* White */
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 1rem;
-    width: 85%;
-    display: flex;
-    justify-content: center;
+      width: 60px;
+      padding: 10px;
   }
-  
-  .provider-dashboard-nav ul {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    gap: 1rem;
+
+  .provider-dashboard-header {
+      left: 60px;
+      width: calc(100% - 60px);
   }
-  
-  .provider-dashboard-nav li {
-    display: inline;
-  }
-  
-  .provider-dashboard-nav a {
-    text-decoration: none;
-    color: #0d47a1; /* Dark Blue */
-    font-size: 1.1rem;
-    font-weight: bold;
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
-    transition: background-color 0.3s ease, transform 0.2s;
-  }
-  
-  .provider-dashboard-nav a:hover {
-    background-color: #0d47a1;
-    color: white;
-    transform: scale(1.05);
-  }
-  
-  /* Content Section */
+
   .provider-dashboard-content {
-    background: white;
-    padding: 2rem;
-    margin-top: 1.2rem;
-    border-radius: 15px;
-    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
-    width: 85%;
-    min-height: 60vh;
+      margin-left: 80px;
   }
-  
-  /* Professional Button Styling */
-  .provider-button {
-    background-color: #1976d2;
-    color: white;
-    padding: 0.7rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
+
+  .provider-dashboard-logo {
+      font-size: 16px;
   }
-  
-  .provider-button:hover {
-    background-color: #0d47a1;
-    transform: scale(1.05);
+
+  .provider-dashboard-nav ul {
+      height: auto;
+      justify-content: start;
+      flex-direction: column;
+      align-items: center;
   }
-  
+
+  .provider-dashboard-nav li a {
+      font-size: 14px;
+      padding: 8px;
+  }
+}
+
+
+/* Profile Page Inside Dashboard */
+.profile-container {
+  width: 80%; /* Take up more space in the dashboard */
+  max-width: 1500px; /* Ensure it doesn’t stretch too wide */
+  margin: 40px auto;
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+  border: 2px solid #1ABC9C; /* Green Theme */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Improve hover effect for dashboard integration */
+.profile-container:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Profile Header */
+.profile-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2C3E50; /* Dark Blue */
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Profile Photo */
+.profile-photo-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.profile-photo {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 3px solid #1ABC9C; /* Green Border */
+  object-fit: cover;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.profile-photo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(26, 188, 156, 0.5); /* Green Glow */
+}
+
+/* Input Fields - Adjusted for dashboard layout */
+.input-group {
+  text-align: left;
+  margin-bottom: 15px;
+  width: 100%; /* Full width for a dashboard feel */
+}
+
+.input-group label {
+  font-weight: 600;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 6px;
+  color: #34495E; /* Dark Blue */
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #BDC3C7;
+  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+  transition: border 0.3s ease-in-out;
+  background: #ECF0F1; /* Light Grey */
+}
+
+.input-group input:focus {
+  border-color: #1ABC9C; /* Green Highlight */
+  background: #FFFFFF;
+}
+
+/* Buttons - Improved size & layout */
+.btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out, transform 0.2s;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Update Button */
+.update-btn {
+  background: #1ABC9C; /* Vibrant Green */
+  color: white;
+}
+
+.update-btn:hover {
+  background: #16A085;
+}
+
+/* Delete Button */
+.delete-btn {
+  background: #E74C3C; /* Red */
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #C0392B;
+}
+
+/* Responsive Fixes for Dashboard */
+@media (max-width: 768px) {
+  .profile-container {
+    width: 90%; /* Make it more flexible */
+  }
+
+  .profile-photo {
+    width: 100px;
+    height: 100px;
+  }
+}

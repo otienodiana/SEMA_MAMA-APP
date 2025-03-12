@@ -23,14 +23,16 @@ const Community = () => {
                 
                 const data = await response.json();
                 setForums(Array.isArray(data) ? data : []);
+                console.log("Fetched forums:", data); // ✅ Log forums after fetching
             } catch (error) {
                 console.error("Error fetching forums:", error);
                 setForums([]);
             }
         };
-
+    
         fetchForums();
     }, [token]);
+    
 
     // Fetch Joined Forums
     useEffect(() => {
@@ -140,6 +142,9 @@ const Community = () => {
     return (
         <div className="community-container">
             <h1>Community Forums</h1>
+            <button onClick={() => navigate('/forums')} className="view-forums-btn">
+                View All Forums
+            </button>
 
             {/* Create Forum Form */}
             {token && (
@@ -188,7 +193,7 @@ const Community = () => {
                         <h3>{forum.name}</h3>
                         <p>{forum.description}</p>
                         <p><strong>Visibility:</strong> {forum.visibility}</p>
-                        <p><strong>Created By:</strong> {forum.created_by ? forum.created_by.username : "Unknown"}</p>
+                        <p><strong>Created By:</strong> {forum.created_by || "Unknown"}</p>
 
                         {joinedForums.includes(forum.id) ? (
                             <button onClick={() => navigate(`/community/forums/${forum.id}/posts`)}>View Posts</button>

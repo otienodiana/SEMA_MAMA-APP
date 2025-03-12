@@ -1,70 +1,45 @@
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "./AuthContext";
-import "./Dashboard.css";
-
-const Dashboard = () => {
-  const { user } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  if (!user) {
-    return <p>Loading...</p>;
-  }
-
+import React from "react";
+import { Outlet, Link } from "react-router-dom";
+import "./AdminDashboard.css";
+const AdminDashboard = () => {
   return (
-    <div className="dashboard-container">
-      {/* Sidebar */}
-      <nav className="sidebar">
-        <h2 className="logo">Sema Mama</h2>
-        <ul className="nav-list">
-          <li className={location.pathname === "/dashboard" ? "active" : ""}>
-            <Link to="/dashboard">🏠 Home</Link>
+    <div className="admin-dashboard">
+      <nav className="admin-sidebar">
+        <ul>
+          <li>
+            <Link to="/dashboard/admin">Analytics</Link>
           </li>
-          <li className={location.pathname === "/dashboard/profile" ? "active" : ""}>
-            <Link to="/dashboard/profile">👤 Profile</Link>
+          <li>
+            <Link to="/dashboard/admin/profile">Profile</Link>
           </li>
-          <li className={location.pathname === "/dashboard/settings" ? "active" : ""}>
-            <Link to="/dashboard/settings">⚙️ Settings</Link>
+          <li>
+            <Link to="/dashboard/admin/settings">Settings</Link>
           </li>
-
-          {/* Conditional Navigation Based on Roles */}
-          {user.role === "mom" && (
-            <>
-              <li className={location.pathname === "/dashboard/appointments" ? "active" : ""}>
-                <Link to="/dashboard/appointments">📅 Appointments</Link>
-              </li>
-              <li className={location.pathname === "/dashboard/community" ? "active" : ""}>
-                <Link to="/dashboard/community">💬 Community</Link>
-              </li>
-            </>
-          )}
-
-          {user.role === "admin" && (
-            <>
-              <li className={location.pathname === "/dashboard/analytics" ? "active" : ""}>
-                <Link to="/dashboard/analytics">📊 Analytics</Link>
-              </li>
-              <li className={location.pathname === "/dashboard/admin/community" ? "active" : ""}>
-                <Link to="/dashboard/admin/community">👥 Admin Community</Link>
-              </li>
-            </>
-          )}
-
-          <li className={location.pathname === "/dashboard/educational-contents" ? "active" : ""}>
-            <Link to="/dashboard/educational-contents">📚 Educational Contents</Link>
+          <li>
+            <Link to="/dashboard/admin/appointments">Appointments</Link>
           </li>
-          <li className={location.pathname === "/dashboard/logout" ? "active" : ""}>
-            <Link to="/dashboard/logout">🚪 Logout</Link>
+          <li>
+            <Link to="/dashboard/admin/sms-setup">SMS Setup</Link>
+          </li>
+          <li>
+            <Link to="/dashboard/admin/community">Community</Link>
+          </li>
+          <li>
+            <Link to="/dashboard/admin/admin/community">Admin Community</Link>
+          </li>
+          <li>
+            <Link to="/dashboard/admin/educational-contents">Educational Contents</Link>
+          </li>
+          <li>
+            <Link to="/dashboard/admin/logout">Logout</Link>
           </li>
         </ul>
       </nav>
-
-      {/* Main Content */}
-      <div className="main-content">
+      <main className="admin-content">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;

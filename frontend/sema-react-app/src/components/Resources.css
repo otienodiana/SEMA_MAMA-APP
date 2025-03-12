@@ -1,79 +1,190 @@
+/* WHO Theme Colors */
+:root {
+  --who-blue: #0093D5;
+  --who-dark-blue: #008DC9;
+  --who-light-blue: #41B6E6;
+  --who-grey: #4D4D4D;
+  --who-light-grey: #F2F2F2;
+  --who-text-color: #333333;
+}
+
+/* General Styling */
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--who-light-grey);
+  color: var(--who-text-color);
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar */
+.navbar {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: var(--who-blue);
+  backdrop-filter: none;
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+/* Logo */
+.navbar-logo {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* Navigation Links */
+.nav-links {
+  display: flex;
+  justify-content: center;
+  flex-grow: 1;
+  gap: 40px;
+}
+
+.nav-link {
+  font-size: 18px;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 400;
+  transition: color 0.3s ease-in-out;
+}
+
+/* Hover Effect */
+.nav-link:hover {
+  color: var(--who-light-grey);
+}
+
+/* Mobile Responsive Navbar */
+@media screen and (max-width: 768px) {
+  .navbar {
+      flex-direction: column;
+      padding: 15px;
+  }
+
+  .nav-links {
+      flex-direction: column;
+      gap: 15px;
+      text-align: center;
+  }
+}
+
+/* Resources Section */
 .resources-container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  .resources-title {
-    text-align: center;
-    font-size: 2.5em;
-    color: #333;
-    margin-bottom: 30px;
-  }
-  
-  .resource-category {
-    margin-bottom: 40px;
-  }
-  
-  .resource-category h2 {
-    font-size: 1.8em;
-    color: #007bff;
-    margin-bottom: 15px;
-  }
-  
-  .resource-links {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .resource-link {
-    color: #007bff;
-    text-decoration: none;
-    font-size: 1.1em;
-    transition: color 0.3s ease;
-  }
-  
-  .resource-link:hover {
-    color: #0056b3;
-  }
-  
+  padding: 80px 20px 20px; /* Added padding at the top to avoid overlap with the navbar */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Title */
+.resources-title {
+  text-align: center;
+  font-size: 2.5em;
+  color: var(--who-blue);
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+
+/* Resource Categories */
+.resource-category {
+  margin-bottom: 40px;
+}
+
+.resource-category h2 {
+  font-size: 1.8em;
+  color: var(--who-blue);
+  font-weight: 500;
+  margin-bottom: 15px;
+}
+
+/* Resource Links */
+.resource-links {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.resource-link {
+  color: var(--who-dark-blue);
+  text-decoration: none;
+  font-size: 1.1em;
+  transition: color 0.3s ease;
+}
+
+.resource-link:hover {
+  color: var(--who-grey);
+}
+
+/* Video Gallery */
+.video-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.video-item {
+  flex: 1 1 320px;
+  max-width: 500px;
+  text-align: center;
+}
+
+.video-item iframe {
+  width: 100%;
+  height: 280px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.video-item p {
+  font-size: 1.1em;
+  color: var(--who-grey);
+  margin-top: 8px;
+}
+
+/* Image Gallery */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  justify-items: center;
+  margin-top: 20px;
+}
+
+.resource-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--who-light-blue);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.resource-image:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive Media Queries */
+@media screen and (max-width: 768px) {
   .video-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
-    justify-items: center;
+      flex-direction: column;
+      align-items: center;
   }
-  
+
   .video-item {
-    text-align: center;
+      max-width: 100%;
   }
-  
-  .video-item iframe {
-    border-radius: 8px;
-  }
-  
-  .video-item p {
-    font-size: 1.1em;
-    color: #333;
-  }
-  
+
   .image-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    justify-items: center;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
-  
-  .resource-image {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-  }
-  
-  .resource-image:hover {
-    transform: scale(1.05);
-  }
-  
+}

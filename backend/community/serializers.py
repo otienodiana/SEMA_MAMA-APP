@@ -2,12 +2,13 @@ from rest_framework import serializers, generics, permissions
 from .models import Forum, Post, Comment
 
 class ForumSerializer(serializers.ModelSerializer):
-    created_by = serializers.ReadOnlyField(source='created_by.username')  # Show creator's username
-    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")  # Format date-time
+    created_by = serializers.CharField(source="created_by.username", read_only=True)
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S",read_only=True)  # Format date-time
     profile_picture = serializers.ImageField(required=False)
 
     class Meta:
         model = Forum
+        read_only_fields = ['created_at', 'created_by']
         fields = ['id', 'name', 'description', 'visibility', 'created_by', 'created_at', 'profile_picture']
 
 class PostSerializer(serializers.ModelSerializer):
@@ -17,9 +18,10 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'forum', 'user', 'title', 'content', 'username', 'created_at', 'total_likes']
+        read_only_fields = ['created_at']
         extra_kwargs = {
-            "forum": {"required": False},  # 👈 Make `forum` optional for updates
-            "user": {"required": False}    # 👈 Make `user` optional for updates
+            "forum": {"required": False},  
+            "user": {"required": False}    
         }
 
 
