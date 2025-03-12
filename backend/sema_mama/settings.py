@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-y^ptm_l)$uk3)exhoe0!ui#$a20l_dmdk6^icv^yzr9fq=twk!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "172.17.146.93"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "172.17.146.93","sema-mama-app.onrender.com"]
 
 
 # Application definition
