@@ -9,13 +9,15 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.views import APIView
 from django.http import JsonResponse
 from .serializers import UserSerializer
+from appointments.models import Appointment
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
-
+from rest_framework.generics import RetrieveUpdateAPIView
+from appointments.serializers import AppointmentSerializer
 
 
 
@@ -141,7 +143,47 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 from rest_framework.parsers import MultiPartParser, FormParser
 
-class UserProfileUpdateView(UpdateAPIView):
-    queryset = User.objects.all()
+class UserProfileUpdateView(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)  # ✅ Enable file uploads
+
+    def get_object(self):
+        return self.request.user  # ✅ Ensure only the logged-in user is updated
+    
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_moms(request):
+    """Allow only healthcare providers & admins to view moms"""
+
+    print("Current User Role:", request.user.role)  # ✅ Debugging Step
+
+    if request.user.role not in ["healthcare_provider", "admin"]:
+        return Response(
+            {"detail": "You do not have permission to view this resource."}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    moms = User.objects.filter(role="mom")
+    print("Moms Found:", moms)  # ✅ Debugging Step
+
+    serializer = UserSerializer(moms, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])  # ✅ Protect the endpoint
+def list_appointments(request):
+    """List all appointments for the logged-in healthcare provider"""
+    user = request.user
+
+    if user.role != "healthcare_provider":
+        return Response({"error": "Only healthcare providers can access this."}, status=403)
+
+    appointments = Appointment.objects.filter(healthcare_provider=user)
+    serializer = AppointmentSerializer(appointments, many=True)
+
+    return Response(serializer.data, status=200)
