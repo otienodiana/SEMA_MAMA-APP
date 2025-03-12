@@ -123,11 +123,11 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sema_mama_db',  # Change to your database name
-        'USER': 'Diana',  # Your MySQL username
-        'PASSWORD': 'Dee0000!',  # Your MySQL password
-        'HOST': '127.0.0.1',  # Use 127.0.0.1 or the MySQL server IP
-        'PORT': '3306',
+        'NAME': os.getenv('DATABASE_NAME', 'sema_mama_db'),
+        'USER': os.getenv('DATABASE_USER', 'Diana'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'Dee0000!'),
+        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DATABASE_PORT', '3306'),
     }
 }
 
