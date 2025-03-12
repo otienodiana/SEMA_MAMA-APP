@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     #"channels",
     'users',
     'content',
-    'sms',
+    #'sms',
     'analytics',
     'api',
     'appointments',
