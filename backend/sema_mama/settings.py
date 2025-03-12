@@ -126,7 +126,7 @@ DATABASES = {
         'NAME': 'sema_mama_db',  # Change to your database name
         'USER': 'Diana',  # Your MySQL username
         'PASSWORD': 'Dee0000!',  # Your MySQL password
-        'HOST': 'localhost',  # Use 127.0.0.1 or the MySQL server IP
+        'HOST': '127.0.0.1',  # Use 127.0.0.1 or the MySQL server IP
         'PORT': '3306',
     }
 }
