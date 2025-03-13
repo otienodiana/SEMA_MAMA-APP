@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://127.0.0.1:8000/api"; // Django backend URL
+const API_BASE_URL = "https://sema-mama-app.onrender.com/api";
+
+axios.defaults.baseURL = API_BASE_URL;
+axios.defaults.withCredentials = true;
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || "https://sema-mama-app.onrender.com/api"; // Django backend URL
 
 // User Registration
 export const registerUser = async (userData) => {

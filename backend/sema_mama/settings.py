@@ -26,11 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y^ptm_l)$uk3)exhoe0!ui#$a20l_dmdk6^icv^yzr9fq=twk!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    "127.0.0.1", 
-    "localhost",
     "sema-mama-app.onrender.com",
     "sema-react-app.vercel.app"
 ]
@@ -152,36 +150,36 @@ else:
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "https://sema-react-app.vercel.app",
-    "https://sema-mama-app.onrender.com"
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
 # Optional: If you need to allow all origins during development
-CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
+CORS_ALLOW_ALL_ORIGINS = False
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
     "https://sema-react-app.vercel.app",
-    "https://sema-mama-app.onrender.com"
 ]
 
 # Allow all HTTP methods
 CORS_ALLOW_METHODS = [
+    "DELETE",
     "GET",
+    "OPTIONS",
+    "PATCH",
     "POST",
     "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS"
 ]
 
 # Allow all headers
 CORS_ALLOW_HEADERS = [
-    "content-type",
+    "accept",
     "authorization",
-    "x-csrftoken"
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 # settings.py
