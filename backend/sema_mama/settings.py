@@ -110,17 +110,14 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 #ASGI_APPLICATION = "sema_mama.asgi.application"
 
 # Redis for real-time message storage
-#CHANNEL_LAYERS = {
-    //"default": {
-        //"BACKEND": "channels.layers.RedisChannelLayer",
-    #    "CONFIG": {
-          #  "hosts": [("127.0.0.1", 6379)],  # Local Redis server
-   #     },
-   # }
-#}
-
-
-
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels.layers.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [("127.0.0.1", 6379)],  # Local Redis server
+#         },
+#     }
+# }
 
 # Database Configuration
 if DEBUG:
@@ -186,8 +183,6 @@ CORS_ALLOW_HEADERS = [
     "authorization",
     "x-csrftoken"
 ]
-
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
 
 # settings.py
 SIMPLE_JWT = {
