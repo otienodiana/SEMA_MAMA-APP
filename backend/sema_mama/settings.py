@@ -28,7 +28,12 @@ SECRET_KEY = 'django-insecure-y^ptm_l)$uk3)exhoe0!ui#$a20l_dmdk6^icv^yzr9fq=twk!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "172.17.146.93","sema-mama-app.onrender.com"]
+ALLOWED_HOSTS = [
+    "127.0.0.1", 
+    "localhost",
+    "sema-mama-app.onrender.com",
+    "sema-react-app.vercel.app"
+]
 
 
 # Application definition
@@ -106,8 +111,8 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 
 # Redis for real-time message storage
 #CHANNEL_LAYERS = {
-    #"default": {
-        #"BACKEND": "channels.layers.RedisChannelLayer",
+    //"default": {
+        //"BACKEND": "channels.layers.RedisChannelLayer",
     #    "CONFIG": {
           #  "hosts": [("127.0.0.1", 6379)],  # Local Redis server
    #     },
@@ -117,24 +122,52 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DATABASE_NAME', 'sema_mama_db'),
-        'USER': os.getenv('DATABASE_USER', 'Diana'),
-        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'Dee0000!'),
-        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
-        'PORT': os.getenv('DATABASE_PORT', '3306'),
+# Database Configuration
+if DEBUG:
+    # Local Database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'sema_mama_db',
+            'USER': 'Diana',
+            'PASSWORD': 'Dee0000!',
+            'HOST': 'localhost',
+            'PORT': '3306',
+        }
     }
-}
+else:
+    # Production Database (Google Cloud MySQL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'sema_mama_db',
+            'USER': 'root',
+            'PASSWORD': 'Dee0000!',
+            'HOST': '34.136.90.148',
+            'PORT': '3306',
+            'OPTIONS': {
+                'ssl': {
+                    'ssl-mode': 'REQUIRED',
+                }
+            }
+        }
+    }
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", 
-    "http://127.0.0.1:3000", # Allow frontend URL (if using React)
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://sema-react-app.vercel.app",
+    "https://sema-mama-app.onrender.com"
+]
+
+# Optional: If you need to allow all origins during development
+CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "https://sema-react-app.vercel.app",
+    "https://sema-mama-app.onrender.com"
 ]
 
 # Allow all HTTP methods
