@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -118,48 +121,56 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 # }
 
 # Database Configuration
-if DEBUG:
+import os
+
+# Database Configuration
+if os.getenv('DJANGO_DEBUG') == 'True':  # Use environment variable for DEBUG mode
     # Local Database
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'sema_mama_db',
             'USER': 'Diana',
-            'PASSWORD': 'Dee0000!',
+            'PASSWORD': 'Dee0000!',  # Consider using an environment variable for this
             'HOST': 'localhost',
             'PORT': '3306',
         }
     }
 else:
-    # Production Database (Google Cloud MySQL)
+    # Production Database (Google Cloud SQL)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'sema_mama_db',
-            'USER': 'root',
-            'PASSWORD': 'Dee0000!',
-            'HOST': '34.136.90.148',
+            'NAME': os.getenv('DB_NAME', 'sema_mama_db'),
+            'USER': os.getenv('DB_USER', 'root'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'Dee0000!'),
+            'HOST': os.getenv('DB_HOST', '34.16.6.244'),
             'PORT': '3306',
             'OPTIONS': {
-                'ssl': {
-                    'ssl-mode': 'REQUIRED',
-                }
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'connect_timeout': 60,
             }
         }
     }
 
 
+
+
 CORS_ALLOWED_ORIGINS = [
     "https://sema-react-app.vercel.app",
+    "http://localhost:3000",
+    
+
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-# Optional: If you need to allow all origins during development
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://sema-react-app.vercel.app",
+    "https://sema-mama-app.onrender.com",
 ]
 
 # Allow all HTTP methods

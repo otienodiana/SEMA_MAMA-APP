@@ -1,39 +1,21 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://sema-mama-app.onrender.com/api";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000/api";
 
-axios.defaults.baseURL = API_BASE_URL;
-axios.defaults.withCredentials = true;
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "https://sema-mama-app.onrender.com/api"; // Django backend URL
-
-// User Registration
-export const registerUser = async (userData) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/register/`, userData);
-    return response.data;
-  } catch (error) {
-    console.error("Registration failed:", error);
-    throw error;
+// Function to set Authorization token
+export const setAuthToken = (token) => {
+  if (token) {
+    api.defaults.headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers["Authorization"];
   }
 };
 
-// User Login
-export const loginUser = async (credentials) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/login/`, credentials);
-    return response.data;
-  } catch (error) {
-    console.error("Login failed:", error);
-    throw error;
-  }
-};
-
-// Logout
-export const logoutUser = async () => {
-  try {
-    await axios.post(`${API_BASE_URL}/logout/`);
-  } catch (error) {
-    console.error("Logout failed:", error);
-  }
-};
+export default api;

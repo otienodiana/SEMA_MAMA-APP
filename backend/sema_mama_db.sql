@@ -1,3 +1,8 @@
+CREATE DATABASE sema_mama_db;
+
+USE sema_mama_db;
+
+
 -- MySQL dump 10.13  Distrib 8.0.41, for Linux (x86_64)
 --
 -- Host: localhost    Database: sema_mama_db
@@ -14,14 +19,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Current Database: `sema_mama_db`
---
-
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `sema_mama_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-
-USE `sema_mama_db`;
 
 --
 -- Table structure for table `analytics_contentperformance`
@@ -828,4 +825,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-03-13 15:56:19
+-- Dump completed on 2025-03-15 22:43:36
