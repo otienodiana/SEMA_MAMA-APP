@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Register.css";
 
-
 function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [role, setRole] = useState("mom"); // Default role
+  const [age, setAge] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState(null); // New state for file upload
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate(); // Initialize navigate
@@ -18,21 +19,32 @@ function Register() {
     setError("");
     setSuccess("");
 
-    const response = await fetch("https://sema-mama-app.onrender.com/api/users/register/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username,
-        email,
-        password,
-        phone_number: phoneNumber,
-        role, // ✅ Send role instead of is_healthcare_provider
-      }),
-    });
+    const formData = new FormData(); // Using FormData to handle file uploads
 
-    const data = await response.json();
+    // Append data to FormData
+    formData.append("username", username);
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("phone_number", phoneNumber);
+    formData.append("role", role);
+    formData.append("age", age);
+    if (profilePhoto) {
+      formData.append("profile_photo", profilePhoto); // Append profile photo if selected
+    }
 
-    if (response.ok) {
+    try {
+      const response = await fetch("https://sema-mama-app.onrender.com/api/users/register/", {
+        method: "POST",
+        body: formData, // Send FormData directly
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+        throw new Error(errorData.detail || JSON.stringify(errorData));
+      }
+
+      const data = await response.json();
       setSuccess("Registration successful! Redirecting to login...");
       console.log("Registration successful:", data);
 
@@ -40,8 +52,9 @@ function Register() {
       setTimeout(() => {
         navigate("/login");
       }, 2000);
-    } else {
-      setError(data.error || JSON.stringify(data)); // Show detailed errors
+    } catch (error) {
+      console.error("Registration error:", error);
+      setError(error.message);
     }
   };
 
@@ -52,7 +65,7 @@ function Register() {
       {error && <p className="error-message">{error}</p>}
       {success && <p className="success-message">{success}</p>}
 
-      <form onSubmit={handleRegister} className="register-form">
+      <form onSubmit={handleRegister} className="register-form" encType="multipart/form-data">
         <div className="form-group">
           <input
             type="text"
@@ -107,6 +120,26 @@ function Register() {
             <option value="healthcare_provider">Healthcare Provider</option>
             <option value="admin">Admin</option>
           </select>
+        </div>
+
+        <div className="form-group">
+          <input
+            type="number"
+            placeholder="Age"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="role-label">Profile Photo:</label>
+          <input
+            type="file"
+            onChange={(e) => setProfilePhoto(e.target.files[0])}
+            accept="image/*"
+            className="form-input"
+          />
         </div>
 
         <button type="submit" className="submit-button">
