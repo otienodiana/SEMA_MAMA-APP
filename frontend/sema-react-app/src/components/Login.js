@@ -7,93 +7,62 @@ function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth(); // Access login function
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(null); // Reset error state
-  
+    console.log("API URL:", process.env.REACT_APP_API_BASE_URL); // Debug log
+    setError(""); // Reset error state
+
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/users/login/`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/users/login/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ username, password }), // Changed from email to username
       });
-  
+
       const data = await response.json();
-      console.log("🔍 Full API Response:", data); // Log entire API response
-  
+      console.log("🔍 API Response:", data);
+
       if (!response.ok) {
-        console.error("❌ Login failed:", data);
-        setError("Invalid credentials. Please try again.");
+        setError(data.detail || "Invalid credentials. Please try again.");
         return;
       }
-  
-      if (!data.user) {
-        console.error("❌ No user data found in response", data);
-        setError("Login failed: No user data received.");
+
+      if (!data.user || !data.access) {
+        setError("Login failed: Missing user data or token.");
         return;
       }
-  
-      if (!data.access) {
-        console.error("⚠️ No token received from API", data);
-        setError("Login failed: No token received.");
-        return;
-      }
-  
-      console.log("✅ Token received:", data.access);
-      localStorage.setItem("token", data.token);
-  
-      console.log("🔹 User role received:", data.user.role);
+
+      // Store both access token and refresh token
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      
       login(data.user); // Store user in context
-  
-      // 🌟 ✅ Added Debugging Fetch Call
-      fetch("http://127.0.0.1:8000/api/users/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("✅ API Login Response:", data); // Debugging fetch call
-          if (data.access) {
-            localStorage.setItem("access", data.access);
-           // window.location.href = "/dashboard"; // Redirect on success
-          } else {
-            alert("Login failed: " + (data.detail || "Invalid credentials"));
-          }
-        });
-  
-      // Redirect based on role
-      switch (data.user.role) {
-        case "admin":
-          navigate("/dashboard");
-          break;
-        case "healthcare_provider":
-          navigate("/dashboard/provider");
-          break;
-        case "mom":
-          navigate("/dashboard/profile");
-          break;
-        default:
-          setError("Unknown role detected. Please contact support.");
-      }
+
+      // Redirect based on user role
+      const userRole = data.user.role;
+      if (userRole === "admin") navigate("/dashboard");
+      else if (userRole === "healthcare_provider") navigate("/dashboard/provider");
+      else if (userRole === "mom") navigate("/dashboard/profile");
+      else setError("Unknown role detected. Please contact support.");
+      
     } catch (err) {
       console.error("❌ Network or Server Error:", err);
       setError("Server error. Please try again later.");
     }
   };
-  
-  
 
   return (
     <div className="login-container">
       <div className="login-card">
         <h2>Login</h2>
         {error && <p className="error-message">{error}</p>}
-        {success && <p className="success-message">{success}</p>}
 
         <form onSubmit={handleLogin}>
           <input
@@ -118,8 +87,7 @@ function Login() {
         </form>
 
         <p className="register-link">
-          Don't have an account?{" "}
-          <Link to="/register">Register here</Link>
+          Don't have an account? <Link to="/register">Register here</Link>
         </p>
       </div>
     </div>
