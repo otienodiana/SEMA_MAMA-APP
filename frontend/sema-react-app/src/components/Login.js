@@ -16,13 +16,13 @@ function Login() {
     setError(""); // Reset error state
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/users/login/`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        body: JSON.stringify({ username, password }), // Changed from email to username
+        body: JSON.stringify({ username, password }), 
       });
 
       const data = await response.json();
@@ -38,7 +38,7 @@ function Login() {
         return;
       }
 
-      // Store both access token and refresh token
+      // Store tokens and user info
       localStorage.setItem("access", data.access);
       localStorage.setItem("refresh", data.refresh);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -47,9 +47,9 @@ function Login() {
 
       // Redirect based on user role
       const userRole = data.user.role;
-      if (userRole === "admin") navigate("/dashboard");
-      else if (userRole === "healthcare_provider") navigate("/dashboard/provider");
-      else if (userRole === "mom") navigate("/dashboard/profile");
+      if (userRole === "admin") navigate("/admin/dashboard");
+      else if (userRole === "healthcare_provider") navigate("/provider/dashboard");
+      else if (userRole === "mom") navigate("/profile/dashboard");
       else setError("Unknown role detected. Please contact support.");
       
     } catch (err) {
