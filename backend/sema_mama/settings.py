@@ -33,7 +33,9 @@ DEBUG = False
 
 ALLOWED_HOSTS = [
     "sema-mama-app.onrender.com",
-    "sema-react-app.vercel.app"
+    "sema-react-app.vercel.app",
+    "localhost",
+    "127.0.0.1"
 ]
 
 
@@ -159,14 +161,19 @@ else:
 CORS_ALLOWED_ORIGINS = [
     "https://sema-react-app.vercel.app",
     "http://localhost:3000",
-    
-
+    "http://127.0.0.1:3000"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True  # Changed to True for development
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://sema-react-app.vercel.app",

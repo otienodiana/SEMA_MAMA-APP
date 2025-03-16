@@ -12,49 +12,60 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("API URL:", process.env.REACT_APP_API_BASE_URL); // Debug log
-    setError(""); // Reset error state
+    setError("");
+
+    console.log("Attempting login with:", { username, password });
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/users/login`, {
-        method: "POST",
-        headers: { 
+      const apiUrl = process.env.REACT_APP_API_BASE_URL;
+      console.log("Using API URL:", apiUrl);
+
+      const response = await fetch(`${apiUrl}/users/login/`, {  // Note the trailing slash
+        method: "POST",  // Explicitly set POST method
+        headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
         },
-        body: JSON.stringify({email: username, password }), 
+        body: JSON.stringify({
+          username: username,
+          password: password
+        })
       });
 
+      // Log response status and headers for debugging
+      console.log("Response status:", response.status);
+      console.log("Response headers:", Object.fromEntries(response.headers));
+
       const data = await response.json();
-      console.log("🔍 API Response:", data);
+      console.log("Response data:", data);
 
       if (!response.ok) {
-        setError(data.detail || "Invalid credentials. Please try again.");
-        return;
+        throw new Error(data.detail || "Login failed");
       }
 
-      if (!data.user || !data.access) {
-        setError("Login failed: Missing user data or token.");
-        return;
-      }
-
-      // Store tokens and user info
+      // Store auth data
       localStorage.setItem("access", data.access);
       localStorage.setItem("refresh", data.refresh);
       localStorage.setItem("user", JSON.stringify(data.user));
       
-      login(data.user); // Store user in context
+      login(data.user);
 
-      // Redirect based on user role
-      const userRole = data.user.role;
-      if (userRole === "admin") navigate("/admin/dashboard");
-      else if (userRole === "healthcare_provider") navigate("/provider/dashboard");
-      else if (userRole === "mom") navigate("/profile/dashboard");
-      else setError("Unknown role detected. Please contact support.");
-      
+      // Navigation based on role
+      switch (data.user.role) {
+        case "admin":
+          navigate("/dashboard/admin");
+          break;
+        case "healthcare_provider":
+          navigate("/dashboard/provider");
+          break;
+        case "mom":
+          navigate("/dashboard/profile"); // Changed from /dashboard/mom to /dashboard/profile
+          break;
+        default:
+          setError("Unknown user role");
+      }
     } catch (err) {
-      console.error("❌ Network or Server Error:", err);
-      setError("Server error. Please try again later.");
+      console.error("Login error details:", err);
+      setError(err.message || "Login failed. Please try again.");
     }
   };
 

@@ -87,14 +87,12 @@ function App() {
 
               {/* ✅ Mom Dashboard */}
               <Route path="/dashboard/profile" element={<MomDashboard />}>
-                <Route index element={<Community />} />
+                <Route index element={<Profile />} /> {/* Default route */}
                 <Route path="community" element={<Community />} />
                 <Route path="resources" element={<Resources />} />
                 <Route path="settings" element={<Settings />} />
-                <Route path="profile" element={<Profile />} />
                 <Route path="appointments" element={<MomAppointments />} />
                 <Route path="educational-contents" element={<EducationalContents />} />
-                <Route path="content/:id" element={<ContentDetail />} />
                 <Route path="logout" element={<Logout />} />
               </Route>
 

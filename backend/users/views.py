@@ -60,32 +60,36 @@ class LoginView(TokenObtainPairView):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def custom_login(request):
+    if request.method != "POST":
+        return Response(
+            {"detail": f"Method {request.method} not allowed."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+    
     username = request.data.get("username")
     password = request.data.get("password")
-
-    print(f"🔍 Debug: Username: {username}, Password: {password}")  # Debugging
-
+    
+    print(f"Login attempt - Username: {username}")  # Debug log
+    
     user = authenticate(username=username, password=password)
     
     if user:
         refresh = RefreshToken.for_user(user)
-        response_data = {
-            "refresh": str(refresh),
+        return Response({
             "access": str(refresh.access_token),
-            "user": {  
+            "refresh": str(refresh),
+            "user": {
                 "id": user.id,
                 "username": user.username,
                 "email": user.email,
-                "role": user.role,  
-                "phone_number": user.phone_number,
-                "age": user.age,
+                "role": user.role
             }
-        }
-        print("✅ Backend Response:", response_data)  # Debugging
-        return Response(response_data, status=status.HTTP_200_OK)
-
-    print("⚠️ Invalid credentials")
-    return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        })
+    
+    return Response(
+        {"detail": "Invalid credentials"},
+        status=status.HTTP_401_UNAUTHORIZED
+    )
 
 
 #  Get all users (Protected)
