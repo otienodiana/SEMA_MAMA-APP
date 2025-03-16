@@ -63,7 +63,10 @@ def custom_login(request):
     username = request.data.get("username")
     password = request.data.get("password")
 
+    print(f"🔍 Debug: Username: {username}, Password: {password}")  # Debugging
+
     user = authenticate(username=username, password=password)
+    
     if user:
         refresh = RefreshToken.for_user(user)
         response_data = {
@@ -73,7 +76,7 @@ def custom_login(request):
                 "id": user.id,
                 "username": user.username,
                 "email": user.email,
-                "role": user.role,  # ✅ Ensure this is returned
+                "role": user.role,  
                 "phone_number": user.phone_number,
                 "age": user.age,
             }
@@ -83,7 +86,6 @@ def custom_login(request):
 
     print("⚠️ Invalid credentials")
     return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-
 
 
 #  Get all users (Protected)
