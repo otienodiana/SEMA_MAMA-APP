@@ -1,21 +1,22 @@
 from django.db import models
-from django.conf import settings  # ✅ Import settings to access AUTH_USER_MODEL
+from django.conf import settings
 
 class Content(models.Model):
-    TITLE_MAX_LENGTH = 255
-
     CONTENT_TYPES = [
-        ('video', 'Video'),
         ('document', 'Document'),
         ('image', 'Image'),
-        ('other', 'Other'),
+        ('video', 'Video')
     ]
-
-    title = models.CharField(max_length=TITLE_MAX_LENGTH)
-    description = models.TextField(blank=True)
+    
+    title = models.CharField(max_length=255)
+    description = models.TextField()
     file = models.FileField(upload_to='uploads/content/')
-    content_type = models.CharField(max_length=10, choices=CONTENT_TYPES, default='other')
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # ✅ Use AUTH_USER_MODEL
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='uploaded_content'
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

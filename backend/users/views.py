@@ -52,6 +52,34 @@ class RegisterUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+    def create(self, request, *args, **kwargs):
+        try:
+            # Print the incoming data for debugging
+            print("📝 Registration attempt with data:", request.data)
+            
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+            
+            print(f"✅ User created successfully: {user.username}")
+            
+            # Return success response with user details
+            return Response({
+                "detail": "Registration successful",
+                "user": {
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role
+                }
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            print(f"❌ Registration error: {str(e)}")
+            return Response(
+                {"detail": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 # JWT Login
 class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
@@ -60,36 +88,59 @@ class LoginView(TokenObtainPairView):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def custom_login(request):
-    if request.method != "POST":
-        return Response(
-            {"detail": f"Method {request.method} not allowed."},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-    
     username = request.data.get("username")
     password = request.data.get("password")
     
-    print(f"Login attempt - Username: {username}")  # Debug log
+    print(f"👤 Login attempt - Username: {username}")
     
-    user = authenticate(username=username, password=password)
+    if not username or not password:
+        return Response(
+            {"detail": "Both username and password are required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
-    if user:
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "role": user.role
+    try:
+        # Check if user exists first
+        user_exists = User.objects.filter(username=username).exists()
+        if not user_exists:
+            print(f"❌ User not found: {username}")
+            return Response(
+                {"detail": "User not found"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+        # Try to authenticate
+        user = authenticate(username=username, password=password)
+        print(f"🔐 Authentication result for {username}: {'Success' if user else 'Failed'}")
+        
+        if user is not None and user.is_active:
+            refresh = RefreshToken.for_user(user)
+            response_data = {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role,
+                    "profile_photo": user.profile_photo.url if user.profile_photo else None,
+                }
             }
-        })
-    
-    return Response(
-        {"detail": "Invalid credentials"},
-        status=status.HTTP_401_UNAUTHORIZED
-    )
+            print(f"✅ Login successful for {username}")
+            return Response(response_data)
+        else:
+            print(f"❌ Invalid password for {username}")
+            return Response(
+                {"detail": "Invalid password"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+    except Exception as e:
+        print(f"❌ Login error for {username}: {str(e)}")
+        return Response(
+            {"detail": "An error occurred during login"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 #  Get all users (Protected)

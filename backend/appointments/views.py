@@ -7,13 +7,14 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, permission_classes
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 class MomAppointmentsView(generics.ListCreateAPIView):
     """View to list and create appointments for mothers"""
     serializer_class = AppointmentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]  # Add explicit JWT authentication
 
     def get_queryset(self):
         """Fetch only the logged-in mom's appointments"""
@@ -22,6 +23,16 @@ class MomAppointmentsView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         """Ensure the logged-in mom is assigned to the appointment"""
         serializer.save(user=self.request.user, status="pending")
+        
+    def create(self, request, *args, **kwargs):
+        """Override create to handle validation errors gracefully"""
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class UpdateAppointmentView(generics.UpdateAPIView):
     """Allow moms to update their own appointments"""

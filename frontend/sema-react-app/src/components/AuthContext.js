@@ -4,38 +4,44 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const initializeAuth = async () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        localStorage.removeItem("user"); // Clear invalid data
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
-      setUser(JSON.parse(storedUser));
-      console.log("✅ User loaded from localStorage:", JSON.parse(storedUser)); // Debugging
-    } else {
-      setUser(null);
-      console.log("⚠️ No valid user found in localStorage"); // Debugging
-    }
+    initializeAuth();
   }, []);
 
   const login = (userData) => {
-    if (userData) {
-      localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
-      console.log("✅ User logged in and stored:", userData); // Debugging
-    } else {
-      console.error("❌ login() was called with invalid userData:", userData);
+    if (!userData) {
+      console.error("Invalid user data provided to login");
+      return;
     }
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
   };
-  
 
   const logout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
     setUser(null);
-    console.log("🚪 User logged out");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

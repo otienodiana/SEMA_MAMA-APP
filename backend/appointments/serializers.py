@@ -20,8 +20,13 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "user_name",  # Mom's name
             "provider",  # Provider's ID
             "provider_name",  # Provider's name
+            "consultation_type",
+            "meeting_link",
+            "notes_for_provider",
+            "preferred_language",
+            "technical_requirements",
         ]
-        read_only_fields = ["id", "created_at", "user", "provider_name", "user_name"]
+        read_only_fields = ["id", "created_at", "user", "provider_name", "user_name", "meeting_link"]
 
     def validate(self, data):
         """Ensure rescheduled_at is only set when rescheduling"""

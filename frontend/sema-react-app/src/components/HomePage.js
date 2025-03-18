@@ -1,93 +1,290 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import { BiGlobe } from 'react-icons/bi';
 import "./HomePageStyles.css";
 import Navbar from "./Navbar";
-import floatingImage1 from "../assets/dep1.jpg";
-import floatingImage2 from "../assets/dep2.jpg";
-import floatingImage3 from "../assets/dep3.jpg";
+import mamaImage from "../assets/dep1.jpg";
+// Add more image imports
+import supportImage from "../assets/dep2.jpg";
+import communityImage from "../assets/dep3.jpg";
+import professionalImage from "../assets/dep4.jpg";
+import mentalHealthImage from "../assets/dep5.jpg";
+import pregnancyTipsImage from "../assets/dep6.jpg";
 
 const HomePage = () => {
-  const isAuthenticated = localStorage.getItem("userToken"); // Check if user is logged in
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const isAuthenticated = localStorage.getItem("userToken");
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+
+  const handleAuthenticatedLink = (path) => {
+    if (!isAuthenticated) {
+      return '/login';
+    }
+    return path;
+  };
+
+  const changeLanguage = (language) => {
+    i18n.changeLanguage(language);
+    localStorage.setItem('language', language);
+  };
+
+  const toggleLanguageMenu = () => {
+    setShowLanguageMenu(!showLanguageMenu);
+  };
+
+  const styles = {
+    container: {
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+    },
+    header: {
+      fontSize: '2.5rem',
+      color: '#008DC9',
+      marginBottom: '1rem',
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: '1.2rem',
+      color: '#6c757d',
+      marginBottom: '2rem',
+      textAlign: 'center',
+    },
+    languageSection: {
+      background: 'white',
+      padding: '2rem',
+      borderRadius: '10px',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      marginBottom: '2rem',
+      width: '100%',
+      maxWidth: '400px',
+    },
+    languageTitle: {
+      fontSize: '1.2rem',
+      color: '#343a40',
+      marginBottom: '1rem',
+      textAlign: 'center',
+    },
+    languageButtons: {
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '1rem',
+      flexWrap: 'wrap',
+    },
+    button: {
+      padding: '10px 20px',
+      border: '2px solid #008DC9',
+      borderRadius: '5px',
+      background: 'transparent',
+      color: '#008DC9',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      '&:hover': {
+        background: '#008DC9',
+        color: 'white',
+      },
+    },
+    activeButton: {
+      background: '#008DC9',
+      color: 'white',
+    },
+    startButton: {
+      padding: '12px 24px',
+      background: '#008DC9',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      fontSize: '1.1rem',
+      cursor: 'pointer',
+      transition: 'background 0.3s ease',
+      '&:hover': {
+        background: '#006d9f',
+      },
+    },
+    languageSelector: {
+      position: 'absolute',
+      top: '20px',
+      right: '20px',
+      zIndex: 1000,
+    },
+    globeIcon: {
+      fontSize: '24px',
+      color: '#008DC9',
+      cursor: 'pointer',
+      padding: '8px',
+      borderRadius: '50%',
+      backgroundColor: 'white',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    },
+    languageDropdown: {
+      position: 'absolute',
+      top: '100%',
+      right: '0',
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+      padding: '8px 0',
+      marginTop: '8px',
+      display: 'flex',
+      flexDirection: 'column',
+      minWidth: '120px',
+    },
+    languageOption: {
+      padding: '8px 16px',
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: '#f0f0f0',
+      },
+    },
+  };
 
   return (
     <div className="home-container">
-      {/* ✅ Add Navbar Here */}
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <h1 className="title">Welcome to SEMA MAMA APP</h1>
-        <p className="description">We are here to talk, listen, and feel your emotions.</p>
-        <p className="highlight-text">
-          Join a community of mothers & experts for guidance, support, and health resources.
-        </p>
+      <div style={styles.languageSelector}>
+        <BiGlobe 
+          style={styles.globeIcon} 
+          onClick={toggleLanguageMenu}
+        />
+        {showLanguageMenu && (
+          <div style={styles.languageDropdown}>
+            <div 
+              style={styles.languageOption} 
+              onClick={() => {
+                changeLanguage('en');
+                setShowLanguageMenu(false);
+              }}
+            >
+              English
+            </div>
+            <div 
+              style={styles.languageOption}
+              onClick={() => {
+                changeLanguage('sw');
+                setShowLanguageMenu(false);
+              }}
+            >
+              Kiswahili
+            </div>
+            <div 
+              style={styles.languageOption}
+              onClick={() => {
+                changeLanguage('fr');
+                setShowLanguageMenu(false);
+              }}
+            >
+              Français
+            </div>
+          </div>
+        )}
+      </div>
 
-        {!isAuthenticated && <Link to="/login" className="join-button">Join Now</Link>}
+      {/* Hero Section with Enhanced Visuals */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <h1>{t('home.welcome')}</h1>
+          <p className="hero-message">
+            {t('home.message')}
+          </p>
+          {!isAuthenticated && (
+            <Link to="/login" className="cta-button">
+              {t('home.joinCommunity')}
+            </Link>
+          )}
+        </div>
       </section>
 
-      {/* Floating Images with Descriptions */}
-      <div className="image-container">
-        <div className="image-box">
-          <img src={floatingImage1} alt="Mother sharing advice" className="floating-image" />
-          <p className="image-description">Mother and Baby Corner</p>
-        </div>
-        <div className="image-box">
-          <img src={floatingImage2} alt="Community discussion" className="floating-image" />
-          <p className="image-description">Feeling Depressed</p>
-        </div>
-        <div className="image-box">
-          <img src={floatingImage3} alt="Healthcare expert guidance" className="floating-image" />
-          <p className="image-description">Baby Health</p>
-        </div>
-      </div>
+      {/* Quick Access Cards with Authentication Check */}
+      <section className="support-options">
+        <h2>{t('home.helpTitle')}</h2>
+        <div className="support-cards">
+          <Link to={handleAuthenticatedLink("/community")} className="support-card">
+            <img src={communityImage} alt={t('alt.communitySupport')} className="card-image" />
+            <h3>{t('home.talkToMoms')}</h3>
+            <p>{t('home.talkToMomsDesc')}</p>
+            {!isAuthenticated}
+          </Link>
 
-      {/* ✅ YouTube Videos Section (Added Below the Images) */}
-      <div className="video-section">
-        <h2>HEALTH CORNER</h2>
-        <div className="video-container">
-          {/* Video 1 */}
-          <div className="video-box">
-            <iframe
-              width="560"
-              height="315"
-              src="https://www.youtube.com/embed/Zx8zbTMTncs"
-              title="Contraceptives"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-            <p>Contraceptives</p>
-          </div>
+          <Link to="/resources" className="support-card">
+            <img src={supportImage} alt={t('alt.resources')} className="card-image" />
+            <h3>{t('home.resources')}</h3>
+            <p>{t('home.resourcesDesc')}</p>
+          </Link>
 
-          {/* Video 2 */}
-          <div className="video-box">
+          <Link to={handleAuthenticatedLink("/appointments")} className="support-card">
+            <img src={professionalImage} alt={t('alt.professionalHelp')} className="card-image" />
+            <h3>{t('home.professionalHelp')}</h3>
+            <p>{t('home.professionalHelpDesc')}</p>
+            {!isAuthenticated}
+          </Link>
+        </div>
+      </section>
+
+      {/* Enhanced Video Gallery */}
+      <section className="featured-section">
+        <h2>Featured Support Videos</h2>
+        <div className="video-grid">
+          <div className="video-item">
             <iframe
-              width="560"
-              height="315"
               src="https://www.youtube.com/embed/CBbYbOni_Kg"
-              title="What is Postpartum?"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              title="Understanding Postpartum Care"
               allowFullScreen
             ></iframe>
-            <p>What Is Postpartum?</p>
+            <h3>Understanding Postpartum Care</h3>
           </div>
-
-          {/* Video 3 */}
-          <div className="video-box">
+          <div className="video-item">
             <iframe
-              width="560"
-              height="315"
+              src="https://www.youtube.com/embed/dMw6m3MJ-uE"
+              title="Mental Health During Pregnancy"
+              allowFullScreen
+            ></iframe>
+            <h3>Mental Health During Pregnancy</h3>
+          </div>
+          <div className="video-item">
+            <iframe
               src="https://www.youtube.com/embed/3jYYT_rf7Sw"
               title="Breastfeeding Tips"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             ></iframe>
-            <p>Breastfeeding Tips</p>
+            <h3>Breastfeeding Tips</h3>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Additional Resources Gallery */}
+      <section className="resources-preview">
+        <h2>Quick Access Resources</h2>
+        <div className="resources-grid">
+          <div className="resource-item">
+            <img src={mentalHealthImage} alt="Mental Health Support" />
+            <h3>Mental Health Support</h3>
+            <p>Access resources for emotional wellbeing</p>
+          </div>
+          <div className="resource-item">
+            <img src={pregnancyTipsImage} alt="Pregnancy Tips" />
+            <h3>Pregnancy Tips</h3>
+            <p>Essential guidance for your journey</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Support Message */}
+      <section className="support-message">
+        <h2>{t('home.remember')}</h2>
+        <p>{t('home.validFeelings')}</p>
+        <p>{t('home.supportMessage')}</p>
+      </section>
+
+
+      
     </div>
   );
 };

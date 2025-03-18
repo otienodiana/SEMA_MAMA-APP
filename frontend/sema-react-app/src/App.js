@@ -31,48 +31,43 @@ import PostDetail from "./components/PostDetail";
 import ProviderAppointments from "./components/ProviderAppointments";
 import ForumList from './components/ForumList';
 import { DataProvider } from "./components/DataContext"; 
+import SelfAssessment from "./components/SelfAssessment";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <AuthProvider>
-      <DataProvider> {/* ✅ Wrap the entire app with DataProvider */}
+      <DataProvider>
         <Router>
           <Routes>
-            {/*  Public Routes */}
+            {/* Public Routes */}
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />
               <Route path="about" element={<AboutUs />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               <Route path="resources" element={<Resources />} />
-              <Route path="forums" element={<ForumList />} />
             </Route>
 
-            {/*  Protected Routes (Require Authentication) */}
-            <Route element={<RequireAuth />}>
-              {/* ✅ Redirect "/dashboard" to "/dashboard/admin" */}
-              <Route path="/dashboard" element={<Navigate to="/dashboard/admin" replace />} />
-
-              {/*  Admin Dashboard */}
-              <Route path="/dashboard/admin" element={<AdminDashboard />}>
-                <Route index element={<Analytics />} />  {/* Default Page: Analytics */}
+            {/* Protected Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+              <Route path="/dashboard/admin/*" element={<AdminDashboard />}>
+                <Route index element={<Analytics />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="sms-setup" element={<SmsSetup />} />
                 <Route path="logout" element={<Logout />} />
-
-                {/*  Admin Access Only */}
-                <Route element={<AllowedUser allowedRoles={["admin"]} />}>
-                  <Route path="community" element={<Community />} />
-                  <Route path="admin-community" element={<AdminCommunity />} />  {/* Changed from "admin/community" */}
-                  <Route path="educational-contents" element={<EducationalContents />} />
-                  <Route path="content/:id" element={<ContentDetail />} />
-                </Route>
+                <Route path="community" element={<Community />} />
+                <Route path="admin-community" element={<AdminCommunity />} />
+                <Route path="educational-contents" element={<EducationalContents />} />
+                <Route path="content/:id" element={<ContentDetail />} />
               </Route>
+            </Route>
 
-              {/*  Healthcare Provider Dashboard */}
-              <Route path="/dashboard/provider" element={<ProviderDashboard />}>
+            {/* Protected Provider Routes */}
+            <Route element={<ProtectedRoute allowedRoles={["healthcare_provider"]} />}>
+              <Route path="/dashboard/provider/*" element={<ProviderDashboard />}>
                 <Route index element={<Profile />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="appointments" element={<ProviderAppointments />} />
@@ -84,25 +79,28 @@ function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="logout" element={<Logout />} />
               </Route>
+            </Route>
 
-              {/* ✅ Mom Dashboard */}
-              <Route path="/dashboard/profile" element={<MomDashboard />}>
-                <Route index element={<Profile />} /> {/* Default route */}
+            {/* Protected Mom Routes */}
+            <Route element={<ProtectedRoute allowedRoles={["mom"]} />}>
+              <Route path="/dashboard/profile/*" element={<MomDashboard />}>
+                <Route index element={<Profile />} />
                 <Route path="community" element={<Community />} />
                 <Route path="resources" element={<Resources />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="appointments" element={<MomAppointments />} />
                 <Route path="educational-contents" element={<EducationalContents />} />
+                <Route path="self-assessment" element={<SelfAssessment />} />
                 <Route path="logout" element={<Logout />} />
               </Route>
-
-              {/* ✅ Forum Routes */}
-              <Route path="community/forums/:forumId/posts" element={<ForumPosts />} />
-              <Route path="/post/:id" element={<PostDetail />} />
-              <Route path="/forums" element={<ForumList />} />
-              <Route path="/community/*" element={<Community />} />
-              <Route path="/dashboard/community" element={<Community />} />
             </Route>
+
+            {/* Protected Community Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/community/*" element={<Community />} />
+              <Route path="/forums" element={<ForumList />} />
+            </Route>
+
           </Routes>
         </Router>
       </DataProvider>

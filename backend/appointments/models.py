@@ -11,6 +11,11 @@ class Appointment(models.Model):
         ('rejected', 'Rejected'),
     ]
 
+    CONSULTATION_TYPE_CHOICES = [
+        ('virtual', 'Virtual Consultation'),
+        ('in_person', 'In-Person Visit'),
+    ]
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="appointments")
     provider = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -27,6 +32,20 @@ class Appointment(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     rejection_reason = models.TextField(blank=True, null=True)  # ✅ Store rejection reasons
     created_at = models.DateTimeField(auto_now_add=True)
+
+    consultation_type = models.CharField(
+        max_length=20, 
+        choices=CONSULTATION_TYPE_CHOICES,
+        default='in_person'
+    )
+    meeting_link = models.URLField(blank=True, null=True)
+    notes_for_provider = models.TextField(blank=True, null=True)
+    preferred_language = models.CharField(max_length=50, blank=True, null=True)
+    technical_requirements = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Any technical requirements or preferences for virtual consultation"
+    )
 
     def __str__(self):
         return f"{self.title} ({self.status}) - {self.date.strftime('%Y-%m-%d %H:%M')}"

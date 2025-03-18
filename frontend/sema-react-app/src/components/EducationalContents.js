@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import axios from "axios";
 import "./EducationalContents.css";
 
 const ContentsPage = () => {
+  const { t } = useTranslation();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,6 +13,9 @@ const ContentsPage = () => {
   const [uploading, setUploading] = useState(false); // For tracking file upload status
   const [selectedResource, setSelectedResource] = useState(null); // ✅ Added for viewing
   const navigate = useNavigate(); // ✅ Initialize
+  const [searchQuery, setSearchQuery] = useState("");
+  const [favorites, setFavorites] = useState([]);
+  const [showFavorites, setShowFavorites] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -37,6 +42,17 @@ const ContentsPage = () => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem("favoriteResources");
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("favoriteResources", JSON.stringify(favorites));
+  }, [favorites]);
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -175,9 +191,44 @@ const ContentsPage = () => {
     }
   };
 
+  const toggleFavorite = (resource) => {
+    setFavorites((prevFavorites) => {
+      if (prevFavorites.some(fav => fav.id === resource.id)) {
+        return prevFavorites.filter(fav => fav.id !== resource.id);
+      } else {
+        return [...prevFavorites, resource];
+      }
+    });
+  };
+
+  const filteredResources = resources.filter(resource => {
+    const searchContent = `${resource.title} ${resource.description}`.toLowerCase();
+    return searchContent.includes(searchQuery.toLowerCase());
+  });
+
+  const displayedResources = showFavorites 
+    ? filteredResources.filter(resource => favorites.some(fav => fav.id === resource.id))
+    : filteredResources;
+
   return (
     <div className="content-page">
-      <h1>SEMAmama Resources</h1>
+      <h1>{t('educational.title')}</h1>
+
+      <div className="search-and-filter">
+        <input
+          type="text"
+          placeholder={t('educational.searchPlaceholder')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
+        <button 
+          className={`filter-button ${showFavorites ? 'active' : ''}`}
+          onClick={() => setShowFavorites(!showFavorites)}
+        >
+          {showFavorites ? t('educational.showFavorites') : t('educational.showAll')}
+        </button>
+      </div>
 
       <div className="content-layout">
         {/* Resources Section */}
@@ -185,20 +236,28 @@ const ContentsPage = () => {
           <p>Loading resources...</p>
         ) : error ? (
           <p>{error}</p>
-        ) : resources.length === 0 ? (
-          <p>No resources available. Please upload a new resource!</p>
+        ) : displayedResources.length === 0 ? (
+          <p>No resources found. {showFavorites ? 'No favorites yet!' : 'Try a different search term.'}</p>
         ) : (
           <div className="resources-list">
-            {resources.map((resource) => (
+            {displayedResources.map((resource) => (
               <div className="resource-card" key={resource.id}>
                 <h3>{resource.title}</h3>
                 <p>{resource.description}</p>
                 {resource.content_type === "video" && <video src={resource.file} controls />}
                 {resource.content_type === "image" && <img src={resource.file} alt={resource.title} />}
-                <button onClick={() => handleDownload(resource.file, resource.title)}>Download</button>
-                <button onClick={() => handleView(resource.id)}>View</button>
-                <button onClick={() => handleUpdate(resource.id)}>Update</button>
-                <button onClick={() => handleDelete(resource.id)}>Delete</button>
+                <div className="resource-actions">
+                  <button onClick={() => handleDownload(resource.file, resource.title)}>Download</button>
+                  <button onClick={() => handleView(resource.id)}>View</button>
+                  <button onClick={() => handleUpdate(resource.id)}>Update</button>
+                  <button onClick={() => handleDelete(resource.id)}>Delete</button>
+                  <button 
+                    className={`favorite-button ${favorites.some(fav => fav.id === resource.id) ? 'active' : ''}`}
+                    onClick={() => toggleFavorite(resource)}
+                  >
+                    {favorites.some(fav => fav.id === resource.id) ? '★' : '☆'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

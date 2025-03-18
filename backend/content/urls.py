@@ -1,9 +1,8 @@
 from django.urls import path
-from .views import ContentListCreateView, ContentDetailView,ContentUploadView,ContentDeleteView
+from . import views
 
 urlpatterns = [
-    path('contents/', ContentListCreateView.as_view(), name='content-list-create'),
-    path('contents/<int:pk>/', ContentDetailView.as_view(), name='content-detail'),
-    path('contents/upload/', ContentUploadView.as_view(), name='content-upload'),
-    path("contents/<int:pk>/delete/", ContentDeleteView.as_view(), name="content-delete"), 
+    path('contents/', views.ContentListView.as_view(), name='contents-list'),
+    path('contents/upload/', views.ContentUploadView.as_view(), name='content-upload'),
+    path('contents/<int:pk>/', views.ContentDetailView.as_view(), name='content-detail'),
 ]

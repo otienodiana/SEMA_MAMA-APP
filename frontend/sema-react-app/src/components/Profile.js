@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from 'react-i18next';
 import "./Profile.css"; // Import the CSS file
 
 const Profile = () => {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -123,49 +125,49 @@ const Profile = () => {
     }
   };
 
-  if (loading) return <p className="loading-message">Loading user information...</p>;
+  if (loading) return <p className="loading-message">{t('profile.loading')}</p>;
   if (error) return <p className="error-message">{error}</p>;
 
   return (
     <div className="profile-container">
-      <h2 className="profile-title">My Profile</h2>
+      <h2 className="profile-title">{t('profile.title')}</h2>
 
       {user && (
         <div className="profile-content">
           <div className="profile-photo-wrapper">
             {user.profile_photo ? (
-              <img src={user.profile_photo} alt="Profile" className="profile-photo" />
+              <img src={user.profile_photo} alt={t('profile.photo')} className="profile-photo" />
             ) : (
-              <div className="placeholder-photo">No Photo</div>
+              <div className="placeholder-photo">{t('profile.noPhoto')}</div>
             )}
           </div>
 
           <div className="input-group">
-            <label>Username</label>
+            <label>{t('profile.username')}</label>
             <input type="text" name="username" value={user.username} onChange={handleChange} />
           </div>
 
           <div className="input-group">
-            <label>Email</label>
+            <label>{t('profile.email')}</label>
             <input type="email" name="email" value={user.email} onChange={handleChange} />
           </div>
 
           <div className="input-group">
-            <label>Phone Number</label>
+            <label>{t('profile.phoneNumber')}</label>
             <input type="text" name="phone_number" value={user.phone_number || ""} onChange={handleChange} />
           </div>
 
           <div className="input-group">
-            <label>Profile Photo</label>
+            <label>{t('profile.photo')}</label>
             <input type="file" onChange={handleFileChange} />
           </div>
 
           <button onClick={handleUpdate} disabled={updating} className="btn update-btn">
-            {updating ? "Updating..." : "Update Profile"}
+            {updating ? t('profile.updating') : t('profile.update')}
           </button>
 
           <button onClick={handleDelete} className="btn delete-btn">
-            Delete Profile
+            {t('profile.delete')}
           </button>
         </div>
       )}

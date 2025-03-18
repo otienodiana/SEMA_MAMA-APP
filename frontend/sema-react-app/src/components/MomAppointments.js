@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from './LanguageSelector';
+import '../i18n';
 
 const styles = {
   container: {
@@ -103,9 +106,23 @@ const getStatusColor = (status) => {
 };
 
 const MomAppointments = () => {
+  const { t } = useTranslation();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [newAppointment, setNewAppointment] = useState({ title: "", description: "", date: "" });
+  // Add these two missing state variables
+  const [showForm, setShowForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [newAppointment, setNewAppointment] = useState({
+    title: "",
+    description: "",
+    date: "",
+    consultation_type: "virtual",
+    meeting_link: "",
+    notes_for_provider: "",
+    preferred_language: "",
+    technical_requirements: "",
+    status: "pending"
+  });
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [updatedData, setUpdatedData] = useState({ title: "", description: "", date: "" });
   const [filterStatus, setFilterStatus] = useState("all"); // ✅ Added state for filtering
@@ -115,12 +132,17 @@ const MomAppointments = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
+        const token = localStorage.getItem("access"); // Changed from "token" to "access"
+        if (!token) {
+          console.error("No access token found");
+          return;
+        }
         const response = await axios.get("http://127.0.0.1:8000/api/appointments/moms/appointments/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAppointments(response.data);
       } catch (error) {
-        console.error("Error fetching appointments:", error);
+        console.error("Error fetching appointments:", error.response?.data || error.message);
       } finally {
         setLoading(false);
       }
@@ -136,12 +158,8 @@ const MomAppointments = () => {
     }
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/appointments/moms/appointments/",
-        { 
-          title: newAppointment.title,
-          description: newAppointment.description,
-          date: newAppointment.date
-        },
+        "http://127.0.0.1:8000/api/appointments/moms/appointments/create/", // Updated endpoint
+        newAppointment, // Send the entire newAppointment object
         { 
           headers: { 
             Authorization: `Bearer ${token}`,
@@ -149,10 +167,25 @@ const MomAppointments = () => {
           } 
         }
       );
-      setAppointments([...appointments, response.data]);
-      setNewAppointment({ title: "", description: "", date: "" });
+      
+      if (response.data) {
+        setAppointments([...appointments, response.data]);
+        // Reset form
+        setNewAppointment({ 
+          title: "", 
+          description: "", 
+          date: "", 
+          consultation_type: "virtual",
+          meeting_link: "",
+          notes_for_provider: "",
+          preferred_language: "",
+          technical_requirements: "",
+          status: "pending"
+        });
+      }
     } catch (error) {
-      console.error("Error creating appointment:", error);
+      console.error("Error creating appointment:", error.response?.data || error.message);
+      alert(error.response?.data?.error || "Failed to create appointment");
     }
   };
 
@@ -207,20 +240,44 @@ const MomAppointments = () => {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.header}>My Appointments</h2>
+      <h1 style={styles.header}>{t('appointment.title')}</h1>
+      
+      <div className="appointments-container">
+        <button onClick={() => setShowForm(true)} className="create-button">
+          {t('appointment.create')}
+        </button>
+        
+        <div className="filter-section">
+          <label>{t('appointment.filter')}</label>
+          <select onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="all">{t('appointment.status.all')}</option>
+            <option value="pending">{t('appointment.status.pending')}</option>
+            <option value="confirmed">{t('appointment.status.confirmed')}</option>
+            <option value="completed">{t('appointment.status.completed')}</option>
+            <option value="canceled">{t('appointment.status.canceled')}</option>
+          </select>
+        </div>
+        
+        {/* ...rest of appointments rendering... */}
+      </div>
+
+      <div style={styles.header}>
+        <h2>{t('appointment.title')}</h2>
+        <LanguageSelector />
+      </div>
 
       <div style={styles.filterSection}>
-        <label>Filter by Status:</label>
+        <label>{t('appointment.filter')}:</label>
         <select 
           style={styles.select}
           onChange={(e) => setFilterStatus(e.target.value)} 
           value={filterStatus}
         >
-          <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="completed">Completed</option>
-          <option value="canceled">Canceled</option>
+          <option value="all">{t('filter.all')}</option>
+          <option value="pending">{t('appointment.status.pending')}</option>
+          <option value="confirmed">{t('appointment.status.confirmed')}</option>
+          <option value="completed">{t('appointment.status.completed')}</option>
+          <option value="canceled">{t('appointment.status.canceled')}</option>
         </select>
       </div>
 
@@ -228,22 +285,70 @@ const MomAppointments = () => {
         <input
           style={styles.input}
           type="text"
-          placeholder="Appointment Title"
+          placeholder={t('appointment.placeholders.title')}
           value={newAppointment.title}
           onChange={(e) => setNewAppointment({ ...newAppointment, title: e.target.value })}
+          required
         />
+        
+        <select
+          style={styles.input}
+          value={newAppointment.consultation_type}
+          onChange={(e) => setNewAppointment({ ...newAppointment, consultation_type: e.target.value })}
+        >
+          <option value="virtual">{t('appointment.consultation.virtual')}</option>
+          <option value="in_person">{t('appointment.consultation.inperson')}</option>
+        </select>
+
         <textarea
           style={styles.input}
-          placeholder="Description"
+          placeholder={t('appointment.placeholders.description')}
           value={newAppointment.description}
           onChange={(e) => setNewAppointment({ ...newAppointment, description: e.target.value })}
         />
+
         <input
           style={styles.input}
           type="datetime-local"
           value={newAppointment.date}
           onChange={(e) => setNewAppointment({ ...newAppointment, date: e.target.value })}
+          required
         />
+
+        {newAppointment.consultation_type === 'virtual' && (
+          <>
+            <input
+              style={styles.input}
+              type="url"
+              placeholder="Meeting Link (optional)"
+              value={newAppointment.meeting_link}
+              onChange={(e) => setNewAppointment({ ...newAppointment, meeting_link: e.target.value })}
+            />
+
+            <textarea
+              style={styles.input}
+              placeholder="Technical Requirements"
+              value={newAppointment.technical_requirements}
+              onChange={(e) => setNewAppointment({ ...newAppointment, technical_requirements: e.target.value })}
+            />
+          </>
+        )}
+
+        <input
+          style={styles.input}
+          type="text"
+          placeholder="Preferred Language"
+          value={newAppointment.preferred_language}
+          onChange={(e) => setNewAppointment({ ...newAppointment, preferred_language: e.target.value })}
+        />
+
+        <textarea
+          style={styles.input}
+          placeholder="Notes for Provider"
+          value={newAppointment.notes_for_provider}
+          onChange={(e) => setNewAppointment({ ...newAppointment, notes_for_provider: e.target.value })}
+        />
+
         <button style={styles.button} onClick={createAppointment}>Create Appointment</button>
       </div>
 

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaEllipsisV, FaEdit, FaTrash, FaShareAlt, FaDownload } from "react-icons/fa"; 
+import { useNavigate, useParams } from "react-router-dom";
+import { FaEllipsisV, FaEdit, FaTrash, FaShareAlt, FaDownload, FaFilter, FaSort } from "react-icons/fa";
+import { useTranslation } from 'react-i18next';
 import Navbar from "./Navbar";
 import "./ForumPosts.css";
 
 const ForumPosts = () => {
+    const { t } = useTranslation();
     const [posts, setPosts] = useState([]);
     const [newTitle, setNewTitle] = useState("");
     const [newContent, setNewContent] = useState("");
@@ -13,6 +15,7 @@ const ForumPosts = () => {
     const [user, setUser] = useState(null);
     const [menuOpen, setMenuOpen] = useState(null);
     const navigate = useNavigate();
+    const { forumId } = useParams(); // Get forumId from URL params
     const [editPostId, setEditPostId] = useState(null);
     const [editTitle, setEditTitle] = useState("");
     const [editContent, setEditContent] = useState("");
@@ -20,49 +23,65 @@ const ForumPosts = () => {
     const [editUserId, setEditUserId] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
     const [message, setMessage] = useState(null);
-
-    
+    const [topicFilter, setTopicFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('newest');
+    const [topics] = useState([
+        'Question',
+        'Experience',
+        'Advice',
+        'Support',
+        'General'
+    ]);
 
     useEffect(() => {
         fetchUser();
-        fetchPosts();
-    }, []);
+        if (forumId) {
+            fetchPosts(forumId);
+        }
+    }, [forumId]); // Update dependency array
 
     async function fetchUser() {
         let token = localStorage.getItem("access");
-        if (!token) return;
+        if (!token) {
+            setError("Authentication required. Please login.");
+            return;
+        }
         try {
             const response = await fetch("http://localhost:8000/api/users/me/", {
                 method: "GET",
-                headers: { "Authorization": `Bearer ${token}` },
+                headers: { 
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
             });
-            if (!response.ok) throw new Error("Failed to fetch user");
+            if (!response.ok) {
+                throw new Error("Failed to fetch user");
+            }
             const userData = await response.json();
             setUser(userData);
         } catch (error) {
             console.error("Error fetching user:", error);
+            setError("Failed to fetch user data");
         }
     }
 
     async function fetchPosts(forumId) {
         let token = localStorage.getItem("access");
         if (!token) {
-            console.error("No access token found in localStorage.");
+            setError("Authentication required. Please login.");
             return;
         }
         
         if (!forumId) {
-            console.error("fetchPosts called with an invalid forumId:", forumId);
+            setError("Invalid forum ID");
             return;
         }
     
         try {
             setError(null);
             setLoading(true);
-            setMessage(null);  // Clear any previous messages
-    
-            console.log(`Fetching posts for forumId: ${forumId}`);
-    
+            setMessage(null);
+
             const response = await fetch(`http://localhost:8000/api/community/forums/${forumId}/posts/`, {
                 method: "GET",
                 headers: { 
@@ -70,61 +89,60 @@ const ForumPosts = () => {
                     "Content-Type": "application/json" 
                 },
             });
-    
-            const text = await response.text(); // Get raw response for debugging
-            console.log("Raw API response:", text);
-    
+
             if (!response.ok) {
-                console.error(`Fetch failed with status: ${response.status} ${response.statusText}`);
-                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
             }
-    
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (parseError) {
-                console.error("Error parsing JSON response:", parseError);
-                throw new Error("Invalid JSON response from server.");
-            }
-    
-            if (!Array.isArray(data)) {
-                console.warn("Unexpected response format, expected an array:", data);
-                data = [];
-            }
-    
-            setPosts(data);
-            setMessage("Posts updated successfully! ✅");  // ✅ Success message
-    
+
+            const data = await response.json();
+            setPosts(Array.isArray(data) ? data : []);
+            setMessage("Posts loaded successfully");
+
         } catch (error) {
             console.error("Error fetching posts:", error);
-            setError(error.message);
+            setError(error.message === "Failed to fetch" ? 
+                "Unable to connect to server. Please check if the backend is running." : 
+                error.message
+            );
         } finally {
             setLoading(false);
         }
     }
     
-    
-    
-    
-    
-
     async function handlePostSubmit(e) {
         e.preventDefault();
         let token = localStorage.getItem("access");
         if (!token || !user) return;
-        const newPostData = { title: newTitle, content: newContent, forum: 2, user: user.id };
+
+        const newPostData = { 
+            title: newTitle, 
+            content: newContent, 
+            forum: parseInt(forumId), // Use the forumId from params
+            user: user.id,
+            topic: topicFilter !== 'all' ? topicFilter : 'General'
+        };
+
         try {
             setLoading(true);
-            const response = await fetch("http://localhost:8000/api/community/forums/2/posts/", {
+            const response = await fetch(`http://localhost:8000/api/community/forums/${forumId}/posts/`, {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                headers: { 
+                    "Authorization": `Bearer ${token}`, 
+                    "Content-Type": "application/json" 
+                },
                 body: JSON.stringify(newPostData),
             });
-            if (!response.ok) throw new Error("Failed to create post");
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || "Failed to create post");
+            }
+
             const responseData = await response.json();
             setPosts([...posts, responseData]);
             setNewTitle("");
             setNewContent("");
+            setMessage("Post created successfully! ✅");
         } catch (error) {
             console.error("Error creating post:", error);
             setError(error.message);
@@ -134,7 +152,7 @@ const ForumPosts = () => {
     }
 
     const handleDelete = async (postId) => {
-        if (!window.confirm("Are you sure you want to delete this post?")) return;
+        if (!window.confirm(t('forumPosts.deleteConfirm'))) return;
     
         let token = localStorage.getItem("access");
     
@@ -160,7 +178,7 @@ const ForumPosts = () => {
     
 
     const handleUpdatePost = async (postId) => {
-    if (!window.confirm("Are you sure you want to update this post?")) return;
+    if (!window.confirm(t('forumPosts.updateConfirm'))) return;
 
     let token = localStorage.getItem("access");
     const post = posts.find(p => p.id === postId);
@@ -209,11 +227,23 @@ const ForumPosts = () => {
     }
 };
 
-    
-    
-    
-    
+    const filterPosts = (posts) => {
+        if (topicFilter === 'all') return posts;
+        return posts.filter(post => post.topic === topicFilter);
+    };
 
+    const sortPosts = (posts) => {
+        switch (sortBy) {
+            case 'newest':
+                return [...posts].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            case 'oldest':
+                return [...posts].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            case 'mostComments':
+                return [...posts].sort((a, b) => (b.comments_count || 0) - (a.comments_count || 0));
+            default:
+                return posts;
+        }
+    };
 
     const handleShare = (postId) => {
         const postUrl = `${window.location.origin}/post/${postId}`;
@@ -231,32 +261,52 @@ const ForumPosts = () => {
 
     return (
         <div className="forum-posts-container">
-            <h2>Forum Posts</h2>
+            <h2>{t('forumPosts.title')}</h2>
 
-            {loading && <p className="loading-message">Loading...</p>}
+            {loading && <p className="loading-message">{t('forumPosts.loading')}</p>}
             {error && <p className="error-message">Error: {error}</p>}
-
+                    <p>Loading posts...</p>
+            <div className="filters-container">
+                <div className="filter-group">
+                    <label><FaFilter /> {t('forumPosts.filterByTopic')}</label>
+                    <select value={topicFilter} onChange={(e) => setTopicFilter(e.target.value)}>
+                        <option value="all">{t('forumPosts.allTopics')}</option>
+                        {topics.map(topic => (
+                            <option key={topic} value={topic}>{topic}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="filter-group">
+                    <label><FaSort /> Sort by:</label>
+                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="mostComments">Most Comments</option>
+                    </select>
+                </div>
+            </div>
             <form onSubmit={handlePostSubmit} className="post-form">
                 <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Post Title..." required />
+                <select value={topicFilter} onChange={(e) => setTopicFilter(e.target.value)} required>
+                    {topics.map(topic => (
+                        <option key={topic} value={topic}>{topic}</option>
+                    ))}
+                </select>
                 <textarea value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Write your post..." required></textarea>
                 <button type="submit">Post</button>
             </form>
-
             <div className="posts-grid">
-                {posts.map((post) => (
+                {sortPosts(filterPosts(posts)).map((post) => (
                     <div key={post.id} className="post-card">
                         <h3>{post.title}</h3>
                         <p>{post.content}</p>
                         <p className="post-meta"><strong>Posted by:</strong> {post.username || "Unknown"}</p>
-
                         <div className="post-actions">
                             <button onClick={() => navigate(`/post/${post.id}`)}>View Post</button>
-
                             <div className="action-menu">
                                 <button className="menu-button" onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)}>
                                     <FaEllipsisV />
                                 </button>
-
                                 {menuOpen === post.id && (
                                     <div className="dropdown-menu">
                                         <button onClick={() => handleUpdatePost(post.id)}><FaEdit /> Edit</button>

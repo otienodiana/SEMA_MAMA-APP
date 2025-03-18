@@ -12,16 +12,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # API endpoints
-    path('api/', include('mama.urls')),  # General API routes
+    path('api/mama/', include('mama.urls')),  # Changed from 'api/'
     path('api/users/', include('users.urls')),  # Authentication, Profiles
     path('api/content/', include('content.urls')),  # Educational content
     path('api/community/', include('community.urls')),  # Postpartum Support, Forums
     
     path('api/analytics/', include('analytics.urls')),  # User engagement tracking
     path('api/appointments/', include('appointments.urls')),  # Appointments
-]
-
-
-# Serve media files during development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

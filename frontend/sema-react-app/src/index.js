@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './i18n'; // Make sure this import comes before App
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';

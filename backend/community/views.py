@@ -154,14 +154,31 @@ class CommentDetailView(RetrieveUpdateDestroyAPIView):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def join_forum(request, forum_id):
-    forum = get_object_or_404(Forum, id=forum_id)
-    user = request.user
+    try:
+        forum = get_object_or_404(Forum, id=forum_id)
+        user = request.user
 
-    if forum.members.filter(id=user.id).exists():
-        return Response({"detail": "You are already a member of this forum."}, status=400)
+        # Check if already a member
+        if forum.members.filter(id=user.id).exists():
+            return Response({
+                "status": "already_member",
+                "message": "You are already a member of this forum.",
+                "forum_id": forum_id
+            }, status=status.HTTP_200_OK)  # Return 200 instead of 400
 
-    forum.members.add(user)
-    return Response({"message": "Successfully joined the forum!"}, status=200)
+        # Add user to forum members
+        forum.members.add(user)
+        return Response({
+            "status": "joined",
+            "message": "Successfully joined the forum!",
+            "forum_id": forum_id
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "status": "error",
+            "message": str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 class ForumListView(ListAPIView):
     queryset = Forum.objects.all()
@@ -282,20 +299,24 @@ class ForumListView(generics.ListCreateAPIView):
 
 class ForumPostListCreateView(generics.ListCreateAPIView):
     serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         forum_id = self.kwargs.get('forum_id')
         return Post.objects.filter(forum_id=forum_id)
 
-    def create(self, request, *args, **kwargs):
+    def perform_create(self, serializer):
         forum_id = self.kwargs.get('forum_id')
-        request.data['forum'] = forum_id  # Assign forum ID
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        forum = get_object_or_404(Forum, id=forum_id)
+        
+        # Check if user is a member of the forum
+        if not forum.members.filter(id=self.request.user.id).exists():
+            raise PermissionDenied("You must be a member of this forum to create posts.")
+            
+        serializer.save(
+            forum_id=forum_id,
+            user=self.request.user
+        )
 
 class PostLikeView(APIView):
     def post(self, request, post_id):
@@ -355,6 +376,29 @@ class PostDetailView(RetrieveUpdateDestroyAPIView):
 
 
 
+class PostReactionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, post_id):
+        post = get_object_or_404(Post, id=post_id)
+        reaction_type = request.data.get('reaction_type')
+
+        if reaction_type == 'helpful':
+            if request.user in post.likes.all():
+                post.likes.remove(request.user)
+                is_helpful = False
+            else:
+                post.likes.add(request.user)
+                is_helpful = True
+            
+            return Response({
+                'is_helpful': is_helpful,
+                'likes_count': post.likes.count()
+            })
+        
+        return Response({
+            'error': 'Invalid reaction type'
+        }, status=400)
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):

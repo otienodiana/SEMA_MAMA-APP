@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Content
 from .serializers import ContentSerializer
 from rest_framework.response import Response
@@ -6,65 +7,112 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ParseError
+import mimetypes
+import os
+from django.db import transaction
 
+class IsHealthcareProvider(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.role == 'healthcare_provider'
 
-class ContentListCreateView(generics.ListCreateAPIView):
+class ContentListView(generics.ListAPIView):
     queryset = Content.objects.all()
     serializer_class = ContentSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class ContentUploadView(generics.CreateAPIView):
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [permissions.IsAuthenticated, IsHealthcareProvider]
+
+    def validate_file(self, file):
+        # Check file size (10MB limit)
+        if file.size > 10 * 1024 * 1024:
+            raise ParseError('File size too large. Maximum size is 10MB')
+
+        # Check file extension and mime type
+        file_name = file.name.lower()
+        mime_type, _ = mimetypes.guess_type(file_name)
+        
+        allowed_extensions = ['.txt', '.pdf', '.jpg', '.jpeg', '.png']
+        allowed_mimetypes = ['text/plain', 'application/pdf', 'image/jpeg', 'image/png']
+        
+        if not any(file_name.endswith(ext) for ext in allowed_extensions):
+            raise ParseError('Unsupported file extension')
+            
+        if mime_type not in allowed_mimetypes:
+            raise ParseError(f'Unsupported file type: {mime_type}')
+
+        # Check if file is empty
+        if file.size == 0:
+            raise ParseError('Empty file uploaded')
 
     def perform_create(self, serializer):
+        if not self.request.user.is_authenticated:
+            raise ParseError('User must be authenticated')
         serializer.save(uploaded_by=self.request.user)
 
-class ContentDetailView(RetrieveUpdateDestroyAPIView):
-    queryset = Content.objects.all()
-    serializer_class = ContentSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         try:
-            content = self.get_object()  # Retrieve the content object
-            serializer = self.get_serializer(content)  # Serialize it
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Content.DoesNotExist:
-            return Response({"error": "Content not found"}, status=status.HTTP_404_NOT_FOUND)
+            with transaction.atomic():
+                # Validate required fields
+                if not request.data.get('title'):
+                    raise ParseError('Title is required')
+                if not request.data.get('description'):
+                    raise ParseError('Description is required')
+                if not request.data.get('content_type'):
+                    raise ParseError('Content type is required')
 
-    def patch(self, request, *args, **kwargs):
-        content = self.get_object()
-        serializer = self.get_serializer(content, data=request.data, partial=True)
+                # Check for duplicate title before file validation
+                title = request.data.get('title')
+                if Content.objects.filter(title=title).exists():
+                    raise ParseError(f'Content with title "{title}" already exists')
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+                # Validate file presence and content
+                if 'file' not in request.FILES:
+                    raise ParseError('No file provided')
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                file = request.FILES['file']
+                self.validate_file(file)
 
-class ContentUploadView(APIView):
-    permission_classes = [IsAuthenticated]
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                
+                try:
+                    self.perform_create(serializer)
+                except IOError:
+                    return Response(
+                        {'error': 'Storage error occurred'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
 
-    def post(self, request):
-        # Get the file from the request
-        file = request.FILES.get('file')
-        title = request.data.get('title')
-        description = request.data.get('description')
-        content_type = request.data.get('content_type', 'other')
+                headers = self.get_success_headers(serializer.data)
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED,
+                    headers=headers
+                )
 
-        if not file or not title:
-            return Response({'error': 'File and title are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        except ParseError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-        # Save the content with the uploaded file
-        content = Content.objects.create(
-            title=title,
-            description=description,
-            file=file,
-            content_type=content_type,
-            uploaded_by=request.user,
-        )
-
-        serializer = ContentSerializer(content)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-class ContentDeleteView(generics.DestroyAPIView):
+class ContentDetailView(generics.RetrieveDestroyAPIView):
     queryset = Content.objects.all()
     serializer_class = ContentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsHealthcareProvider]
+
+    def check_object_permissions(self, request, obj):
+        if request.method == 'DELETE' and not IsHealthcareProvider().has_permission(request, self):
+            self.permission_denied(request)
+        return super().check_object_permissions(request, obj)

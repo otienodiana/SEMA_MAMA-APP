@@ -29,41 +29,36 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y^ptm_l)$uk3)exhoe0!ui#$a20l_dmdk6^icv^yzr9fq=twk!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "sema-mama-app.onrender.com",
     "sema-react-app.vercel.app",
     "localhost",
-    "127.0.0.1"
+    "127.0.0.1",
 ]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    #"daphne",
     'django.contrib.staticfiles',
-    'mama',
+    'corsheaders',
     'rest_framework',
     
-    #"channels",
+    
+    # Custom apps in dependency order
     'users',
+    'mama',
     'content',
-    #'sms',
     'analytics',
-    'api',
     'appointments',
     'community',
-    
-
-    
 ]
 
 REST_FRAMEWORK = {
@@ -87,7 +82,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'sema_mama.urls'
@@ -155,17 +150,24 @@ else:
         }
     }
 
-
-
+# Update database for local development
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 CORS_ALLOWED_ORIGINS = [
-    "https://sema-react-app.vercel.app",
     "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_ALLOW_ALL = True  # Changed to True for development
+CORS_ORIGIN_ALLOW_ALL = True
+
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
@@ -257,3 +259,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Internationalization settings
+LANGUAGE_CODE = 'en'
+
+LANGUAGES = [
+    ('en', 'English'),
+    ('sw', 'Swahili'),
+    ('fr', 'French'),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]

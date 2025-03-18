@@ -10,17 +10,18 @@ from .views import (
 )
 
 urlpatterns = [
-    # ✅ List & Create Appointments for Moms
-    path("moms/appointments/", MomAppointmentsView.as_view(), name="moms_appointments"),
-    path('appointments/delete/<int:pk>/', DeleteAppointmentView.as_view(), name='delete-appointment'),
-
-    # ✅ Update & Cancel Appointments (Only by the appointment owner)
+    # Mom-specific Routes
+    path("moms/appointments/", MomAppointmentsView.as_view(), name="mom_appointments_list"),
+    path("moms/appointments/create/", MomAppointmentsView.as_view(), name="mom_create_appointment"),
+    
+    # Appointment Management
     path("update/<int:pk>/", UpdateAppointmentView.as_view(), name="update_appointment"),
     path("cancel/<int:pk>/", CancelAppointmentView.as_view(), name="cancel_appointment"),
+    path("delete/<int:pk>/", DeleteAppointmentView.as_view(), name="delete_appointment"),
 
-    # Providers: View & Manage Appointments
-    path("providers/", ProviderAppointmentsView.as_view(), name="provider_appointments"),
-    path("<int:pk>/approve/", ApproveRejectAppointmentView.as_view(), name="approve_appointment"),
-    path("<int:pk>/reject/", ApproveRejectAppointmentView.as_view(), name="reject_appointment"),
-    path("<int:pk>/reschedule/", RescheduleAppointmentView.as_view(), name="reschedule_appointment"),
+    # Provider Routes
+    path("provider/list/", ProviderAppointmentsView.as_view(), name="provider_appointments"),
+    path("provider/approve/<int:pk>/", ApproveRejectAppointmentView.as_view(), name="approve_appointment"),
+    path("provider/reject/<int:pk>/", ApproveRejectAppointmentView.as_view(), name="reject_appointment"),
+    path("provider/reschedule/<int:pk>/", RescheduleAppointmentView.as_view(), name="reschedule_appointment"),
 ]

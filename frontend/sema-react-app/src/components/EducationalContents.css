@@ -1,3 +1,17 @@
+/* WHO Official Color Palette */
+:root {
+  --who-primary-blue: #008DC9;
+  --who-darker-blue: #006D9C;
+  --who-light-blue: #E3F2FD;
+  --who-accent-blue: #41B6E6;
+  --who-neutral-grey: #4D4D4D;
+  --who-light-grey: #F2F2F2;
+  --who-success-green: #217645;
+  --who-warning-yellow: #FFB612;
+  --who-alert-red: #CC0000;
+  --who-white: #FFFFFF;
+}
+
 /* Main container */
 .content-page {
   max-width: 1000px;
@@ -5,6 +19,7 @@
   padding: 20px;
   font-family: Arial, sans-serif;
   text-align: center;
+  background: var(--who-light-grey);
 }
 
 /* Layout: Place resources and form side by side */
@@ -29,11 +44,12 @@
 
 /* Resource card styling */
 .resource-card {
-  background: #f9f9f9;
+  background: var(--who-white);
   border-radius: 8px;
   padding: 15px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
+  border-left: 4px solid var(--who-primary-blue);
 }
 
 .resource-card:hover {
@@ -63,13 +79,13 @@
 }
 
 .upload-section button {
-  background: #28a745;
-  color: white;
+  background: var(--who-success-green);
+  color: var(--who-white);
   cursor: pointer;
 }
 
 .upload-section button:hover {
-  background: #218838;
+  background: var(--who-darker-blue);
 }
 
 /* Make layout stack on small screens */
@@ -82,4 +98,64 @@
   .upload-section {
     width: 100%;
   }
+}
+
+.search-and-filter {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  border-color: #0072C6;
+  outline: none;
+}
+
+.filter-button {
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 2px solid #0072C6;
+  color: #0072C6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-button.active {
+  background: #0072C6;
+  color: #fff;
+}
+
+.resource-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.favorite-button {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 2px solid #FFD700;
+  color: #FFD700;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.favorite-button.active {
+  background: #FFD700;
+  color: #fff;
 }

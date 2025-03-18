@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaEllipsisV } from "react-icons/fa";
+import { useTranslation } from 'react-i18next';
 import "./PostDetail.css";
 
 const PostDetail = () => {
+    const { t } = useTranslation();
     const { id } = useParams();
     const [post, setPost] = useState(null);
     const [comments, setComments] = useState([]);
@@ -13,6 +15,13 @@ const PostDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
+    const [isHelpful, setIsHelpful] = useState(false);
+    const [showReplyForm, setShowReplyForm] = useState(null);
+    const [replyContent, setReplyContent] = useState("");
+    const [likes, setLikes] = useState(0);
+    const [isLiked, setIsLiked] = useState(false); 
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followNotification, setFollowNotification] = useState('');
     const navigate = useNavigate();
 
     async function fetchUser() {
@@ -73,11 +82,19 @@ const PostDetail = () => {
         fetchComments();
     }, [fetchPostDetail, fetchComments]);
 
+    useEffect(() => {
+        if (post) {
+            setLikes(post.likes_count || 0);
+            setIsLiked(post.is_liked || false);
+            setIsFollowing(post.is_following || false);
+        }
+    }, [post]);
+
     async function handleDeleteComment(commentId) {
         let token = localStorage.getItem("access");
         if (!token) return;
 
-        if (!window.confirm("Are you sure you want to delete this comment?")) return;
+        if (!window.confirm(t('post.deleteConfirm'))) return;
 
         try {
             const response = await fetch(`http://localhost:8000/api/community/comments/${commentId}/`, {
@@ -161,66 +178,180 @@ const PostDetail = () => {
         }
     };
 
+    const handleReaction = async (type) => {
+        let token = localStorage.getItem("access");
+        if (!token) return;
+
+        try {
+            const response = await fetch(`http://localhost:8000/api/community/posts/${id}/react/`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ reaction_type: type })
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to react to post");
+            }
+
+            const data = await response.json();
+            setIsHelpful(data.is_helpful);
+            // Optionally update likes count in the UI
+            if (post) {
+                setPost({...post, likes_count: data.likes_count});
+            }
+        } catch (error) {
+            console.error("Error reacting to post:", error);
+        }
+    };
+
+    const handleReply = async (commentId) => {
+        let token = localStorage.getItem("access");
+        if (!token || !user) return;
+
+        try {
+            const response = await fetch(`http://localhost:8000/api/community/comments/${commentId}/reply/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ content: replyContent })
+            });
+
+            if (!response.ok) throw new Error("Failed to post reply");
+
+            const newReply = await response.json();
+            setComments(comments.map(comment => 
+                comment.id === commentId 
+                    ? { ...comment, replies: [...(comment.replies || []), newReply] }
+                    : comment
+            ));
+            setShowReplyForm(null);
+            setReplyContent("");
+        } catch (error) {
+            console.error("Error posting reply:", error);
+        }
+    };
+
+    const handleLike = async () => {
+        let token = localStorage.getItem("access");
+        if (!token) return;
+
+        try {
+            const response = await fetch(`http://localhost:8000/api/community/posts/${id}/like/`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (!response.ok) throw new Error("Failed to like post");
+
+            const data = await response.json();
+            setLikes(data.likes_count);
+            setIsLiked(!isLiked);
+        } catch (error) {
+            console.error("Error liking post:", error);
+        }
+    };
+
+    const handleFollow = async () => {
+        let token = localStorage.getItem("access");
+        if (!token) return;
+
+        try {
+            const response = await fetch(`http://localhost:8000/api/community/posts/${id}/follow/`, {
+                method: "POST", 
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (!response.ok) throw new Error("Failed to follow discussion");
+
+            const data = await response.json();
+            setIsFollowing(!isFollowing);
+            setFollowNotification(
+                isFollowing ? 
+                'You will no longer receive notifications for this discussion' : 
+                'You will receive notifications when new comments are added'
+            );
+
+            // Hide notification after 3 seconds
+            setTimeout(() => setFollowNotification(''), 3000);
+        } catch (error) {
+            console.error("Error following discussion:", error);
+        }
+    };
+
     return (
         <div className="post-detail-container">
-            <button className="back-button" onClick={() => navigate(-1)}>
-                ← Back
-            </button>
-
-            {loading && <p>Loading...</p>}
-            {error && <p style={{ color: "red" }}>Error: {error}</p>}
-
-            {post && (
+            {loading ? <p>{t('post.loading')}</p> : error ? <p className="error">{error}</p> : (
                 <>
-                    <h2 className="post-title">{post.title}</h2>
-                    <p className="post-content">{post.content}</p>
+                    <div className="post-header">
+                        <div className="user-avatar">
+                            {/* If you have user avatar, add it here */}
+                        </div>
+                        <div className="post-user-info">
+                            <a href="#" className="post-username">{post?.username}</a>
+                            <div className="post-meta">
+                                {new Date(post?.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <p className="post-content">{post?.content}</p>
+
+                    <div className="post-actions">
+                        <button onClick={handleLike}>
+                            {isLiked ? '❤️' : '🤍'}
+                            <span>{likes} {likes === 1 ? t('post.like') : t('post.likes')}</span>
+                        </button>
+                        <button onClick={handleFollow}>
+                            {isFollowing ? '🔔' : '🔕'}
+                            <span>{isFollowing ? t('post.following') : t('post.follow')}</span>
+                        </button>
+                    </div>
 
                     <div className="comments-section">
-                        <h3>Comments</h3>
-                        {comments.length === 0 ? (
-                            <p>No comments yet. Be the first!</p>
-                        ) : (
-                            comments.map((comment) => (
-                                <div key={comment.id} className="comment">
-                                    {editingComment === comment.id ? (
-                                        <>
-                                            <textarea
-                                                value={editedCommentText}
-                                                onChange={(e) => setEditedCommentText(e.target.value)}
-                                            />
-                                            <button onClick={() => handleEditComment(comment.id)}>💾 Save</button>
-                                            <button onClick={() => setEditingComment(null)}>❌ Cancel</button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <p>{comment.content}</p>
-                                            <p>
-                                                <strong>By:</strong> {comment.user ? comment.user.username : "Unknown"}
-                                            </p>
-
-                                            {user && comment.user.username === user.username && (
-                                                <div className="comment-actions">
-                                                    <button onClick={() => setEditingComment(comment.id) || setEditedCommentText(comment.content)}>
-                                                         Edit
-                                                    </button>
-                                                    <button onClick={() => handleDeleteComment(comment.id)}> Delete</button>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
+                        <h3>{t('post.comments')}</h3>
+                        {comments.map((comment) => (
+                            <div key={comment.id} className="comment">
+                                <div className="comment-content">
+                                    <span className="comment-username">{comment.user?.username}</span>
+                                    <span className="comment-text">{comment.content}</span>
                                 </div>
-                            ))
-                        )}
+                                {user && comment.user?.username === user.username && (
+                                    <div className="comment-actions">
+                                        <button onClick={() => setEditingComment(comment.id)}>Edit</button>
+                                        <button onClick={() => handleDeleteComment(comment.id)}>Delete</button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
 
                     <form className="comment-form" onSubmit={handleCommentSubmit}>
                         <textarea
+                            placeholder={t('post.addComment')}
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Write a comment..."
-                        ></textarea>
-                        <button type="submit">Post Comment</button>
+                        />
+                        <button type="submit" disabled={!newComment.trim()}>
+                            {t('post.post')}
+                        </button>
                     </form>
+
+                    {followNotification && (
+                        <div className="notification">
+                            {followNotification}
+                        </div>
+                    )}
                 </>
             )}
         </div>

@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import "./Community.css";
 
 const BASE_URL = "http://localhost:8000/api/community";
 
 const Community = () => {
+    const { t } = useTranslation();
     const [forums, setForums] = useState([]);
     const [joinedForums, setJoinedForums] = useState([]);
     const [newForumName, setNewForumName] = useState("");
     const [newForumDescription, setNewForumDescription] = useState("");
     const [newForumVisibility, setNewForumVisibility] = useState("public");
     const [newForumPicture, setNewForumPicture] = useState(null);
+    const [forumFilter, setForumFilter] = useState('all');
+    const [forumCategory, setForumCategory] = useState('general');
+    const categories = [
+        'Pregnancy',
+        'Postpartum',
+        'Parenting',
+        'Mental Health',
+        'General'
+    ];
     const navigate = useNavigate();
     const token = localStorage.getItem("access");
 
@@ -76,27 +87,20 @@ const Community = () => {
             const data = await response.json();
 
             if (response.ok) {
-                alert("Successfully joined the forum!");
-                setJoinedForums((prev) => [...prev, forumId]); 
-                setCurrentForum(forumId); // ✅ Store the joined forum
-                navigate(`/community/forums/${forumId}/posts`); // 🚀 Redirect after joining
-            } else if (data.detail === "You are already a member of this forum.") {
-                alert("You are already a member of this forum!");
-                setCurrentForum(forumId); // ✅ Store the forum if already a member
-                navigate(`/community/forums/${forumId}/posts`); // 🚀 Redirect
-            } else {
-                alert("Error joining forum: " + data.detail);
+                // Handle both cases - already member and just joined
+                if (data.status === "already_member" || data.status === "joined") {
+                    setJoinedForums(prev => prev.includes(forumId) ? prev : [...prev, forumId]);
+                    navigate(`/community/forums/${forumId}/posts`);
+                    return;
+                }
             }
+            
+            throw new Error(data.message || "Failed to join forum");
         } catch (error) {
             console.error("Error joining forum:", error);
-            alert("An unexpected error occurred. Please try again.");
+            alert(error.message || "An unexpected error occurred. Please try again.");
         }
     };
-
-    
-    
-    
-    
 
     // Create Forum
     const createForum = async (e) => {
@@ -114,6 +118,7 @@ const Community = () => {
             formData.append("description", newForumDescription);
             formData.append("visibility", newForumVisibility);
             if (newForumPicture) formData.append("profile_picture", newForumPicture);
+            formData.append("category", forumCategory);
     
             response = await fetch(`${BASE_URL}/forums/`, {
                 method: "POST",
@@ -141,19 +146,27 @@ const Community = () => {
 
     return (
         <div className="community-container">
-            <h1>Community Forums</h1>
+            <h1>{t('community.title')}</h1>
             <button onClick={() => navigate('/forums')} className="view-forums-btn">
-                View All Forums
+                {t('community.viewAllForums')}
             </button>
+
+            <div className="forum-filters">
+                <select value={forumFilter} onChange={(e) => setForumFilter(e.target.value)}>
+                    <option value="all">{t('community.allForums')}</option>
+                    <option value="my">{t('community.myForums')}</option>
+                    <option value="popular">{t('community.popularForums')}</option>
+                </select>
+            </div>
 
             {/* Create Forum Form */}
             {token && (
                 <div className="create-forum">
-                    <h2>Create a New Forum</h2>
+                    <h2>{t('community.createForum')}</h2>
                     <form onSubmit={createForum}>
                         <input 
                             type="text" 
-                            placeholder="Forum Name" 
+                            placeholder={t('community.forumName')}
                             value={newForumName} 
                             onChange={(e) => setNewForumName(e.target.value)} 
                             required 
@@ -173,36 +186,51 @@ const Community = () => {
                             accept="image/*" 
                             onChange={(e) => setNewForumPicture(e.target.files[0])} 
                         />
+                        <select 
+                            value={forumCategory} 
+                            onChange={(e) => setForumCategory(e.target.value)}
+                            required
+                        >
+                            {categories.map(cat => (
+                                <option key={cat} value={cat.toLowerCase()}>{cat}</option>
+                            ))}
+                        </select>
                         <button type="submit">Create Forum</button>
                     </form>
                 </div>
             )}
 
-            {/* Forum List */}
-            <h2>Available Forums</h2>
-            <div className="forums-grid">
-                {forums.map((forum) => (
-                    <div key={forum?.id} className="forum-card">
-                        {/* Forum Profile Picture */}
-                        {forum.profile_picture ? (
-                            <img src={`${BASE_URL}${forum.profile_picture}`} alt="Forum" className="forum-image" />
-                        ) : (
-                            <div className="forum-placeholder">No Image</div>
-                        )}
+            {/* Category Sections */}
+            {categories.map(category => (
+                <div key={category} className="forum-category-section">
+                    <h2>{category}</h2>
+                    <div className="forums-grid">
+                        {forums
+                            .filter(forum => forum.category === category.toLowerCase())
+                            .map(forum => (
+                                <div key={forum?.id} className="forum-card">
+                                    {/* Forum Profile Picture */}
+                                    {forum.profile_picture ? (
+                                        <img src={`${BASE_URL}${forum.profile_picture}`} alt="Forum" className="forum-image" />
+                                    ) : (
+                                        <div className="forum-placeholder">No Image</div>
+                                    )}
 
-                        <h3>{forum.name}</h3>
-                        <p>{forum.description}</p>
-                        <p><strong>Visibility:</strong> {forum.visibility}</p>
-                        <p><strong>Created By:</strong> {forum.created_by || "Unknown"}</p>
+                                    <h3>{forum.name}</h3>
+                                    <p>{forum.description}</p>
+                                    <p><strong>Visibility:</strong> {forum.visibility}</p>
+                                    <p><strong>Created By:</strong> {forum.created_by || "Unknown"}</p>
 
-                        {joinedForums.includes(forum.id) ? (
-                            <button onClick={() => navigate(`/community/forums/${forum.id}/posts`)}>View Posts</button>
-                        ) : (
-                            <button onClick={() => joinForum(forum.id)}>Join Forum</button>
-                        )}
+                                    {joinedForums.includes(forum.id) ? (
+                                        <button onClick={() => navigate(`/community/forums/${forum.id}/posts`)}>View Posts</button>
+                                    ) : (
+                                        <button onClick={() => joinForum(forum.id)}>Join Forum</button>
+                                    )}
+                                </div>
+                            ))}
                     </div>
-                ))}
-            </div>
+                </div>
+            ))}
         </div>
     );
 };

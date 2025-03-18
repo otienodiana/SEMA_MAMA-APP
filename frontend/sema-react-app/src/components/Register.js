@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import "./Register.css";
 
 function Register() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,43 +35,42 @@ function Register() {
     }
 
     try {
-      const response = await fetch("https://sema-mama-app.onrender.com/api/users/register/", {
+      const response = await fetch("http://localhost:8000/api/users/register/", {
         method: "POST",
-        body: formData, // Send FormData directly
+        body: formData
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error response:", errorData);
-        throw new Error(errorData.detail || JSON.stringify(errorData));
+        console.error("Registration response:", errorData);
+        throw new Error(errorData.detail || "Registration failed");
       }
 
       const data = await response.json();
-      setSuccess("Registration successful! Redirecting to login...");
       console.log("Registration successful:", data);
+      setSuccess("Registration successful! Redirecting to login...");
 
-      // Redirect to login page after 2 seconds
       setTimeout(() => {
         navigate("/login");
-      }, 2000);
+      }, 1500);
     } catch (error) {
       console.error("Registration error:", error);
-      setError(error.message);
+      setError(error.message || "Registration failed");
     }
   };
 
   return (
     <div className="register-container">
-      <h2 className="register-title">Register</h2>
+      <h2 className="register-title">{t('register.title')}</h2>
 
-      {error && <p className="error-message">{error}</p>}
-      {success && <p className="success-message">{success}</p>}
+      {error && <p className="error-message">{t('register.error')}</p>}
+      {success && <p className="success-message">{t('register.success')}</p>}
 
       <form onSubmit={handleRegister} className="register-form" encType="multipart/form-data">
         <div className="form-group">
           <input
             type="text"
-            placeholder="Username"
+            placeholder={t('register.username')}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -80,7 +81,7 @@ function Register() {
         <div className="form-group">
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t('register.email')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -91,7 +92,7 @@ function Register() {
         <div className="form-group">
           <input
             type="password"
-            placeholder="Password"
+            placeholder={t('register.password')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -102,7 +103,7 @@ function Register() {
         <div className="form-group">
           <input
             type="text"
-            placeholder="Phone Number"
+            placeholder={t('register.phoneNumber')}
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             className="form-input"
@@ -110,22 +111,22 @@ function Register() {
         </div>
 
         <div className="form-group">
-          <label className="role-label">Select your role:</label>
+          <label className="role-label">{t('register.role')}</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className="form-select"
           >
-            <option value="mom">Mom</option>
-            <option value="healthcare_provider">Healthcare Provider</option>
-            <option value="admin">Admin</option>
+            <option value="mom">{t('register.role.mom')}</option>
+            <option value="healthcare_provider">{t('register.role.provider')}</option>
+            <option value="admin">{t('register.role.admin')}</option>
           </select>
         </div>
 
         <div className="form-group">
           <input
             type="number"
-            placeholder="Age"
+            placeholder={t('register.age')}
             value={age}
             onChange={(e) => setAge(e.target.value)}
             className="form-input"
@@ -133,7 +134,7 @@ function Register() {
         </div>
 
         <div className="form-group">
-          <label className="role-label">Profile Photo:</label>
+          <label className="role-label">{t('register.profilePhoto')}</label>
           <input
             type="file"
             onChange={(e) => setProfilePhoto(e.target.files[0])}
@@ -143,7 +144,7 @@ function Register() {
         </div>
 
         <button type="submit" className="submit-button">
-          Register
+          {t('register.button')}
         </button>
       </form>
     </div>

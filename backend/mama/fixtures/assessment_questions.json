@@ -1,0 +1,47 @@
+[
+    {
+        "model": "mama.postpartumdepressionquestion",
+        "pk": 1,
+        "fields": {
+            "question_text": "I have been able to laugh and see the funny side of things",
+            "order": 1,
+            "is_active": true
+        }
+    },
+    {
+        "model": "mama.postpartumdepressionquestion",
+        "pk": 2,
+        "fields": {
+            "question_text": "I have looked forward with enjoyment to things",
+            "order": 2,
+            "is_active": true
+        }
+    },
+    {
+        "model": "mama.postpartumdepressionquestion",
+        "pk": 3,
+        "fields": {
+            "question_text": "I have blamed myself unnecessarily when things went wrong",
+            "order": 3,
+            "is_active": true
+        }
+    },
+    {
+        "model": "mama.postpartumdepressionquestion",
+        "pk": 4,
+        "fields": {
+            "question_text": "I have been anxious or worried for no good reason",
+            "order": 4,
+            "is_active": true
+        }
+    },
+    {
+        "model": "mama.postpartumdepressionquestion",
+        "pk": 5,
+        "fields": {
+            "question_text": "I have felt scared or panicky for no very good reason",
+            "order": 5,
+            "is_active": true
+        }
+    }
+]

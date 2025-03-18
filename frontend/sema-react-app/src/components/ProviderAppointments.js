@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useTranslation } from 'react-i18next';
 
 const ProvidersAppointments = () => {
+  const { t } = useTranslation();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("all");
@@ -164,44 +166,41 @@ const deleteAppointment = async (id) => {
 
   return (
     <div>
-      <h2>Manage Appointments</h2>
+      <h2>{t('provider.appointments.title')}</h2>
 
-      {/* Filter & Sort */}
       <div>
-        <label>Filter by Status:</label>
+        <label>{t('provider.appointments.filterStatus')}</label>
         <select onChange={(e) => setFilterStatus(e.target.value)} value={filterStatus}>
-          <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="completed">Completed</option>
-          <option value="canceled">Canceled</option>
+          <option value="all">{t('filter.all')}</option>
+          <option value="pending">{t('appointment.status.pending')}</option>
+          <option value="confirmed">{t('appointment.status.confirmed')}</option>
+          <option value="completed">{t('appointment.status.completed')}</option>
+          <option value="canceled">{t('appointment.status.canceled')}</option>
         </select>
 
-        <label>Sort by Date:</label>
+        <label>{t('provider.appointments.sortDate')}</label>
         <select onChange={(e) => setSortOrder(e.target.value)} value={sortOrder}>
-          <option value="upcoming">Upcoming</option>
-          <option value="past">Past</option>
+          <option value="upcoming">{t('provider.appointments.upcoming')}</option>
+          <option value="past">{t('provider.appointments.past')}</option>
         </select>
       </div>
 
-      {/* Loading State */}
-      {loading ? <p>Loading...</p> : null}
+      {loading ? <p>{t('provider.appointments.loading')}</p> : null}
 
-      {/* Appointments List */}
       {filteredAppointments.length === 0 ? (
-        <p>No appointments found.</p>
+        <p>{t('provider.appointments.noAppointments')}</p>
       ) : (
         <ul>
   {filteredAppointments.map((appointment) => (
     <li key={appointment.id} style={{ border: "1px solid #ddd", padding: "10px", marginBottom: "10px", borderRadius: "5px" }}>
       <h3>{appointment.title}</h3>
-      <p><strong>Mom's Name:</strong> {appointment.mom_name}</p>
-      <p><strong>Date:</strong> {new Date(appointment.date).toLocaleString()}</p>
-      <p><strong>Status:</strong> {appointment.status}</p>
-      <p><strong>Reason:</strong> {appointment.description}</p>
+      <p><strong>{t('provider.appointments.momName')}:</strong> {appointment.mom_name}</p>
+      <p><strong>{t('provider.appointments.date')}:</strong> {new Date(appointment.date).toLocaleString()}</p>
+      <p><strong>{t('provider.appointments.status')}:</strong> {appointment.status}</p>
+      <p><strong>{t('provider.appointments.reason')}:</strong> {appointment.description}</p>
       
       {/* ✅ Show the Request Date (created_at) */}
-      <p><strong>Requested on:</strong> {new Date(appointment.created_at).toLocaleDateString()}</p>
+      <p><strong>{t('provider.appointments.requestedOn')}:</strong> {new Date(appointment.created_at).toLocaleDateString()}</p>
 
       {appointment.status === "pending" && (
         <>

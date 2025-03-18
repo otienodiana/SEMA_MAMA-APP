@@ -40,3 +40,61 @@ class Setting(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.language}"
+
+class PostpartumDepressionQuestion(models.Model):
+    question_text = models.CharField(max_length=500)
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order']
+        app_label = 'mama'  # Add this line
+
+    def __str__(self):
+        return self.question_text
+
+class AssessmentResponse(models.Model):
+    RESPONSE_CHOICES = [
+        (0, 'Never'),
+        (1, 'Sometimes'),
+        (2, 'Often'),
+        (3, 'Always')
+    ]
+
+    RISK_LEVELS = [
+        ('low', 'Low Risk'),
+        ('moderate', 'Moderate Risk'),
+        ('high', 'High Risk')
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    question = models.ForeignKey(PostpartumDepressionQuestion, on_delete=models.CASCADE)
+    response = models.IntegerField(choices=RESPONSE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'mama'  # Add this line
+
+class AssessmentResult(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    total_score = models.IntegerField()
+    risk_level = models.CharField(max_length=20, choices=AssessmentResponse.RISK_LEVELS)
+    completed_at = models.DateTimeField(auto_now_add=True)
+    responses = models.ManyToManyField(AssessmentResponse)
+    notes = models.TextField(blank=True)
+
+    def calculate_risk_level(self):
+        if self.total_score < 10:
+            return 'low'
+        elif self.total_score < 20:
+            return 'moderate'
+        return 'high'
+
+    def save(self, *args, **kwargs):
+        if not self.risk_level:
+            self.risk_level = self.calculate_risk_level()
+        super().save(*args, **kwargs)
+
+    class Meta:
+        app_label = 'mama'  # Add this line
