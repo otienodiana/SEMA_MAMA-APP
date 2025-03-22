@@ -9,7 +9,7 @@ function MomDashboard() {
 
   return (
     <div className="mom-dashboard-container">
-      <header className="mom-dashboard-header">{t('dashboard.header')}</header>
+      <header className="mom-dashboard-header">Moms Dashboard</header>
 
       <nav className="mom-dashboard-nav">
         <ul>

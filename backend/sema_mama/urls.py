@@ -1,22 +1,25 @@
 from django.contrib import admin
-from django.http import JsonResponse
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-def home_view(request):
-    return JsonResponse({"message": "Welcome to Sema Mama Backend!"})
-
 urlpatterns = [
-    path('', home_view),  # Root home response
     path('admin/', admin.site.urls),
+    path('api/users/', include('users.urls')),
+    path('api/content/', include('content.urls')),
+    path('api/appointments/', include('appointments.urls')),
+    path('api/community/', include('community.urls')),
+    path('api/analytics/', include('analytics.urls')),  # Make sure this line exists
+]
 
-    # API endpoints
-    path('api/mama/', include('mama.urls')),  # Changed from 'api/'
-    path('api/users/', include('users.urls')),  # Authentication, Profiles
-    path('api/content/', include('content.urls')),  # Educational content
-    path('api/community/', include('community.urls')),  # Postpartum Support, Forums
-    
-    path('api/analytics/', include('analytics.urls')),  # User engagement tracking
-    path('api/appointments/', include('appointments.urls')),  # Appointments
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += [
+        path('__debug__/', include('debug_toolbar.urls')),
+    ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Update the static file serving for development
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

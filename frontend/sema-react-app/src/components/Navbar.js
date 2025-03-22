@@ -29,14 +29,7 @@ const Navbar = () => {
       <div className="nav-links">
         <Link to="/about" className="nav-link">{t('nav.about')}</Link>
         <Link to="/resources" className="nav-link">{t('nav.resources')}</Link>
-        {user ? (
-          <>
-            <Link to="/community" className="nav-link">{t('nav.community')}</Link>
-            <Link to={getDashboardPath()} className="nav-link">{t('nav.dashboard')}</Link>
-          </>
-        ) : (
-          <Link to="/login" className="nav-link">Login</Link>
-        )}
+         
       </div>
     </nav>
   );

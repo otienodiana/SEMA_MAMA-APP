@@ -45,3 +45,31 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.user.username} - {self.report_type}"
+
+class UserStatistics(models.Model):
+    date = models.DateField(auto_now_add=True)
+    total_users = models.IntegerField(default=0)
+    active_users = models.IntegerField(default=0)
+    inactive_users = models.IntegerField(default=0)
+    new_registrations = models.IntegerField(default=0)
+
+class EngagementMetrics(models.Model):
+    date = models.DateField(auto_now_add=True)
+    total_posts = models.IntegerField(default=0)
+    total_comments = models.IntegerField(default=0)
+    total_likes = models.IntegerField(default=0)
+    total_shares = models.IntegerField(default=0)
+    appointments_booked = models.IntegerField(default=0)
+
+class SystemPerformance(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    server_uptime = models.DurationField()
+    api_requests = models.IntegerField(default=0)
+    storage_usage = models.BigIntegerField(default=0)
+    response_time = models.FloatField(default=0.0)
+
+class RealtimeActivity(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    online_users = models.IntegerField(default=0)
+    active_sessions = models.IntegerField(default=0)
+    recent_activities = models.JSONField(default=list)

@@ -51,19 +51,18 @@ class RegisterUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+    parser_classes = (MultiPartParser, FormParser)
 
     def create(self, request, *args, **kwargs):
         try:
-            # Print the incoming data for debugging
-            print("📝 Registration attempt with data:", request.data)
-            
             serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+            if not serializer.is_valid():
+                return Response(
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             user = serializer.save()
-            
-            print(f"✅ User created successfully: {user.username}")
-            
-            # Return success response with user details
             return Response({
                 "detail": "Registration successful",
                 "user": {
@@ -74,7 +73,6 @@ class RegisterUserView(generics.CreateAPIView):
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
-            print(f"❌ Registration error: {str(e)}")
             return Response(
                 {"detail": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
@@ -88,11 +86,11 @@ class LoginView(TokenObtainPairView):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def custom_login(request):
-    username = request.data.get("username")
-    password = request.data.get("password")
+    """Custom login view with better error handling"""
+    username = request.data.get("username", "").strip()
+    password = request.data.get("password", "").strip()
     
-    print(f"👤 Login attempt - Username: {username}")
-    
+    # Validate required fields
     if not username or not password:
         return Response(
             {"detail": "Both username and password are required"},
@@ -100,22 +98,18 @@ def custom_login(request):
         )
     
     try:
-        # Check if user exists first
-        user_exists = User.objects.filter(username=username).exists()
-        if not user_exists:
-            print(f"❌ User not found: {username}")
+        # Check if user exists
+        if not User.objects.filter(username=username).exists():
             return Response(
                 {"detail": "User not found"},
-                status=status.HTTP_401_UNAUTHORIZED
+                status=status.HTTP_404_NOT_FOUND
             )
             
-        # Try to authenticate
+        # Authenticate user
         user = authenticate(username=username, password=password)
-        print(f"🔐 Authentication result for {username}: {'Success' if user else 'Failed'}")
-        
-        if user is not None and user.is_active:
+        if user and user.is_active:
             refresh = RefreshToken.for_user(user)
-            response_data = {
+            return Response({
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
                 "user": {
@@ -125,31 +119,47 @@ def custom_login(request):
                     "role": user.role,
                     "profile_photo": user.profile_photo.url if user.profile_photo else None,
                 }
-            }
-            print(f"✅ Login successful for {username}")
-            return Response(response_data)
+            })
         else:
-            print(f"❌ Invalid password for {username}")
             return Response(
-                {"detail": "Invalid password"},
+                {"detail": "Invalid credentials"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
             
     except Exception as e:
-        print(f"❌ Login error for {username}: {str(e)}")
+        print(f"Login error: {str(e)}")
         return Response(
             {"detail": "An error occurred during login"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-#  Get all users (Protected)
+#  Get all users (admin only)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_users(request):
-    users = User.objects.all()
-    serializer = UserSerializer(users, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    """Get all users (admin only)"""
+    try:
+        # Check if user is admin
+        if not request.user.role == 'admin':
+            return Response(
+                {"detail": "Only administrators can view user list"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get all users and order by most recent
+        users = User.objects.all().order_by('-date_joined')
+        serializer = UserSerializer(users, many=True)
+        
+        print(f"Fetched {len(users)} users") # Debug log
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"Error fetching users: {str(e)}")
+        return Response(
+            {"detail": "Failed to fetch users"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 #  Refresh Token API
 class RefreshTokenView(TokenRefreshView):

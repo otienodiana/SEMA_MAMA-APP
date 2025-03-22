@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, viewsets
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Content
 from .serializers import ContentSerializer
@@ -18,9 +18,27 @@ class IsHealthcareProvider(permissions.BasePermission):
         return request.user.role == 'healthcare_provider'
 
 class ContentListView(generics.ListAPIView):
-    queryset = Content.objects.all()
     serializer_class = ContentSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            return Content.objects.all().order_by('-created_at')
+        except Exception as e:
+            print(f"Error fetching content: {str(e)}")
+            return Content.objects.none()
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            print(f"Error in list view: {str(e)}")
+            return Response(
+                {"error": "Failed to fetch content"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class ContentUploadView(generics.CreateAPIView):
     queryset = Content.objects.all()
@@ -116,3 +134,31 @@ class ContentDetailView(generics.RetrieveDestroyAPIView):
         if request.method == 'DELETE' and not IsHealthcareProvider().has_permission(request, self):
             self.permission_denied(request)
         return super().check_object_permissions(request, obj)
+
+class ContentViewSet(viewsets.ModelViewSet):
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'destroy']:
+            # Only healthcare providers can create/edit/delete content
+            return [permissions.IsAuthenticated(), IsHealthcareProvider()]
+        # All authenticated users (including moms) can view content
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin':
+            # Admins can see all content
+            return Content.objects.all()
+        elif user.role == 'healthcare_provider':
+            # Healthcare providers see their own content
+            return Content.objects.filter(created_by=user)
+        else:
+            # Regular users (moms) can see all published content
+            return Content.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)

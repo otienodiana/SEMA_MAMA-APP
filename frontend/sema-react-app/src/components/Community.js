@@ -29,15 +29,27 @@ const Community = () => {
     useEffect(() => {
         const fetchForums = async () => {
             try {
-                const response = await fetch(`${BASE_URL}/forums/`);
-                if (!response.ok) throw new Error(`Error fetching forums: ${response.status}`);
-                
+                const token = localStorage.getItem("access");
+                if (!token) {
+                    console.warn("No auth token found");
+                    return;
+                }
+            
+                const response = await fetch(`${BASE_URL}/forums/`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            
                 const data = await response.json();
-                setForums(Array.isArray(data) ? data : []);
-                console.log("Fetched forums:", data); // ✅ Log forums after fetching
+                setForums(data);
             } catch (error) {
                 console.error("Error fetching forums:", error);
-                setForums([]);
+                setForums([]); // Set empty array instead of failing
             }
         };
     

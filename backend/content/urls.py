@@ -1,8 +1,11 @@
 from django.urls import path
-from . import views
+from .views import ContentViewSet, ContentUploadView, ContentListView
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'content-viewset', ContentViewSet, basename='content-viewset')
 
 urlpatterns = [
-    path('contents/', views.ContentListView.as_view(), name='contents-list'),
-    path('contents/upload/', views.ContentUploadView.as_view(), name='content-upload'),
-    path('contents/<int:pk>/', views.ContentDetailView.as_view(), name='content-detail'),
-]
+    path('contents/', ContentListView.as_view(), name='content-list'),
+    path('upload/', ContentUploadView.as_view(), name='content-upload'),
+] + router.urls

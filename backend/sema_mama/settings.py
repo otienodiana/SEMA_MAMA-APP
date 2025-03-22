@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    
+    'rest_framework_simplejwt',
+    'debug_toolbar',  # Add debug_toolbar only once here
     
     # Custom apps in dependency order
     'users',
@@ -64,25 +65,34 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+    ],
 }
 
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be first
+    'debug_toolbar.middleware.DebugToolbarMiddleware',  # Add this line
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # Make sure this is after session and before common
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'sema_mama.urls'
@@ -90,14 +100,18 @@ ROOT_URLCONF = 'sema_mama.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'venv/lib/python3.12/site-packages/rest_framework/templates'),
+        ],
+        'APP_DIRS': True,  # This will look for templates in app directories
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
             ],
         },
     },
@@ -158,48 +172,45 @@ DATABASES = {
     }
 }
 
+# Update CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_ALLOW_ALL = True
-
+CORS_ALLOW_ALL_ORIGINS = True  # Only for development
 CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://sema-react-app.vercel.app",
-    "https://sema-mama-app.onrender.com",
-]
-
-# Allow all HTTP methods
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
-]
-
-# Allow all headers
 CORS_ALLOW_HEADERS = [
-    "accept",
-    "authorization",
-    "content-type",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_EXPOSE_HEADERS = ['content-type', 'x-csrftoken']
+
+# Disable CSRF for API endpoints
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
 ]
 
 # settings.py
@@ -246,14 +257,16 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'users.User'  # Ensure this line exists
 
-#for media
+# Static files configuration
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+# Media files configuration
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -269,6 +282,123 @@ LANGUAGES = [
     ('fr', 'French'),
 ]
 
+# Update locale paths to be simpler
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
+
+# Test Runner Configuration
+TEST_RUNNER = 'sema_mama.test_runner.CategoryTestRunner'
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+    'localhost',
+]
+
+# Add detailed logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
+# Watchman settings for development
+if DEBUG:
+    import sys
+    if sys.platform == 'win32':
+        import asyncio
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+# File watcher settings
+USE_WATCHMAN = False  # Disable watchman if causing issues
+WATCHMAN_ENABLE_PAID_FEATURES = False
+
+# Add file watcher configuration
+FILE_UPLOAD_HANDLERS = [
+    'django.core.files.uploadhandler.MemoryFileUploadHandler',
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
+]
+
+# Development settings
+if DEBUG:
+    import sys
+    import asyncio
+    
+    # Configure asyncio for Windows
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    # File watcher settings
+    USE_WATCHMAN = False
+    WATCHMAN_ENABLE_PAID_FEATURES = False
+    FILE_WATCHER = 'django.utils.autoreload.StatReloader'
+    FILE_WATCHER_INTERVAL = 1  # seconds
+
+    # Auto-reload settings
+    AUTORELOAD_ENABLED = True
+    AUTORELOAD_PATTERNS = [
+        '*.py',
+        '*.html',
+        '*.js',
+        '*.css',
+    ]
+    AUTORELOAD_IGNORE_PATTERNS = [
+        '*/migrations/*.py',
+        '*/node_modules/*',
+        '*/venv/*',
+        '*.pyc',
+    ]
+
+    DEBUG_TOOLBAR_CONFIG = {
+        'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
+        'RESULTS_CACHE_SIZE': 100,
+        'RENDER_PANELS': True,
+        'SQL_WARNING_THRESHOLD': 100,
+    }
+
+# Remove duplicate settings
+USE_WATCHMAN = False
+WATCHMAN_ENABLE_PAID_FEATURES = False
+
+# Clean up duplicate settings
+if 'debug_toolbar.middleware.DebugToolbarMiddleware' in MIDDLEWARE:
+    MIDDLEWARE = list(dict.fromkeys(MIDDLEWARE))
+
+# Add template loaders explicitly
+TEMPLATE_LOADERS = None  # Remove this since it's defined in TEMPLATES
+
+def show_toolbar(request):
+    return DEBUG
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
+    'RENDER_PANELS': True,
+    'SQL_WARNING_THRESHOLD': 100,
+    'RESULTS_CACHE_SIZE': 100,
+    'SHOW_TEMPLATE_CONTEXT': True,
+    'EXTRA_SIGNALS': [],
+    'ENABLE_STACKTRACES': True,
+    'HIDE_IN_STACKTRACES': (
+        'django.middleware',
+        'django.template',
+        'debug_toolbar',
+    ),
+}
+
+# Clean up settings - remove redundant/duplicate settings
+TEMPLATE_LOADERS = None  # Remove this since it's defined in TEMPLATES
+USE_WATCHMAN = False
+WATCHMAN_ENABLE_PAID_FEATURES = False
+
+if 'debug_toolbar.middleware.DebugToolbarMiddleware' in MIDDLEWARE:
+    MIDDLEWARE = list(dict.fromkeys(MIDDLEWARE))

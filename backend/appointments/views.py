@@ -13,16 +13,21 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 class MomAppointmentsView(generics.ListCreateAPIView):
     """View to list and create appointments for mothers"""
     serializer_class = AppointmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]  # Add explicit JWT authentication
 
     def get_queryset(self):
         """Fetch only the logged-in mom's appointments"""
-        return Appointment.objects.filter(user=self.request.user).order_by("date")
+        user = self.request.user
+        if user.role == 'mom':
+            return Appointment.objects.filter(user=user)
+        elif user.role in ['healthcare_provider', 'admin']:
+            return Appointment.objects.all()
+        return Appointment.objects.none()
 
     def perform_create(self, serializer):
         """Ensure the logged-in mom is assigned to the appointment"""
-        serializer.save(user=self.request.user, status="pending")
+        serializer.save(user=self.request.user)
         
     def create(self, request, *args, **kwargs):
         """Override create to handle validation errors gracefully"""

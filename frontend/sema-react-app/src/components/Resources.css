@@ -1,15 +1,15 @@
 /* WHO Official Color Palette */
 :root {
-  --who-primary-blue: #008DC9;
-  --who-darker-blue: #006D9C;
-  --who-light-blue: #E3F2FD;
-  --who-accent-blue: #41B6E6;
-  --who-neutral-grey: #4D4D4D;
-  --who-light-grey: #F2F2F2;
-  --who-success-green: #217645;
-  --who-warning-yellow: #FFB612;
-  --who-alert-red: #CC0000;
-  --who-white: #FFFFFF;
+  --who-primary-blue: #0093D5;      /* WHO Primary Blue */
+  --who-darker-blue: #005C84;       /* WHO Dark Blue */
+  --who-light-blue: #DAF0F8;        /* WHO Light Blue */
+  --who-accent-blue: #40B6E6;       /* WHO Secondary Blue */
+  --who-neutral-grey: #5B5B5B;      /* WHO Dark Grey */
+  --who-light-grey: #F6F6F6;        /* WHO Light Grey */
+  --who-success-green: #3FA535;     /* WHO Green */
+  --who-warning-yellow: #FBB917;    /* WHO Yellow */
+  --who-alert-red: #E6343C;         /* WHO Red */
+  --who-white: #FFFFFF;             /* White */
 }
 
 /* General Styling */
@@ -128,33 +128,39 @@ body {
 
 /* Video Gallery */
 .video-gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
   justify-content: center;
-  align-items: center;
-  margin-top: 20px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 20px auto;
 }
 
 .video-item {
-  flex: 1 1 320px;
-  max-width: 500px;
-  text-align: center;
+  width: 100%;
   background: var(--who-white);
   border: 1px solid var(--who-accent-blue);
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
 }
 
 .video-item iframe {
   width: 100%;
-  height: 280px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  border: none;
+  display: block;
 }
 
-.video-item p {
-  font-size: 1.1em;
-  color: var(--who-grey);
-  margin-top: 8px;
+/* Responsive adjustment for video gallery */
+@media screen and (max-width: 768px) {
+  .video-gallery {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
 }
 
 /* Image Gallery */

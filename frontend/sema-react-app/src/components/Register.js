@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { API_BASE_URL, API_ENDPOINTS } from '../config';
 import "./Register.css";
 
 function Register() {
@@ -35,27 +36,33 @@ function Register() {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/api/users/register/", {
-        method: "POST",
-        body: formData
+      const response = await fetch(`${API_BASE_URL}/api/users/register/`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
       });
 
+      const data = await response.json();
+      console.log("Registration response:", data);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Registration response:", errorData);
-        throw new Error(errorData.detail || "Registration failed");
+        throw new Error(JSON.stringify(data));
       }
 
-      const data = await response.json();
-      console.log("Registration successful:", data);
-      setSuccess("Registration successful! Redirecting to login...");
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-    } catch (error) {
-      console.error("Registration error:", error);
-      setError(error.message || "Registration failed");
+      setSuccess("Registration successful!");
+      setTimeout(() => navigate('/login'), 2000);
+    } catch (err) {
+      console.error("Registration error:", err);
+      try {
+        const errorMessage = JSON.parse(err.message);
+        setError(
+          Object.entries(errorMessage)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n')
+        );
+      } catch {
+        setError(err.message);
+      }
     }
   };
 

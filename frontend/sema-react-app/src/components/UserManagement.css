@@ -1,0 +1,43 @@
+.user-management {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+.status-badge.active {
+  background-color: #e7f7ed;
+  color: #28a745;
+}
+
+.status-badge.inactive {
+  background-color: #fbe7e7;
+  color: #dc3545;
+}
+
+.action-icon {
+  cursor: pointer;
+  margin: 0 5px;
+  font-size: 1.1em;
+}
+
+.action-icon:hover {
+  opacity: 0.8;
+}
+
+.action-icon.delete:hover {
+  color: #dc3545;
+}

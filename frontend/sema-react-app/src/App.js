@@ -33,6 +33,7 @@ import ForumList from './components/ForumList';
 import { DataProvider } from "./components/DataContext"; 
 import SelfAssessment from "./components/SelfAssessment";
 import ProtectedRoute from "./components/ProtectedRoute";
+import UserManagement from './components/UserManagement';
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
                 <Route path="admin-community" element={<AdminCommunity />} />
                 <Route path="educational-contents" element={<EducationalContents />} />
                 <Route path="content/:id" element={<ContentDetail />} />
+                <Route path="users/*" element={<UserManagement />} />
               </Route>
             </Route>
 

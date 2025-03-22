@@ -6,7 +6,7 @@ from .views import (
     ProviderAppointmentsView,
     ApproveRejectAppointmentView,
     RescheduleAppointmentView,
-    DeleteAppointmentView,
+    DeleteAppointmentView
 )
 
 urlpatterns = [
@@ -24,4 +24,7 @@ urlpatterns = [
     path("provider/approve/<int:pk>/", ApproveRejectAppointmentView.as_view(), name="approve_appointment"),
     path("provider/reject/<int:pk>/", ApproveRejectAppointmentView.as_view(), name="reject_appointment"),
     path("provider/reschedule/<int:pk>/", RescheduleAppointmentView.as_view(), name="reschedule_appointment"),
+
+    # General list route - use MomAppointmentsView for general listing
+    path('list/', MomAppointmentsView.as_view(), name='appointment-list'),
 ]

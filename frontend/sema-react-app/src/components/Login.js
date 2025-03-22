@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "./AuthContext";
+import { API_BASE_URL } from '../config';  // Add this import
 import './Login.css';
 
 function Login() {
@@ -16,40 +17,18 @@ function Login() {
     e.preventDefault();
     setError("");
 
-    // Validate input
-    if (!username.trim() || !password.trim()) {
-      setError(t('login.error.empty'));
-      return;
-    }
-
     try {
-      console.log("Attempting login for user:", username);
-
-      const response = await fetch("http://localhost:8000/api/users/custom-login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username.trim(),
-          password: password
-        }),
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-      console.log("Login response:", data);
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Login failed");
+      if (!username || !password) {
+        setError("Both username and password are required");
+        return;
       }
 
-      // Store tokens and user info
-      localStorage.setItem("access", data.access);
-      localStorage.setItem("refresh", data.refresh);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      
-      login(data.user);
+      const data = await login({ username, password });
+
+      if (!data?.user?.role) {
+        setError("Invalid user data received");
+        return;
+      }
 
       // Navigate based on role
       switch (data.user.role) {
@@ -63,11 +42,12 @@ function Login() {
           navigate("/dashboard/profile");
           break;
         default:
-          setError("Unknown role detected");
+          setError("Unknown user role");
       }
+
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.message || "Login failed");
+      setError(err.message || "Failed to login. Please check your credentials.");
     }
   };
 

@@ -1,21 +1,44 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { API_BASE_URL, API_ENDPOINTS } from '../config';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const initializeAuth = async () => {
+      const token = localStorage.getItem("access");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
-          setUser(JSON.parse(storedUser));
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.profile}`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          mode: 'cors'
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          // Token invalid - clear storage
+          localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        localStorage.removeItem("user"); // Clear invalid data
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -24,24 +47,58 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = (userData) => {
-    if (!userData) {
-      console.error("Invalid user data provided to login");
-      return;
+  const login = async (credentials) => {
+    try {
+      // Validate credentials
+      if (!credentials.username || !credentials.password) {
+        throw new Error('Both username and password are required');
+      }
+
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.login}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          username: credentials.username.trim(),
+          password: credentials.password
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Login failed');
+      }
+
+      const data = await response.json();
+      
+      // Validate response data
+      if (!data.access || !data.refresh || !data.user) {
+        throw new Error('Invalid server response');
+      }
+
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
+      setUser(data.user);
+      setError(null);
+      return data;
+
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error.message);
+      throw error;
     }
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem("user");
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, error, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
