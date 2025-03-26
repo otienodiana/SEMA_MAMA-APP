@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import UserActivity, ContentPerformance, SMSUsage, ForumActivity, Report
+from .models import AlertsPanel, UserActivity, ContentPerformance, SMSUsage, ForumActivity, Report
+
+class AlertsPanelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AlertsPanel
+        fields = ['id', 'title', 'message', 'severity', 'created_at', 'is_active']
 
 class UserActivitySerializer(serializers.ModelSerializer):
     class Meta:

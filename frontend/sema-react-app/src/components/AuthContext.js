@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { API_BASE_URL, API_ENDPOINTS } from '../config';
+import { API_BASE_URL, API_ENDPOINTS, API_CONFIG } from '../config';
 
 const AuthContext = createContext();
 
@@ -49,44 +49,49 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      // Validate credentials
-      if (!credentials.username || !credentials.password) {
-        throw new Error('Both username and password are required');
-      }
+      console.log('Attempting login with:', credentials);
 
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.login}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          username: credentials.username.trim(),
-          password: credentials.password
-        })
+          username: credentials.username,
+          password: credentials.password,
+          is_admin_login: credentials.is_admin_login || false
+        }),
+        credentials: 'include',
+        mode: 'cors'
       });
 
+      // Log the full response for debugging
+      console.log('Raw response:', response);
+
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Server not found. Please check your connection.');
+        }
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Login failed');
       }
 
       const data = await response.json();
-      
-      // Validate response data
-      if (!data.access || !data.refresh || !data.user) {
-        throw new Error('Invalid server response');
+      console.log('Login response:', data);
+
+      if (data.access) {
+        localStorage.setItem('access', data.access);
+        localStorage.setItem('refresh', data.refresh);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setUser(data.user);
+        }
       }
 
-      localStorage.setItem("access", data.access);
-      localStorage.setItem("refresh", data.refresh);
-      setUser(data.user);
-      setError(null);
       return data;
-
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.message);
       throw error;
     }
   };

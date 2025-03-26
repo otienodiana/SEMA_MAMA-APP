@@ -31,47 +31,85 @@ from appointments.models import Appointment
 from content.models import Content
 from community.models import Forum, Post, Comment
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .models import UserActivity, ContentPerformance, SMSUsage, ForumActivity
+from .serializers import (
+    UserActivitySerializer, 
+    ContentPerformanceSerializer,
+    SMSUsageSerializer, 
+    ForumActivitySerializer
+)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def analytics_detail(request):
+    """Get detailed analytics"""
+    try:
+        # Check if user is admin
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only admins can access analytics"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get analytics data with error handling
+        try:
+            total_users = User.objects.count()
+        except:
+            total_users = 0
+
+        context = {
+            'user_stats': {
+                'total_users': total_users,
+                'active_users': User.objects.filter(is_active=True).count(),
+                'new_users_today': User.objects.filter(
+                    date_joined__date=timezone.now().date()
+                ).count(),
+            }
+        }
+        
+        return Response(context, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"Analytics Error: {str(e)}")  # Debug logging
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 class AnalyticsSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        # Check if user is admin
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only admins can access analytics"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         try:
-            # Basic error checking
-            if not request.user.is_authenticated:
-                return Response({"error": "Authentication required"}, status=401)
-
-            # Get user statistics
-            user_stats = {
-                'total_users': User.objects.count(),
-                'active_users': User.objects.filter(
-                    last_login__gte=timezone.now() - timezone.timedelta(days=30)
-                ).count(),
-                'inactive_users': User.objects.filter(
-                    Q(last_login__lt=timezone.now() - timezone.timedelta(days=30)) |
-                    Q(last_login__isnull=True)
-                ).count(),
-                'user_growth': self.get_user_growth_data()
-            }
-
-            # Get engagement metrics
-            engagement_metrics = {
-                'total_appointments': Appointment.objects.count() if 'Appointment' in globals() else 0,
-                'total_posts': Post.objects.count() if 'Post' in globals() else 0,
-                'total_comments': Comment.objects.count() if 'Comment' in globals() else 0,
-                'engagement_trends': self.get_engagement_trends()
-            }
-
             data = {
-                'user_statistics': user_stats,
-                'engagement_metrics': engagement_metrics
+                'user_statistics': {
+                    'total_users': User.objects.count(),
+                    'active_users': User.objects.filter(is_active=True).count(),
+                },
+                'engagement_metrics': {
+                    'total_posts': 0,  # Add real metrics when available
+                    'total_comments': 0,
+                }
             }
-
-            return Response(data)
+            return Response(data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            import traceback
-            print(f"Analytics Error: {str(e)}\n{traceback.format_exc()}")
-            return Response({"error": str(e)}, status=500)
+            print(f"Summary Error: {str(e)}")  # Debug logging
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def get_user_growth_data(self):
         """Get monthly user growth data for the past 6 months"""

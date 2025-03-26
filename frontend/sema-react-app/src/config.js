@@ -1,7 +1,11 @@
-export const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://127.0.0.1:8000'
+  : process.env.REACT_APP_API_URL;
+
+export { API_BASE_URL };
 
 export const API_ENDPOINTS = {
-  login: '/api/users/custom-login/',
+  login: '/api/users/login/',
   register: '/api/users/register/',
   profile: '/api/users/me/',
   users: '/api/users/users/',
@@ -14,7 +18,7 @@ export const API_CONFIG = {
     'Content-Type': 'application/json'
   },
   fetchOptions: {
-    credentials: 'include',
-    mode: 'cors'
+    mode: 'cors',
+    credentials: 'include'
   }
 };

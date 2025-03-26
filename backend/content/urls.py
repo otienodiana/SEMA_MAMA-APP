@@ -7,5 +7,5 @@ router.register(r'content-viewset', ContentViewSet, basename='content-viewset')
 
 urlpatterns = [
     path('contents/', ContentListView.as_view(), name='content-list'),
-    path('upload/', ContentUploadView.as_view(), name='content-upload'),
+    path('contents/upload/', ContentUploadView.as_view(), name='content-upload'),  # Updated path
 ] + router.urls

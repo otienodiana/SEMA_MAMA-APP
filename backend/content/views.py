@@ -15,7 +15,7 @@ from django.db import transaction
 
 class IsHealthcareProvider(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.role == 'healthcare_provider'
+        return request.user.role in ['healthcare_provider', 'admin']
 
 class ContentListView(generics.ListAPIView):
     serializer_class = ContentSerializer
@@ -27,6 +27,11 @@ class ContentListView(generics.ListAPIView):
         except Exception as e:
             print(f"Error fetching content: {str(e)}")
             return Content.objects.none()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
     def list(self, request, *args, **kwargs):
         try:
@@ -44,7 +49,7 @@ class ContentUploadView(generics.CreateAPIView):
     queryset = Content.objects.all()
     serializer_class = ContentSerializer
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [permissions.IsAuthenticated, IsHealthcareProvider]
+    permission_classes = [IsAuthenticated]
 
     def validate_file(self, file):
         # Check file size (10MB limit)
@@ -71,10 +76,21 @@ class ContentUploadView(generics.CreateAPIView):
     def perform_create(self, serializer):
         if not self.request.user.is_authenticated:
             raise ParseError('User must be authenticated')
-        serializer.save(uploaded_by=self.request.user)
+        
+        print(f"User role: {self.request.user.role}")  # Debug log
+        
+        if not hasattr(self.request.user, 'role'):
+            raise ParseError('User role not found')
+        
+        if self.request.user.role not in ['healthcare_provider', 'admin']:
+            raise ParseError('Only healthcare providers and admins can upload content')
+            
+        serializer.save(created_by=self.request.user)
 
     def create(self, request, *args, **kwargs):
         try:
+            print(f"Request data: {request.data}")  # Debug log
+            print(f"Request FILES: {request.FILES}")  # Debug log
             with transaction.atomic():
                 # Validate required fields
                 if not request.data.get('title'):
@@ -89,12 +105,15 @@ class ContentUploadView(generics.CreateAPIView):
                 if Content.objects.filter(title=title).exists():
                     raise ParseError(f'Content with title "{title}" already exists')
 
-                # Validate file presence and content
-                if 'file' not in request.FILES:
+                # Check both possible field names for the file
+                file = request.FILES.get('file') or request.FILES.get('uploaded_file')
+                if not file:
                     raise ParseError('No file provided')
 
-                file = request.FILES['file']
                 self.validate_file(file)
+
+                # Add file to request.data
+                request.data['uploaded_file'] = file
 
                 serializer = self.get_serializer(data=request.data)
                 serializer.is_valid(raise_exception=True)
@@ -143,9 +162,8 @@ class ContentViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'destroy']:
-            # Only healthcare providers can create/edit/delete content
+            # Allow both healthcare providers and admins
             return [permissions.IsAuthenticated(), IsHealthcareProvider()]
-        # All authenticated users (including moms) can view content
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):

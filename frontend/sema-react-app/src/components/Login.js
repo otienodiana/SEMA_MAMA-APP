@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "./AuthContext";
-import { API_BASE_URL } from '../config';  // Add this import
 import './Login.css';
 
 function Login() {
@@ -11,50 +10,62 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth(); // Access login function
+  const [searchParams] = useSearchParams();
+  const { login } = useAuth();
+  
+  // Check if current path is admin route
+  const isAdminRoute = window.location.pathname.includes('/admin/');
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
+    // Basic validation
+    if (!username || !password) {
+      setError("Username and password are required");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
     try {
-      if (!username || !password) {
-        setError("Both username and password are required");
-        return;
+      const data = await login({ 
+        username, 
+        password,
+        is_admin_login: isAdminRoute
+      });
+
+      if (data?.user?.role === 'admin') {
+        navigate('/dashboard/admin', { replace: true });
+      } else {
+        switch (data?.user?.role) {
+          case "healthcare_provider":
+            navigate("/dashboard/provider");
+            break;
+          case "mom":
+            navigate("/dashboard/profile");
+            break;
+          default:
+            setError("Invalid user role");
+        }
       }
-
-      const data = await login({ username, password });
-
-      if (!data?.user?.role) {
-        setError("Invalid user data received");
-        return;
-      }
-
-      // Navigate based on role
-      switch (data.user.role) {
-        case "admin":
-          navigate("/dashboard/admin");
-          break;
-        case "healthcare_provider":
-          navigate("/dashboard/provider");
-          break;
-        case "mom":
-          navigate("/dashboard/profile");
-          break;
-        default:
-          setError("Unknown user role");
-      }
-
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.message || "Failed to login. Please check your credentials.");
+      if (err.message.includes("password")) {
+        setError("Password must be at least 8 characters long");
+      } else {
+        setError(err.message || "Failed to login");
+      }
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>{t('login.title')}</h2>
+        <h2>{isAdminRoute ? t('login.adminTitle') : t('login.title')}</h2>
         {error && <p className="error-message">{error}</p>}
 
         <form onSubmit={handleLogin}>
@@ -66,21 +77,29 @@ function Login() {
             required
             className="login-input"
           />
-          <input
-            type="password"
-            placeholder={t('login.password')}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="login-input"
-          />
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder={t('login.password')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className={`login-input ${error && error.includes('password') ? 'error' : ''}`}
+            />
+            {error && error.includes('password') && (
+              <small className="error-text">{error}</small>
+            )}
+          </div>
           <button type="submit" className="login-button">
             {t('login.button')}
           </button>
         </form>
 
         <p className="register-link">
-          {t('login.register')} <Link to="/register">{t('login.registerLink')}</Link>
+          {t('login.register')} {' '}
+          <Link to={isAdminRoute ? "/admin/register" : "/register"}>
+            {t('login.registerLink')}
+          </Link>
         </p>
       </div>
     </div>

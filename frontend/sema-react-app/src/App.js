@@ -46,13 +46,21 @@ function App() {
               <Route index element={<HomePage />} />
               <Route path="about" element={<AboutUs />} />
               <Route path="login" element={<Login />} />
+              <Route path="admin/login" element={<Login />} />
               <Route path="register" element={<Register />} />
+              <Route path="admin/register" element={<Register />} />
               <Route path="resources" element={<Resources />} />
             </Route>
 
+            {/* Admin redirect */}
+            <Route 
+              path="/admin" 
+              element={<Navigate to="/admin/login" replace />} 
+            />
+
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-              <Route path="/dashboard/admin/*" element={<AdminDashboard />}>
+              <Route path="dashboard/admin" element={<AdminDashboard />}>
                 <Route index element={<Analytics />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />

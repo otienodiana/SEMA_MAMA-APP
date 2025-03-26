@@ -119,6 +119,7 @@ const resources = {
       'register.role.mom': 'Mom',
       'register.role.provider': 'Healthcare Provider',
       'register.role.admin': 'Admin',
+      'register.adminTitle': 'Create Administrator Account', // Updated admin registration title
 
       // Dashboard page
       'dashboard.header': 'Community Dashboard',
@@ -147,6 +148,7 @@ const resources = {
 
       // Login page
       'login.title': 'Login',
+      'login.adminTitle': 'Administrator Login',
       'login.username': 'Username',
       'login.password': 'Password',
       'login.button': 'Login',
@@ -383,6 +385,7 @@ const resources = {
       'register.role.mom': 'Mama',
       'register.role.provider': 'Mtoa Huduma za Afya',
       'register.role.admin': 'Msimamizi',
+      'register.adminTitle': 'Tengeneza Akaunti ya Msimamizi', // Updated admin registration title
 
       // Dashboard page
       'dashboard.header': 'Dashibodi ya Jamii',
@@ -411,6 +414,7 @@ const resources = {
 
       // Login page
       'login.title': 'Ingia',
+      'login.adminTitle': 'Ingia kama Msimamizi',
       'login.username': 'Jina la Mtumiaji',
       'login.password': 'Nywila',
       'login.button': 'Ingia',
@@ -647,6 +651,7 @@ const resources = {
       'register.role.mom': 'Maman',
       'register.role.provider': 'Professionnel de santé',
       'register.role.admin': 'Administrateur',
+      'register.adminTitle': 'Créer un Compte Administrateur', // Updated admin registration title
 
       // Dashboard page
       'dashboard.header': 'Tableau de Bord Communautaire',
@@ -675,6 +680,7 @@ const resources = {
 
       // Login page
       'login.title': 'Connexion',
+      'login.adminTitle': 'Connexion Administrateur',
       'login.username': 'Nom d\'utilisateur',
       'login.password': 'Mot de passe',
       'login.button': 'Se connecter',

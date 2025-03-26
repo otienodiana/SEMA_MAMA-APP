@@ -6,6 +6,9 @@ class Content(models.Model):
     CONTENT_TYPES = (
         ('article', 'Article'),
         ('video', 'Video'),
+        ('image', 'Image'),
+        ('document', 'Document'),
+        ('other', 'Other'),
         ('infographic', 'Infographic'),
     )
 

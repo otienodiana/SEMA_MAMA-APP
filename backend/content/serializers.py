@@ -9,7 +9,11 @@ class ContentSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'content_type', 'description', 'file_url', 
                  'uploaded_file', 'created_by', 'created_by_username', 
                  'created_at', 'updated_at']
-        read_only_fields = ['created_by']
+        read_only_fields = ['created_by', 'file_url']
 
     def get_created_by_username(self, obj):
         return obj.created_by.username
+
+    def create(self, validated_data):
+        # Handle the file upload
+        return super().create(validated_data)

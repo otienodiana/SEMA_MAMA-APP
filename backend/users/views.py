@@ -18,6 +18,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.generics import RetrieveUpdateAPIView
 from appointments.serializers import AppointmentSerializer
+from .permissions import require_permission, HasRolePermission
 
 
 
@@ -30,12 +31,28 @@ class UserProfileView(APIView):
 
     def get(self, request):
         """Retrieve user profile"""
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+        try:
+            user = request.user
+            print(f"Fetching profile for user: {user.id}") # Debug log
+            
+            serializer = UserSerializer(user, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"Profile fetch error: {str(e)}") # Debug log
+            return Response(
+                {"detail": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def put(self, request):
         """Update user profile (including profile picture)"""
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(
+            request.user, 
+            data=request.data, 
+            context={'request': request},
+            partial=True
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -55,6 +72,12 @@ class RegisterUserView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         try:
+            if 'password' not in request.data:
+                return Response(
+                    {"detail": "Password is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():
                 return Response(
@@ -65,14 +88,11 @@ class RegisterUserView(generics.CreateAPIView):
             user = serializer.save()
             return Response({
                 "detail": "Registration successful",
-                "user": {
-                    "username": user.username,
-                    "email": user.email,
-                    "role": user.role
-                }
+                "user": UserSerializer(user, context={'request': request}).data
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
+            print(f"Registration error: {str(e)}")  # Debug log
             return Response(
                 {"detail": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
@@ -86,11 +106,11 @@ class LoginView(TokenObtainPairView):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def custom_login(request):
-    """Custom login view with better error handling"""
+    """Custom login view that handles both regular and admin login"""
     username = request.data.get("username", "").strip()
     password = request.data.get("password", "").strip()
+    is_admin_login = request.data.get("is_admin_login", False)  # New parameter
     
-    # Validate required fields
     if not username or not password:
         return Response(
             {"detail": "Both username and password are required"},
@@ -98,11 +118,13 @@ def custom_login(request):
         )
     
     try:
-        # Check if user exists
-        if not User.objects.filter(username=username).exists():
+        user = User.objects.get(username=username)
+        
+        # For admin login route, verify user is admin
+        if is_admin_login and user.role != 'admin':
             return Response(
-                {"detail": "User not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {"detail": "This login is for administrators only"},
+                status=status.HTTP_403_FORBIDDEN
             )
             
         # Authenticate user
@@ -118,7 +140,8 @@ def custom_login(request):
                     "email": user.email,
                     "role": user.role,
                     "profile_photo": user.profile_photo.url if user.profile_photo else None,
-                }
+                },
+                "redirect": '/dashboard/admin' if user.role == 'admin' else f'/dashboard/{user.role}'
             })
         else:
             return Response(
@@ -126,6 +149,11 @@ def custom_login(request):
                 status=status.HTTP_401_UNAUTHORIZED
             )
             
+    except User.DoesNotExist:
+        return Response(
+            {"detail": "User not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         print(f"Login error: {str(e)}")
         return Response(
@@ -149,15 +177,19 @@ def get_users(request):
 
         # Get all users and order by most recent
         users = User.objects.all().order_by('-date_joined')
-        serializer = UserSerializer(users, many=True)
+        serializer = UserSerializer(users, many=True, context={'request': request})  # Add context
         
-        print(f"Fetched {len(users)} users") # Debug log
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        print(f"Fetched {len(users)} users successfully") # Debug log
+        return Response({
+            "status": "success",
+            "count": len(users),
+            "users": serializer.data
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print(f"Error fetching users: {str(e)}")
+        print(f"Error fetching users: {str(e)}")  # Debug log
         return Response(
-            {"detail": "Failed to fetch users"}, 
+            {"detail": f"Failed to fetch users: {str(e)}"}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -254,3 +286,227 @@ def list_appointments(request):
     serializer = AppointmentSerializer(appointments, many=True)
 
     return Response(serializer.data, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@require_permission('assign_roles')
+def assign_role(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        new_role = request.data.get('role')
+        
+        if new_role not in dict(User.ROLE_CHOICES):
+            return Response(
+                {'error': 'Invalid role'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.role = new_role
+        user.save()
+        
+        return Response({
+            'message': f'Role updated to {new_role}',
+            'permissions': user.get_permissions()
+        })
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_permissions(request):
+    """Get user permissions and role"""
+    try:
+        user = request.user
+        permissions = []
+        
+        # Add permissions based on role
+        if user.role == 'admin':
+            permissions = [
+                'manage_users',
+                'view_content',
+                'manage_content',
+                'manage_forums',
+                'manage_appointments',
+                'assign_roles'
+            ]
+        elif user.role == 'healthcare_provider':
+            permissions = [
+                'view_content',
+                'manage_appointments',
+                'view_forums'
+            ]
+            
+        return Response({
+            'role': user.role,
+            'permissions': permissions
+        })
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_user(request, user_id):
+    """Delete a user (admin only)"""
+    try:
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only administrators can delete users"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user = User.objects.get(id=user_id)
+        user.delete()
+        return Response(
+            {"detail": "User deleted successfully"},
+            status=status.HTTP_200_OK
+        )
+    except User.DoesNotExist:
+        return Response(
+            {"detail": "User not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def assign_role(request, user_id):
+    """Assign a new role to a user (admin only)"""
+    try:
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only administrators can assign roles"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user = User.objects.get(id=user_id)
+        new_role = request.data.get('role')
+        
+        if new_role not in ['admin', 'healthcare_provider', 'mom']:
+            return Response(
+                {"detail": "Invalid role"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.role = new_role
+        user.save()
+        
+        return Response({
+            "detail": f"Role updated to {new_role}",
+            "user": UserSerializer(user).data
+        })
+    except User.DoesNotExist:
+        return Response(
+            {"detail": "User not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_role(request, user_id):
+    """Update user role (admin only)"""
+    try:
+        # Verify admin permission
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only administrators can update roles"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get user and new role
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        new_role = request.data.get('role')
+        if not new_role:
+            return Response(
+                {"detail": "Role is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate role
+        valid_roles = ['admin', 'healthcare_provider', 'mom']
+        if new_role not in valid_roles:
+            return Response(
+                {"detail": f"Invalid role. Must be one of: {', '.join(valid_roles)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update user role
+        user.role = new_role
+        user.save()
+
+        # Return updated user data
+        serializer = UserSerializer(user, context={'request': request})
+        return Response({
+            "detail": "Role updated successfully",
+            "user": serializer.data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"Role update error: {str(e)}")  # Debug log
+        return Response(
+            {"detail": "Failed to update role"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_role(request):
+    """Create a new role (admin only)"""
+    if request.user.role != 'admin':
+        return Response(
+            {"detail": "Only administrators can create roles"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        name = request.data.get('name')
+        permissions = request.data.get('permissions', [])
+
+        if not name:
+            return Response(
+                {"detail": "Role name is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create new role in database
+        role = Role.objects.create(
+            name=name,
+            permissions=permissions
+        )
+
+        return Response({
+            "detail": "Role created successfully",
+            "role": {
+                "id": role.id,
+                "name": role.name,
+                "permissions": role.permissions
+            }
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

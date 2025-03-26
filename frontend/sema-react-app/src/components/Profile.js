@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
+import { API_BASE_URL } from '../config';  // Add this import
 import "./Profile.css"; // Import the CSS file
 
 const Profile = () => {
@@ -10,14 +11,9 @@ const Profile = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [updating, setUpdating] = useState(false);
 
-  let token = localStorage.getItem("access");
-
-  // ✅ Fetch user profile from API
   const fetchUserProfile = useCallback(async () => {
-    let token = localStorage.getItem("access"); // Get token from localStorage
-
-    console.log("🔍 Stored Token:", token); // ✅ Debugging: Check if the correct token is stored
-
+    const token = localStorage.getItem("access");
+    
     if (!token) {
       setError("No authentication token found.");
       setLoading(false);
@@ -25,32 +21,29 @@ const Profile = () => {
     }
 
     try {
-      let response = await fetch("http://127.0.0.1:8000/api/users/me/", {
+      const response = await fetch(`${API_BASE_URL}/api/users/me/`, {
         method: "GET",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        }
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch profile.");
+        throw new Error("Failed to fetch profile");
       }
 
       const data = await response.json();
-      console.log("✅ API Response:", data); // ✅ Debugging: Check what data is returned
-
+      console.log("Profile data:", data);
       setUser(data);
+      
     } catch (err) {
-      console.error("❌ Error fetching profile:", err);
-      setError("Failed to load user data.");
+      console.error("Profile fetch error:", err);
+      setError("Failed to load user data");
     } finally {
       setLoading(false);
     }
-}, [token]);
-
-  
-  
+  }, []);
 
   useEffect(() => {
     fetchUserProfile();
@@ -67,6 +60,7 @@ const Profile = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     setUpdating(true);
+    const token = localStorage.getItem("access"); // Add token declaration
 
     const formData = new FormData();
     formData.append("username", user.username);
@@ -101,10 +95,9 @@ const Profile = () => {
     }
 };
 
-
-
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete your profile?")) return;
+    const token = localStorage.getItem("access"); // Add token declaration
 
     try {
       const response = await fetch("http://127.0.0.1:8000/api/users/me/", {

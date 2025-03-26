@@ -17,28 +17,30 @@ const ContentsPage = () => {
   const [favorites, setFavorites] = useState([]);
   const [showFavorites, setShowFavorites] = useState(false);
 
+  const fetchResources = async () => {
+    const token = localStorage.getItem("access");
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/content/contents/",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setResources(response.data);
+      setError(null);
+    } catch (err) {
+      setError("Error fetching resources.");
+      console.error("Fetch error:", err);
+    }
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("access");
     if (token) {
       setIsAuthenticated(true);
-      const fetchResources = async () => {
-        try {
-          const response = await axios.get(
-            "http://localhost:8000/api/content/contents/",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setResources(response.data);
-          setLoading(false);
-        } catch (err) {
-          setError("Error fetching resources.");
-          setLoading(false);
-        }
-      };
       fetchResources();
     } else {
-      setError("Repeat");
+      setError("Not authenticated");
       setLoading(false);
     }
   }, []);
@@ -70,7 +72,7 @@ const ContentsPage = () => {
       return;
     }
 
-    formData.append("file", fileInput.files[0]);
+    formData.append("file", fileInput.files[0]);  // Changed to just "file"
     formData.append("title", e.target.title.value.trim());
     formData.append("description", e.target.description.value.trim());
     formData.append("content_type", e.target.content_type.value);
@@ -79,7 +81,8 @@ const ContentsPage = () => {
     setError(null);
 
     try {
-      const response = await axios.post(
+      console.log("Form data content:", Object.fromEntries(formData)); // Debug log
+      await axios.post(
         "http://localhost:8000/api/content/contents/upload/",
         formData,
         {
@@ -89,18 +92,23 @@ const ContentsPage = () => {
           },
         }
       );
-
-      setResources((prevResources) => [...prevResources, response.data]);
+      
       alert("File uploaded successfully!");
+      // Clear the form
+      e.target.reset();
+      // Refresh the resources list
+      await fetchResources();
+      
     } catch (err) {
-      setError(err.response?.data?.detail || "Error uploading the file.");
+      console.error("Upload error:", err.response?.data); // Debug log
+      setError(err.response?.data?.error || "Error uploading the file. Make sure you have permission.");
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    const token = localStorage.getItem("access");
+    const token = localStorage.getItem("access");  // Already correct
     try {
       await axios.delete(
         `http://localhost:8000/api/content/contents/${id}/delete/`,
@@ -117,7 +125,7 @@ const ContentsPage = () => {
 
   const handleView = async (id) => {
     try {
-      const token = localStorage.getItem("access");
+      const token = localStorage.getItem("access");  // Already correct
       const response = await axios.get(
         `http://localhost:8000/api/content/contents/${id}/`,
         {
@@ -136,7 +144,7 @@ const ContentsPage = () => {
   };
 
   const handleUpdate = async (id) => {
-    const token = localStorage.getItem("access");
+    const token = localStorage.getItem("access");  // Already correct
     const resourceToUpdate = resources.find((res) => res.id === id);
     if (!resourceToUpdate) {
       alert("Resource not found.");
@@ -212,7 +220,9 @@ const ContentsPage = () => {
 
   return (
     <div className="content-page">
-      <h1>{t('educational.title')}</h1>
+      <div className="page-header">
+        <h1>{t('educational.title')}</h1>
+      </div>
 
       <div className="search-and-filter">
         <input
@@ -231,6 +241,25 @@ const ContentsPage = () => {
       </div>
 
       <div className="content-layout">
+        {/* Upload Section - Moved to top */}
+        <div className="upload-section">
+          <h2>Upload a New Resource</h2>
+          <form onSubmit={handleUpload}>
+            <input type="file" name="file" required />
+            <input type="text" name="title" placeholder="Title" required />
+            <textarea name="description" placeholder="Description" />
+            <select name="content_type">
+              <option value="article">Article</option>
+              <option value="video">Video</option>
+              <option value="image">Image</option>
+              <option value="document">Document</option>
+              <option value="other">Other</option>
+              <option value="infographic">Infographic</option>
+            </select>
+            <button type="submit" disabled={uploading}>{uploading ? "Uploading..." : "Upload"}</button>
+          </form>
+        </div>
+
         {/* Resources Section */}
         {loading ? (
           <p>Loading resources...</p>
@@ -239,46 +268,35 @@ const ContentsPage = () => {
         ) : displayedResources.length === 0 ? (
           <p>No resources found. {showFavorites ? 'No favorites yet!' : 'Try a different search term.'}</p>
         ) : (
-          <div className="resources-list">
-            {displayedResources.map((resource) => (
-              <div className="resource-card" key={resource.id}>
-                <h3>{resource.title}</h3>
-                <p>{resource.description}</p>
-                {resource.content_type === "video" && <video src={resource.file} controls />}
-                {resource.content_type === "image" && <img src={resource.file} alt={resource.title} />}
-                <div className="resource-actions">
-                  <button onClick={() => handleDownload(resource.file, resource.title)}>Download</button>
-                  <button onClick={() => handleView(resource.id)}>View</button>
-                  <button onClick={() => handleUpdate(resource.id)}>Update</button>
-                  <button onClick={() => handleDelete(resource.id)}>Delete</button>
-                  <button 
-                    className={`favorite-button ${favorites.some(fav => fav.id === resource.id) ? 'active' : ''}`}
-                    onClick={() => toggleFavorite(resource)}
-                  >
-                    {favorites.some(fav => fav.id === resource.id) ? '★' : '☆'}
-                  </button>
+          <div className="resources-section">
+            <div className="resources-list">
+              {displayedResources.map((resource) => (
+                <div className="resource-card" key={resource.id}>
+                  <div className="resource-card-header">
+                    <h3>{resource.title}</h3>
+                  </div>
+                  <div className="resource-card-content">
+                    <p>{resource.description}</p>
+                    {resource.content_type === "video" && <video src={resource.file} controls />}
+                    {resource.content_type === "image" && <img src={resource.file} alt={resource.title} />}
+                  </div>
+                  <div className="resource-actions">
+                    <button onClick={() => handleDownload(resource.file, resource.title)}>Download</button>
+                    <button onClick={() => handleView(resource.id)}>View</button>
+                    <button onClick={() => handleUpdate(resource.id)}>Update</button>
+                    <button onClick={() => handleDelete(resource.id)}>Delete</button>
+                    <button 
+                      className={`favorite-button ${favorites.some(fav => fav.id === resource.id) ? 'active' : ''}`}
+                      onClick={() => toggleFavorite(resource)}
+                    >
+                      {favorites.some(fav => fav.id === resource.id) ? '★' : '☆'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
-
-        {/* Upload Section */}
-        <div className="upload-section">
-          <h2>Upload a New Resource</h2>
-          <form onSubmit={handleUpload}>
-            <input type="file" name="file" required />
-            <input type="text" name="title" placeholder="Title" required />
-            <textarea name="description" placeholder="Description" />
-            <select name="content_type">
-              <option value="video">Video</option>
-              <option value="document">Document</option>
-              <option value="image">Image</option>
-              <option value="other">Other</option>
-            </select>
-            <button type="submit" disabled={uploading}>{uploading ? "Uploading..." : "Upload"}</button>
-          </form>
-        </div>
       </div>
     </div>
   );
