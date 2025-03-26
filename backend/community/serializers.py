@@ -5,11 +5,38 @@ class ForumSerializer(serializers.ModelSerializer):
     created_by = serializers.CharField(source="created_by.username", read_only=True)
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S",read_only=True)  # Format date-time
     profile_picture = serializers.ImageField(required=False)
+    members = serializers.SerializerMethodField()
 
     class Meta:
         model = Forum
-        read_only_fields = ['created_at', 'created_by']
-        fields = ['id', 'name', 'description', 'visibility', 'created_by', 'created_at', 'profile_picture']
+        read_only_fields = ['created_at', 'created_by', 'members']
+        fields = ['id', 'name', 'description', 'visibility', 'created_by', 'created_at', 'profile_picture', 'category', 'members']
+
+    def validate_category(self, value):
+        """Ensure category matches one of the valid options"""
+        valid_categories = [choice[0] for choice in Forum.CATEGORY_CHOICES]
+        if value not in valid_categories:
+            raise serializers.ValidationError(f"Category must be one of: {', '.join(valid_categories)}")
+        return value
+
+    def validate(self, data):
+        if not data.get('category'):
+            data['category'] = 'General'
+        elif data['category'] not in dict(Forum.CATEGORY_CHOICES):
+            raise serializers.ValidationError({
+                'category': f"Invalid category. Must be one of: {', '.join(dict(Forum.CATEGORY_CHOICES).keys())}"
+            })
+        return data
+
+    def get_members(self, obj):
+        return [
+            {
+                'id': member.id,
+                'username': member.username,
+                'profile_picture': member.profile.profile_picture.url if hasattr(member, 'profile') and member.profile.profile_picture else None
+            }
+            for member in obj.members.all()
+        ]
 
 class PostSerializer(serializers.ModelSerializer):
     total_likes = serializers.ReadOnlyField()

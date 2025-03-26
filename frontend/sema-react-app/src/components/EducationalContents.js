@@ -16,6 +16,8 @@ const ContentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState([]);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
+  const userRole = JSON.parse(localStorage.getItem('user'))?.role;
 
   const fetchResources = async () => {
     const token = localStorage.getItem("access");
@@ -66,42 +68,41 @@ const ContentsPage = () => {
     }
 
     const formData = new FormData();
-    const fileInput = e.target.file;
-    if (!fileInput.files.length) {
+    const fileInput = e.target.querySelector('input[type="file"]');
+    
+    if (!fileInput || !fileInput.files.length) {
       setError("Please select a file.");
       return;
     }
 
-    formData.append("file", fileInput.files[0]);  // Changed to just "file"
+    formData.append("uploaded_file", fileInput.files[0]);
     formData.append("title", e.target.title.value.trim());
     formData.append("description", e.target.description.value.trim());
     formData.append("content_type", e.target.content_type.value);
+    formData.append("is_featured", isFeatured);
 
     setUploading(true);
     setError(null);
 
     try {
-      console.log("Form data content:", Object.fromEntries(formData)); // Debug log
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:8000/api/content/contents/upload/",
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
-          },
+          }
         }
       );
-      
+
+      setResources(prevResources => [...prevResources, response.data]);
       alert("File uploaded successfully!");
-      // Clear the form
       e.target.reset();
-      // Refresh the resources list
-      await fetchResources();
-      
+      setIsFeatured(false);
     } catch (err) {
-      console.error("Upload error:", err.response?.data); // Debug log
-      setError(err.response?.data?.error || "Error uploading the file. Make sure you have permission.");
+      console.error("Upload error:", err.response?.data);
+      setError(err.response?.data?.error || "Error uploading file");
     } finally {
       setUploading(false);
     }
@@ -241,24 +242,41 @@ const ContentsPage = () => {
       </div>
 
       <div className="content-layout">
-        {/* Upload Section - Moved to top */}
-        <div className="upload-section">
-          <h2>Upload a New Resource</h2>
-          <form onSubmit={handleUpload}>
-            <input type="file" name="file" required />
-            <input type="text" name="title" placeholder="Title" required />
-            <textarea name="description" placeholder="Description" />
-            <select name="content_type">
-              <option value="article">Article</option>
-              <option value="video">Video</option>
-              <option value="image">Image</option>
-              <option value="document">Document</option>
-              <option value="other">Other</option>
-              <option value="infographic">Infographic</option>
-            </select>
-            <button type="submit" disabled={uploading}>{uploading ? "Uploading..." : "Upload"}</button>
-          </form>
-        </div>
+        {/* Show upload section only for admin and provider */}
+        {(userRole === 'admin' || userRole === 'healthcare_provider') && (
+          <div className="upload-section">
+            <h2>Upload a New Resource</h2>
+            <form onSubmit={handleUpload}>
+              <input type="file" name="file" required />
+              <input type="text" name="title" placeholder="Title" required />
+              <textarea name="description" placeholder="Description" required />
+              <select name="content_type" required>
+                <option value="article">Article</option>
+                <option value="video">Video</option>
+                <option value="image">Image</option>
+                <option value="document">Document</option>
+                <option value="other">Other</option>
+                <option value="infographic">Infographic</option>
+              </select>
+              {userRole === 'admin' && (
+                <div className="featured-toggle">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={isFeatured}
+                      onChange={(e) => setIsFeatured(e.target.checked)}
+                    />
+                    Feature on Homepage
+                  </label>
+                </div>
+              )}
+              <button type="submit" disabled={uploading}>
+                {uploading ? "Uploading..." : "Upload"}
+              </button>
+              {error && <div className="error-message">{error}</div>}
+            </form>
+          </div>
+        )}
 
         {/* Resources Section */}
         {loading ? (
@@ -274,6 +292,9 @@ const ContentsPage = () => {
                 <div className="resource-card" key={resource.id}>
                   <div className="resource-card-header">
                     <h3>{resource.title}</h3>
+                    {resource.is_featured && (
+                      <span className="featured-badge">Featured</span>
+                    )}
                   </div>
                   <div className="resource-card-content">
                     <p>{resource.description}</p>

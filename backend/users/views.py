@@ -19,6 +19,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.generics import RetrieveUpdateAPIView
 from appointments.serializers import AppointmentSerializer
 from .permissions import require_permission, HasRolePermission
+from .models import User, Role  # Add Role import
 
 
 
@@ -474,13 +475,15 @@ def update_role(request, user_id):
 @permission_classes([IsAuthenticated])
 def create_role(request):
     """Create a new role (admin only)"""
-    if request.user.role != 'admin':
-        return Response(
-            {"detail": "Only administrators can create roles"},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
     try:
+        # Verify admin permission
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only administrators can create roles"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get and validate role data
         name = request.data.get('name')
         permissions = request.data.get('permissions', [])
 
@@ -490,7 +493,14 @@ def create_role(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Create new role in database
+        # Check if role already exists
+        if Role.objects.filter(name=name).exists():
+            return Response(
+                {"detail": f"Role '{name}' already exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create new role
         role = Role.objects.create(
             name=name,
             permissions=permissions
@@ -501,10 +511,83 @@ def create_role(request):
             "role": {
                 "id": role.id,
                 "name": role.name,
-                "permissions": role.permissions
+                "permissions": role.permissions,
+                "created_at": role.created_at
             }
         }, status=status.HTTP_201_CREATED)
 
+    except Exception as e:
+        print(f"Role creation error: {str(e)}")  # Debug log
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_roles(request):
+    """List all available roles (admin only)"""
+    try:
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only administrators can view roles"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get all roles from the Role model
+        roles = Role.objects.all()
+        roles_data = [
+            {
+                "id": role.id,
+                "name": role.name,
+                "permissions": role.permissions,
+                "created_at": role.created_at
+            }
+            for role in roles
+        ]
+
+        return Response({
+            "roles": roles_data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"Error listing roles: {str(e)}")  # Debug log
+        return Response(
+            {"detail": "Failed to fetch roles"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_role(request, role_id):
+    """Delete a custom role (admin only)"""
+    try:
+        if request.user.role != 'admin':
+            return Response(
+                {"detail": "Only administrators can delete roles"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        role = Role.objects.get(id=role_id)
+        
+        # Prevent deletion of default roles
+        default_roles = ['admin', 'healthcare_provider', 'mom']
+        if role.name in default_roles:
+            return Response(
+                {"detail": "Cannot delete default roles"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        role.delete()
+        return Response(
+            {"detail": "Role deleted successfully"},
+            status=status.HTTP_200_OK
+        )
+    except Role.DoesNotExist:
+        return Response(
+            {"detail": "Role not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response(
             {"detail": str(e)},

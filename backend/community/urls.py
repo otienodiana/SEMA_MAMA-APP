@@ -35,4 +35,5 @@ urlpatterns = [
     path('users/user-role/', get_user_role, name='user-role'),
     path("forums/<int:forum_id>/is-member/", is_member_of_forum, name="is-member-of-forum"),
     path('posts/<int:post_id>/react/', PostReactionView.as_view(), name='post-react'),
+    path('forums/<int:forum_id>/join_forum/', join_forum, name='forum-join'),
 ]

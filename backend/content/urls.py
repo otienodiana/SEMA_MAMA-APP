@@ -1,11 +1,11 @@
-from django.urls import path
-from .views import ContentViewSet, ContentUploadView, ContentListView
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .views import ContentViewSet, ContentUploadView
 
 router = DefaultRouter()
-router.register(r'content-viewset', ContentViewSet, basename='content-viewset')
+router.register(r'contents', ContentViewSet, basename='content')
 
 urlpatterns = [
-    path('contents/', ContentListView.as_view(), name='content-list'),
-    path('contents/upload/', ContentUploadView.as_view(), name='content-upload'),  # Updated path
-] + router.urls
+    path('contents/upload/', ContentUploadView.as_view(), name='content-upload'),
+    path('', include(router.urls)),
+]

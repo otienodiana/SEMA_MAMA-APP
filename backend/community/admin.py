@@ -6,6 +6,12 @@ class ForumAdmin(admin.ModelAdmin):
     list_display = ('name', 'category', 'visibility', 'created_by', 'created_at')
     search_fields = ('name', 'description')
     list_filter = ('visibility', 'category')
+    list_editable = ('category',)  # Allow quick category editing
+    
+    def save_model(self, request, obj, form, change):
+        if not obj.category:  # Ensure category is never empty
+            obj.category = 'General'
+        super().save_model(request, obj, form, change)
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):

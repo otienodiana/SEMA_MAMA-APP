@@ -158,26 +158,20 @@ def join_forum(request, forum_id):
         forum = get_object_or_404(Forum, id=forum_id)
         user = request.user
 
-        # Check if already a member
         if forum.members.filter(id=user.id).exists():
             return Response({
-                "status": "already_member",
-                "message": "You are already a member of this forum.",
-                "forum_id": forum_id
-            }, status=status.HTTP_200_OK)  # Return 200 instead of 400
+                'detail': 'Already a member of this forum'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Add user to forum members
         forum.members.add(user)
         return Response({
-            "status": "joined",
-            "message": "Successfully joined the forum!",
-            "forum_id": forum_id
+            'detail': 'Successfully joined the forum',
+            'forum_id': forum_id
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({
-            "status": "error",
-            "message": str(e)
+            'detail': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class ForumListView(ListAPIView):

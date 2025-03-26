@@ -1,0 +1,305 @@
+.forum-detail {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.forum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.forum-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.members-btn {
+  background: #2196F3;
+}
+
+.exit-forum-btn {
+  background: #f44336;
+  color: white;
+}
+
+.exit-forum-btn:hover {
+  background: #d32f2f;
+}
+
+.members-list {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  animation: slideDown 0.3s ease-out;
+}
+
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.member-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.member-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 5px;
+}
+
+.member-role {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 3px;
+}
+
+.create-post {
+  margin-bottom: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 20px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.create-post form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.create-post input,
+.create-post textarea {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.post-card {
+  background: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.post-meta {
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+.comments-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.comment {
+  padding: 10px;
+  margin: 10px 0;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.comment-meta {
+  font-size: 0.8em;
+  color: #666;
+}
+
+.add-comment {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.add-comment textarea {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  padding: 8px 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+.create-post-btn {
+  margin-bottom: 20px;
+  background: #4CAF50;
+  padding: 12px 24px;
+  font-size: 1.1em;
+  width: auto;
+}
+
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 15px 0;
+}
+
+.like-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.like-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  background: #f0f0f0;
+  color: #333;
+}
+
+.like-btn.liked {
+  background: #2196F3;
+  color: white;
+}
+
+.like-count {
+  font-size: 0.9em;
+  margin-left: 5px;
+}
+
+.reply-btn {
+  margin-top: 15px;
+  background: none;
+  color: #4CAF50;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.reply-btn:hover {
+  text-decoration: underline;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.add-member-form {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  animation: slideDown 0.3s ease-out;
+}
+
+.add-member-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.add-member-form input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.add-member-btn {
+  background: #4CAF50;
+}
+
+.cancel-btn {
+  background: #f44336;
+}
+
+.forum-management {
+  min-width: 250px;
+  margin-left: 20px;
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.forum-actions button {
+  width: 100%;
+  padding: 12px 15px;
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.join-forum-btn {
+  background: #4CAF50;
+  width: 100%;
+  padding: 15px;
+  font-size: 1.1em;
+  color: white;
+  font-weight: bold;
+}
+
+.members-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.add-member-btn-small {
+  padding: 5px 10px;
+  font-size: 0.9em;
+}
+
+.join-message {
+  text-align: center;
+  padding: 30px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin: 20px 0;
+  font-size: 1.1em;
+  color: #666;
+}

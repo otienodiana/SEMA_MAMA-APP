@@ -1,65 +1,136 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import "./ContentDetail.css"; // Add styles if needed
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import './ContentDetail.css';
 
 const ContentDetail = () => {
-  const { id } = useParams(); // Get the content ID from the URL
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [content, setContent] = useState(null);
+  const [resource, setResource] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const userRole = JSON.parse(localStorage.getItem('user'))?.role;
 
   useEffect(() => {
-    const fetchContent = async () => {
-      const token = localStorage.getItem("access");
+    fetchResourceDetails();
+  }, [id]);
 
-      if (!token) {
-        alert("Session expired. Please log in again.");
-        navigate("/login");
-        return;
-      }
+  const fetchResourceDetails = async () => {
+    const token = localStorage.getItem("access");
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/content/contents/${id}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      setResource(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError("Failed to fetch resource details");
+      setLoading(false);
+    }
+  };
 
-      try {
-        const response = await axios.get(`http://localhost:8000/api/content/contents/${id}/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const handleApprove = async () => {
+    const token = localStorage.getItem("access");
+    try {
+      await axios.patch(
+        `http://localhost:8000/api/content/contents/${id}/approve/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      fetchResourceDetails();
+      alert("Resource approved successfully!");
+    } catch (err) {
+      setError("Failed to approve resource");
+    }
+  };
 
-        console.log("Fetched content:", response.data); // ✅ Debug API response
-        setContent(response.data);
-      } catch (err) {
-        console.error("Error fetching content:", err);
-        setError("Failed to load content.");
-      }
-    };
+  const handleReject = async () => {
+    const reason = window.prompt("Please provide a reason for rejection:");
+    if (!reason) return;
 
-    fetchContent();
-  }, [id, navigate]);
+    const token = localStorage.getItem("access");
+    try {
+      await axios.patch(
+        `http://localhost:8000/api/content/contents/${id}/reject/`,
+        { rejection_reason: reason },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      fetchResourceDetails();
+      alert("Resource rejected successfully!");
+    } catch (err) {
+      setError("Failed to reject resource");
+    }
+  };
 
-  if (error) return <p>{error}</p>;
-  if (!content) return <p>Loading...</p>;
-
-  // ✅ Ensure media paths are correct
-  const mediaBaseURL = "http://localhost:8000"; 
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!resource) return <div>Resource not found</div>;
 
   return (
     <div className="content-detail">
-      <h2>{content.title}</h2>
-      <p>{content.description}</p>
+      <div className="content-header">
+        <h1>{resource.title}</h1>
+        <div className="status-badge" data-status={resource.status}>
+          {resource.status}
+        </div>
+      </div>
 
-      {/* ✅ Render media based on content type */}
-      {content.content_type === "video" && (
-        <video src={`${mediaBaseURL}${content.file}`} controls />
-      )}
-      {content.content_type === "image" && (
-        <img src={`${mediaBaseURL}${content.file}`} alt={content.title} />
-      )}
-      {content.content_type === "document" && (
-        <a href={`${mediaBaseURL}${content.file}`} download>
-          Download Document
-        </a>
+      <div className="content-meta">
+        <p>Type: {resource.content_type}</p>
+        <p>Created by: {resource.created_by?.username}</p>
+        <p>Date: {new Date(resource.created_at).toLocaleDateString()}</p>
+      </div>
+
+      <div className="content-body">
+        <h2>Description</h2>
+        <p>{resource.description}</p>
+
+        {resource.uploaded_file && (
+          <div className="content-preview">
+            {resource.content_type === 'image' && (
+              <img src={resource.uploaded_file} alt={resource.title} />
+            )}
+            {resource.content_type === 'video' && (
+              <video src={resource.uploaded_file} controls />
+            )}
+            {['document', 'article', 'infographic'].includes(resource.content_type) && (
+              <a href={resource.uploaded_file} target="_blank" rel="noopener noreferrer" 
+                 className="download-link">
+                Download {resource.content_type}
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+
+      {userRole === 'admin' && resource.status === 'pending' && (
+        <div className="admin-actions">
+          <button onClick={handleApprove} className="approve-btn">
+            Approve
+          </button>
+          <button onClick={handleReject} className="reject-btn">
+            Reject
+          </button>
+        </div>
       )}
 
-      <button onClick={() => navigate(-1)}>Go Back</button> {/* Back Button */}
+      {resource.status === 'rejected' && (
+        <div className="rejection-details">
+          <h3>Rejection Reason:</h3>
+          <p>{resource.rejection_reason}</p>
+        </div>
+      )}
+
+      <button onClick={() => navigate(-1)} className="back-btn">
+        Back to List
+      </button>
     </div>
   );
 };

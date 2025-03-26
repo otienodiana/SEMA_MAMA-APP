@@ -9,11 +9,11 @@ class Forum(models.Model):
     ]
     
     CATEGORY_CHOICES = [
-        ('pregnancy', 'Pregnancy'),
-        ('postpartum', 'Postpartum'),
-        ('parenting', 'Parenting'),
-        ('mental_health', 'Mental Health'),
-        ('general', 'General'),
+        ('Pregnancy', 'Pregnancy'),  # Note: Using exact case matching with frontend
+        ('Postpartum', 'Postpartum'),
+        ('Parenting', 'Parenting'),
+        ('Mental Health', 'Mental Health'),
+        ('General', 'General'),
     ]
 
     name = models.CharField(max_length=255, unique=True)
@@ -22,7 +22,11 @@ class Forum(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_forums')
     created_at = models.DateTimeField(auto_now_add=True)
     profile_picture = models.ImageField(upload_to='forum_pictures/', null=True, blank=True)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general')
+    category = models.CharField(
+        max_length=20, 
+        choices=CATEGORY_CHOICES,
+        default='General'
+    )
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='forums', blank=True)
 
     def __str__(self):

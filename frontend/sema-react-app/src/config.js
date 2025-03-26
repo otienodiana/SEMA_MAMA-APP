@@ -1,8 +1,4 @@
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://127.0.0.1:8000'
-  : process.env.REACT_APP_API_URL;
-
-export { API_BASE_URL };
+export const API_BASE_URL = 'http://localhost:8000';  // Changed to localhost
 
 export const API_ENDPOINTS = {
   login: '/api/users/login/',

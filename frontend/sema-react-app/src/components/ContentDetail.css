@@ -1,8 +1,8 @@
 /* ContentDetail.css */
 .content-detail {
-    max-width: 800px;
-    margin: 40px auto;
-    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
     background: #ffffff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
@@ -54,4 +54,101 @@
   .content-detail button:hover {
     background: #cc0000;
   }
-  
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.status-badge[data-status="pending"] {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge[data-status="approved"] {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge[data-status="rejected"] {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.content-meta {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.content-body {
+  margin-bottom: 2rem;
+}
+
+.content-preview {
+  margin: 2rem 0;
+}
+
+.content-preview img,
+.content-preview video {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.approve-btn,
+.reject-btn,
+.back-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.approve-btn {
+  background: #28a745;
+  color: white;
+}
+
+.reject-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.back-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.rejection-details {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+.download-link {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
