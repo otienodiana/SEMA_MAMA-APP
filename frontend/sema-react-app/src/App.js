@@ -36,6 +36,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import UserManagement from './components/UserManagement';
 import AdminEducationalContents from './components/AdminEducationalContents';
 import ForumDetail from './components/ForumDetail';
+import AdminAppointments from "./components/AdminAppointments";
 
 function App() {
   return (
@@ -57,16 +58,16 @@ function App() {
             {/* Admin redirect */}
             <Route 
               path="/admin" 
-              element={<Navigate to="/admin/login" replace />} 
+              element={<Navigate to="/dashboard/admin" replace />} 
             />
 
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
               <Route path="dashboard/admin" element={<AdminDashboard />}>
-                <Route index element={<Analytics />} />
+                <Route index element={<Analytics />} /> {/* This makes Analytics the default */}
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />
-                <Route path="appointments" element={<Appointments />} />
+                <Route path="appointments" element={<AdminAppointments />} />
                 <Route path="sms-setup" element={<SmsSetup />} />
                 <Route path="logout" element={<Logout />} />
                 <Route path="community" element={<AdminCommunity />} />

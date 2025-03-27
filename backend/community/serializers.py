@@ -39,23 +39,24 @@ class ForumSerializer(serializers.ModelSerializer):
         ]
 
 class PostSerializer(serializers.ModelSerializer):
-    total_likes = serializers.ReadOnlyField()
-    username = serializers.CharField(source="user.username", read_only=True)
+    likes = serializers.SerializerMethodField()
+    author = serializers.SerializerMethodField()
+    created_by = serializers.IntegerField(source='user.id', read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'forum', 'user', 'title', 'content', 'username', 'created_at', 'total_likes']
-        read_only_fields = ['created_at']
-        extra_kwargs = {
-            "forum": {"required": False},  
-            "user": {"required": False}    
+        fields = ['id', 'forum', 'created_by', 'title', 'content', 'created_at', 'likes', 'author']
+        read_only_fields = ['created_at', 'likes', 'author']
+
+    def get_likes(self, obj):
+        return [user.id for user in obj.likes.all()]
+
+    def get_author(self, obj):
+        return {
+            'id': obj.user.id,
+            'username': obj.user.username,
+            'name': obj.user.get_full_name() if obj.user.get_full_name() else obj.user.username
         }
-
-
-
-    def get_username(self, obj):
-        """Returns the username of the user who created the post."""
-        return obj.user.username if obj.user else None  # 
 
 class CommentSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)

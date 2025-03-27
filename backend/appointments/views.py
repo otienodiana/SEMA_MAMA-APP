@@ -1,12 +1,11 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from .models import Appointment
 from .serializers import AppointmentSerializer
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
@@ -139,41 +138,65 @@ class RescheduleAppointmentView(generics.UpdateAPIView):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def approve_appointment(request, id):
-    try:
-        appointment = Appointment.objects.get(id=id)
-        appointment.status = "approved"
-        appointment.save()
-        return Response({"message": "Appointment approved successfully"}, status=200)
-    except Appointment.DoesNotExist:
-        return Response({"error": "Appointment not found"}, status=404)
-    
-
-
-@api_view(['PUT'])
 def approve_appointment(request, pk):
-    """Approve an appointment by changing its status to 'approved'."""
+    """Approve an appointment."""
     try:
+        # Only admin and healthcare providers can approve appointments
+        if request.user.role not in ['admin', 'healthcare_provider']:
+            return Response(
+                {"error": "Only administrators and healthcare providers can approve appointments"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         appointment = Appointment.objects.get(pk=pk)
         appointment.status = "approved"
         appointment.save()
-        return Response({"message": "Appointment approved successfully"}, status=status.HTTP_200_OK)
+        
+        serializer = AppointmentSerializer(appointment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
     except Appointment.DoesNotExist:
-        return Response({"error": "Appointment not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Appointment not found"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def reject_appointment(request, pk):
-    """Reject an appointment and store the rejection reason."""
+    """Reject an appointment with a reason."""
     try:
+        if request.user.role not in ['admin', 'healthcare_provider']:
+            return Response(
+                {"error": "Only administrators and healthcare providers can reject appointments"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         appointment = Appointment.objects.get(pk=pk)
-        rejection_reason = request.data.get("rejection_reason", "No reason provided")
+        rejection_reason = request.data.get('rejection_reason', 'No reason provided')
+        
         appointment.status = "rejected"
         appointment.rejection_reason = rejection_reason
         appointment.save()
-        return Response({"message": "Appointment rejected successfully"}, status=status.HTTP_200_OK)
+        
+        serializer = AppointmentSerializer(appointment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
     except Appointment.DoesNotExist:
-        return Response({"error": "Appointment not found"}, status=status.HTTP_404_NOT_FOUND)
-    
+        return Response(
+            {"error": "Appointment not found"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])

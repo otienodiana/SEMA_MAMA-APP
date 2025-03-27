@@ -33,6 +33,10 @@ const AdminCommunity = () => {
     profile_picture: null
   });
 
+  const [showAddMemberForm, setShowAddMemberForm] = useState(false);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [selectedForum, setSelectedForum] = useState(null);
+
   const normalizeCategory = (rawCategory) => {
     if (!rawCategory || typeof rawCategory !== 'string') {
       console.log('Empty or invalid category, defaulting to General');
@@ -156,26 +160,52 @@ const AdminCommunity = () => {
   const handleJoinForum = async (forumId) => {
     try {
       const token = localStorage.getItem('access');
-      await axios.post(`http://localhost:8000/api/community/forums/${forumId}/join/`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      await fetchForums();
-      // Navigate to forum detail page after joining
-      navigate(`/dashboard/admin/community/forums/${forumId}`);
+      const response = await axios.post(
+        `http://localhost:8000/api/community/forums/${forumId}/join/`, 
+        {},  // Empty body since user is identified by token
+        {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.status === 'already_member' || response.data.status === 'joined') {
+        await fetchForums();
+        // Navigate to forum detail page after joining
+        navigate(`/dashboard/admin/community/forums/${forumId}`);
+      } else {
+        setError('Unexpected response from server');
+      }
     } catch (err) {
-      setError('Failed to join forum');
+      console.error('Join forum error:', err.response?.data);
+      setError(err.response?.data?.error || 'Failed to join forum');
     }
   };
 
   const handleExitForum = async (forumId) => {
     try {
       const token = localStorage.getItem('access');
-      await axios.post(`http://localhost:8000/api/community/forums/${forumId}/exit/`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchForums();
+      const response = await axios.post(
+        `http://localhost:8000/api/community/forums/${forumId}/exit/`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.status === 'success') {
+        await fetchForums(); // Refresh the forums list
+      } else {
+        throw new Error(response.data.message || 'Failed to exit forum');
+      }
     } catch (err) {
-      setError('Failed to exit forum');
+      console.error('Exit forum error:', err.response?.data);
+      setError(err.response?.data?.message || 'Failed to exit forum');
     }
   };
 
@@ -232,6 +262,43 @@ const AdminCommunity = () => {
     }
   };
 
+  const handleAddMember = async (forum) => {
+    try {
+      const token = localStorage.getItem('access');
+      const trimmedEmail = newMemberEmail.trim().toLowerCase();
+      
+      if (!trimmedEmail) {
+        alert('Please enter an email address');
+        return;
+      }
+
+      const response = await axios.post(
+        `http://localhost:8000/api/community/forums/${forum.id}/add_member/`,
+        { email: trimmedEmail },
+        { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
+
+      if (response.data.status === 'success') {
+        alert(response.data.detail); // Show success message
+        setNewMemberEmail('');
+        setShowAddMemberForm(false);
+        setSelectedForum(null);
+        await fetchForums(); // Refresh forum data
+      } else {
+        throw new Error(response.data.detail);
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || 'Failed to add member';
+      console.error('Add member error:', err.response?.data);
+      alert(errorMessage);
+    }
+  };
+
   const handleCategoryClick = (category) => {
     if (expandedCategory === category) {
       setExpandedCategory(null);
@@ -256,12 +323,23 @@ const AdminCommunity = () => {
       
       <div className="forum-actions">
         {forum.members?.includes(user?.id) ? (
-          <button 
-            className="view-posts-btn"
-            onClick={() => navigate(`/dashboard/admin/community/forums/${forum.id}`)}
-          >
-            View Posts
-          </button>
+          <>
+            <button 
+              className="view-posts-btn"
+              onClick={() => navigate(`/dashboard/admin/community/forums/${forum.id}`)}
+            >
+              View Posts
+            </button>
+            <button
+              className="add-member-btn"
+              onClick={() => {
+                setSelectedForum(forum);
+                setShowAddMemberForm(true);
+              }}
+            >
+              Add Member
+            </button>
+          </>
         ) : (
           <button 
             className="join-btn"
@@ -291,6 +369,37 @@ const AdminCommunity = () => {
           </>
         )}
       </div>
+
+      {/* Add member form */}
+      {showAddMemberForm && selectedForum?.id === forum.id && (
+        <div className="add-member-form">
+          <h3>Add New Member</h3>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleAddMember(forum);
+          }}>
+            <input
+              type="email"
+              placeholder="Enter member's email"
+              value={newMemberEmail}
+              onChange={(e) => setNewMemberEmail(e.target.value)}
+              required
+            />
+            <div className="form-buttons">
+              <button type="submit">Add Member</button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setShowAddMemberForm(false);
+                  setNewMemberEmail('');
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 

@@ -20,7 +20,9 @@ from rest_framework.generics import RetrieveUpdateAPIView
 from appointments.serializers import AppointmentSerializer
 from .permissions import require_permission, HasRolePermission
 from .models import User, Role  # Add Role import
-
+from django.utils import timezone
+from django.db.models import Count
+from community.models import Post, Comment
 
 
 User = get_user_model()
@@ -591,5 +593,66 @@ def delete_role(request, role_id):
     except Exception as e:
         return Response(
             {"detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_users(request):
+    """Get all users (admin only)"""
+    try:
+        if request.user.role != 'admin':
+            return Response(
+                {"error": "Only administrators can view all users"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True, context={'request': request})
+        
+        # Return array of users directly
+        return Response(serializer.data)
+        
+    except Exception as e:
+        print(f"Error in get_all_users: {str(e)}")
+        return Response(
+            {"error": f"Failed to fetch users: {str(e)}"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_analytics(request):
+    """Get analytics data for the dashboard"""
+    try:
+        # Get user statistics
+        total_users = User.objects.count()
+        active_users = User.objects.filter(last_login__gte=timezone.now() - timezone.timedelta(days=30)).count()
+        
+        # Get appointment statistics
+        total_appointments = Appointment.objects.count()
+        
+        # Get forum engagement statistics
+        total_posts = Post.objects.count()
+        total_comments = Comment.objects.count()
+        
+        return Response({
+            'user_statistics': {
+                'total_users': total_users,
+                'active_users': active_users,
+                'inactive_users': total_users - active_users,
+                'user_growth': [0, 0, 0, 0, 0, 0]  # Placeholder for growth data
+            },
+            'engagement_metrics': {
+                'total_appointments': total_appointments,
+                'total_posts': total_posts,
+                'total_comments': total_comments,
+                'engagement_trends': [total_posts, total_comments, 0, 0]
+            }
+        })
+    except Exception as e:
+        print(f"Analytics error: {str(e)}")
+        return Response(
+            {'error': str(e)}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

@@ -37,38 +37,18 @@ const ForumDetail = () => {
         })
       ]);
 
-      // Add user details to posts and comments
-      const postsWithUsers = await Promise.all(postsRes.data.map(async (post) => {
-        try {
-          const userResponse = await axios.get(`http://localhost:8000/api/users/${post.created_by}/`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          return {
-            ...post,
-            authorName: userResponse.data.username || userResponse.data.name || post.created_by,
-            comments: await Promise.all((post.comments || []).map(async (comment) => {
-              try {
-                const commentUserResponse = await axios.get(`http://localhost:8000/api/users/${comment.created_by}/`, {
-                  headers: { Authorization: `Bearer ${token}` }
-                });
-                return {
-                  ...comment,
-                  authorName: commentUserResponse.data.username || commentUserResponse.data.name || comment.created_by
-                };
-              } catch (err) {
-                return { ...comment, authorName: comment.created_by };
-              }
-            }))
-          };
-        } catch (err) {
-          return { ...post, authorName: post.created_by };
-        }
+      // Simplified post handling with author info from serializer
+      const postsData = postsRes.data.map(post => ({
+        ...post,
+        authorName: post.author.name || post.author.username,
+        comments: post.comments || []
       }));
 
       setForum(forumRes.data);
-      setPosts(postsWithUsers);
+      setPosts(postsData);
       setLoading(false);
     } catch (err) {
+      console.error('Error fetching forum details:', err);
       setError('Failed to fetch forum details');
       setLoading(false);
     }
@@ -180,24 +160,33 @@ const ForumDetail = () => {
   const handleLikePost = async (postId) => {
     try {
       const token = localStorage.getItem('access');
-      await axios.post(`http://localhost:8000/api/community/posts/${postId}/like/`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchForumDetails(); // Refresh posts to update likes
-    } catch (err) {
-      setError('Failed to like post');
-    }
-  };
+      await axios.post(
+        `http://localhost:8000/api/community/posts/${postId}/like/`, 
+        {},
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-  const handleUnlikePost = async (postId) => {
-    try {
-      const token = localStorage.getItem('access');
-      await axios.post(`http://localhost:8000/api/community/posts/${postId}/unlike/`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchForumDetails(); // Refresh posts to update likes
+      // Update the posts state locally
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          const userLiked = post.likes.includes(user.id);
+          return {
+            ...post,
+            likes: userLiked 
+              ? post.likes.filter(id => id !== user.id)  // Remove user's like
+              : [...post.likes, user.id]  // Add user's like
+          };
+        }
+        return post;
+      }));
     } catch (err) {
-      setError('Failed to unlike post');
+      console.error('Like error:', err.response?.data);
+      setError('Failed to like post');
     }
   };
 
@@ -205,11 +194,15 @@ const ForumDetail = () => {
     if (window.confirm('Are you sure you want to exit this forum?')) {
       try {
         const token = localStorage.getItem('access');
-        await axios.post(`http://localhost:8000/api/community/forums/${forumId}/leave_forum/`, 
-          { user: user.id },
+        const response = await axios.post(
+          `http://localhost:8000/api/community/forums/${forumId}/exit/`, // Changed from leave_forum to exit
+          {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        await checkMembershipStatus();
+        if (response.data.status === 'success') {
+          // Redirect to admin community page after successful exit
+          window.location.href = '/dashboard/admin/community';
+        }
       } catch (err) {
         console.error('Exit forum error:', err.response?.data);
         setError('Failed to exit forum');
@@ -233,6 +226,64 @@ const ForumDetail = () => {
       setError(err.response?.data?.detail || 'Failed to add member');
     }
   };
+
+  const renderPost = (post) => (
+    <div key={post.id} className="post-card">
+      <h3>{post.title}</h3>
+      <p>{post.content}</p>
+      <div className="post-actions">
+        <p className="post-meta">
+          Posted by {post.authorName} on {new Date(post.created_at).toLocaleDateString()}
+        </p>
+        <div className="like-buttons">
+          <button 
+            className={`like-btn ${post.likes?.includes(user?.id) ? 'liked' : ''}`}
+            onClick={() => handleLikePost(post.id)}
+          >
+            {post.likes?.includes(user?.id) ? 'Unlike' : 'Like'}
+            <span className="like-count">({post.likes?.length || 0})</span>
+          </button>
+        </div>
+      </div>
+      
+      <div className="comments-section">
+        {post.comments?.map(comment => (
+          <div key={comment.id} className="comment">
+            <p>{comment.content}</p>
+            <p className="comment-meta">
+              By {comment.authorName} on {new Date(comment.created_at).toLocaleDateString()}
+            </p>
+          </div>
+        ))}
+        
+        <button 
+          className="reply-btn"
+          onClick={() => setShowCommentForm({
+            ...showCommentForm,
+            [post.id]: !showCommentForm[post.id]
+          })}
+        >
+          {showCommentForm[post.id] ? 'Cancel Reply' : 'Reply'}
+        </button>
+
+        {showCommentForm[post.id] && (
+          <div className="add-comment">
+            <textarea
+              placeholder="Add a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+            />
+            <button onClick={() => {
+              handleCreateComment(post.id);
+              setShowCommentForm({ ...showCommentForm, [post.id]: false });
+            }}>
+              Add Comment
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -367,65 +418,7 @@ const ForumDetail = () => {
           )}
 
           <div className="posts-list">
-            {posts.map(post => (
-              <div key={post.id} className="post-card">
-                <h3>{post.title}</h3>
-                <p>{post.content}</p>
-                <div className="post-actions">
-                  <p className="post-meta">
-                    Posted by {post.authorName} on {new Date(post.created_at).toLocaleDateString()}
-                  </p>
-                  <div className="like-buttons">
-                    <button 
-                      className={`like-btn ${post.likes?.includes(user?.id) ? 'liked' : ''}`}
-                      onClick={() => post.likes?.includes(user?.id) 
-                        ? handleUnlikePost(post.id) 
-                        : handleLikePost(post.id)}
-                    >
-                      {post.likes?.includes(user?.id) ? 'Unlike' : 'Like'}
-                      <span className="like-count">({post.likes?.length || 0})</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="comments-section">
-                  {post.comments?.map(comment => (
-                    <div key={comment.id} className="comment">
-                      <p>{comment.content}</p>
-                      <p className="comment-meta">
-                        By {comment.authorName} on {new Date(comment.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                  
-                  <button 
-                    className="reply-btn"
-                    onClick={() => setShowCommentForm({
-                      ...showCommentForm,
-                      [post.id]: !showCommentForm[post.id]
-                    })}
-                  >
-                    {showCommentForm[post.id] ? 'Cancel Reply' : 'Reply'}
-                  </button>
-
-                  {showCommentForm[post.id] && (
-                    <div className="add-comment">
-                      <textarea
-                        placeholder="Add a comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                      />
-                      <button onClick={() => {
-                        handleCreateComment(post.id);
-                        setShowCommentForm({ ...showCommentForm, [post.id]: false });
-                      }}>
-                        Add Comment
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+            {posts.map(post => renderPost(post))}
           </div>
         </>
       ) : (

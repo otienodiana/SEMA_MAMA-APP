@@ -69,16 +69,12 @@ const AdminDashboard = () => {
         icon: <FaUsers />,
         label: "User Management",
         permission: "manage_users",
-        subItems: [
-          { path: "/dashboard/admin/users/list", icon: <FaUsers />, label: "User List", permission: "manage_users" },
-          { path: "/dashboard/admin/users/roles", icon: <FaUserShield />, label: "Roles & Permissions", permission: "assign_roles" },
-          { path: "/dashboard/admin/users/activity", icon: <FaUserCheck />, label: "User Activity", permission: "manage_users" }
-        ]
+        
       },
       { path: "/dashboard/admin/educational-contents", icon: <FaBook />, label: "Educational Content", permission: "manage_content" },
       { path: "/dashboard/admin/community", icon: <FaComments />, label: "Community", permission: "manage_forums" },
       { path: "/dashboard/admin/appointments", icon: <FaCalendarAlt />, label: "Appointments", permission: "manage_appointments" },
-      { path: "/dashboard/admin/sms-setup", icon: <FaSms />, label: "SMS Setup", permission: "manage_users" },
+      
       { path: "/dashboard/admin/settings", icon: <FaCog />, label: "Settings", permission: "manage_users" },
     ];
 

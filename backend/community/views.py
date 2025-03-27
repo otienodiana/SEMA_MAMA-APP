@@ -26,7 +26,8 @@ from django.contrib.auth.models import User
 from rest_framework.views import APIView 
 from rest_framework.generics import DestroyAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
-
+from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 
 @api_view(["GET"])
@@ -154,24 +155,31 @@ class CommentDetailView(RetrieveUpdateDestroyAPIView):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def join_forum(request, forum_id):
+    """Handle joining a forum"""
     try:
         forum = get_object_or_404(Forum, id=forum_id)
         user = request.user
 
         if forum.members.filter(id=user.id).exists():
             return Response({
-                'detail': 'Already a member of this forum'
-            }, status=status.HTTP_400_BAD_REQUEST)
+                'status': 'already_member',
+                'message': 'You are already a member of this forum'
+            }, status=status.HTTP_200_OK)
 
         forum.members.add(user)
         return Response({
-            'detail': 'Successfully joined the forum',
+            'status': 'joined',
+            'message': 'Successfully joined the forum',
             'forum_id': forum_id
         }, status=status.HTTP_200_OK)
 
+    except Forum.DoesNotExist:
+        return Response({
+            'error': 'Forum not found'
+        }, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({
-            'detail': str(e)
+            'error': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class ForumListView(ListAPIView):
@@ -449,3 +457,99 @@ class ForumCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)  # Ensure `created_by` is set
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_member(request, forum_id):
+    try:
+        forum = get_object_or_404(Forum, id=forum_id)
+        email = request.data.get('email', '').strip().lower()
+        
+        if not email:
+            return Response({'detail': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        User = get_user_model()
+        # Fixed: proper email lookup syntax
+        new_member = User.objects.filter(email__iexact=email).first()
+        
+        if not new_member:
+            return Response({
+                'detail': 'No user found with this email address. Please check the email and try again.',
+                'status': 'error'
+            }, status=status.HTTP_404_NOT_FOUND)
+            
+        if forum.members.filter(id=new_member.id).exists():
+            return Response({
+                'detail': 'User is already a member of this forum',
+                'status': 'error'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        forum.members.add(new_member)
+        return Response({
+            'detail': f'Successfully added {new_member.username} to the forum',
+            'status': 'success',
+            'member': {
+                'id': new_member.id,
+                'username': new_member.username,
+                'email': new_member.email
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'detail': f'Failed to add member: {str(e)}',
+            'status': 'error'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def exit_forum(request, forum_id):
+    """Handle exiting a forum"""
+    try:
+        forum = get_object_or_404(Forum, id=forum_id)
+        user = request.user
+
+        if not forum.members.filter(id=user.id).exists():
+            return Response({
+                'status': 'error',
+                'message': 'You are not a member of this forum'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        forum.members.remove(user)
+        return Response({
+            'status': 'success',
+            'message': 'Successfully left the forum'
+        }, status=status.HTTP_200_OK)
+
+    except Forum.DoesNotExist:
+        return Response({
+            'error': 'Forum not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_forum_stats(request):
+    """Get forum statistics"""
+    try:
+        total_forums = Forum.objects.count()
+        # Consider a forum active if it has posts in the last 30 days
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+        active_forums = Forum.objects.filter(
+            posts__created_at__gte=thirty_days_ago
+        ).distinct().count()
+
+        return Response({
+            'total_forums': total_forums,
+            'active_forums': active_forums,
+        })
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

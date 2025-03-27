@@ -177,25 +177,49 @@ button:hover {
 .like-buttons {
   display: flex;
   gap: 10px;
+  margin-top: 8px;
 }
 
 .like-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   padding: 8px 16px;
-  background: #f0f0f0;
-  color: #333;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  background-color: #fff;
+  color: #666;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.like-btn:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .like-btn.liked {
-  background: #2196F3;
+  background-color: #2196F3;
   color: white;
+  border-color: #2196F3;
+}
+
+.like-btn.liked:hover {
+  background-color: #1976D2;
 }
 
 .like-count {
   font-size: 0.9em;
-  margin-left: 5px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.like-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .reply-btn {

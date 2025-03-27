@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
+import axios from 'axios';  // Add this import
 import { Line as LineChart, Bar as BarChart } from 'react-chartjs-2';
 import { FaUsers, FaCalendar, FaBook, FaComments } from 'react-icons/fa';
 import {
@@ -50,75 +51,58 @@ const Analytics = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30days');
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalAppointments: 0,
+    totalForums: 0,
+    totalPosts: 0,
+    activeForums: 0,
+    activePosts: 0,
+    usersByRole: {},
+    appointmentsByStatus: {},
+    recentActivity: []
+  });
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
         const token = localStorage.getItem('access');
-        if (!token) {
-          setError('No authentication token found');
-          setLoading(false);
-          return;
-        }
-
         const headers = {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         };
 
-        // Split the fetches to handle them independently
-        try {
-          const summaryRes = await fetch(`${API_BASE_URL}/api/analytics/summary/`, {
-            method: 'GET',
-            headers
-          });
+        // Update API endpoints to match your Django URLs
+        const [analyticsResponse, forumsResponse] = await Promise.all([
+          axios.get('http://localhost:8000/api/users/analytics/', { headers }),
+          axios.get('http://localhost:8000/api/community/stats/', { headers })
+        ]);
 
-          if (summaryRes.ok) {
-            const summaryData = await summaryRes.json();
-            setSummary({
-              ...defaultSummaryData,
-              ...summaryData
-            });
-          } else {
-            console.warn('Summary endpoint failed, using default data');
-            setSummary(defaultSummaryData);
+        console.log('Analytics response:', analyticsResponse.data);
+        console.log('Forums response:', forumsResponse.data);
+
+        setSummary({
+          ...defaultSummaryData,
+          user_statistics: analyticsResponse.data.user_statistics || defaultSummaryData.user_statistics,
+          engagement_metrics: {
+            ...defaultSummaryData.engagement_metrics,
+            total_appointments: analyticsResponse.data.total_appointments || 0,
+            total_posts: analyticsResponse.data.total_posts || 0,
+            total_comments: analyticsResponse.data.total_comments || 0,
           }
-        } catch (summaryError) {
-          console.error('Summary fetch error:', summaryError);
-          setSummary(defaultSummaryData);
-        }
+        });
 
-        try {
-          const detailsRes = await fetch(`${API_BASE_URL}/api/analytics/detail/`, {
-            method: 'GET',
-            headers
-          });
-
-          if (detailsRes.ok) {
-            const detailsData = await detailsRes.json();
-            setDetails(detailsData);
-          } else {
-            setDetails({
-              recent_users: [],
-              recent_appointments: [],
-              popular_content: [],
-              active_forums: []
-            });
-          }
-        } catch (detailsError) {
-          console.error('Details fetch error:', detailsError);
-          setDetails({
-            recent_users: [],
-            recent_appointments: [],
-            popular_content: [],
-            active_forums: []
-          });
-        }
+        setStats(prev => ({
+          ...prev,
+          totalForums: forumsResponse.data.total_forums || 0,
+          activeForums: forumsResponse.data.active_forums || 0,
+        }));
 
       } catch (err) {
         console.error('Analytics Error:', err);
-        setError(err.message);
+        console.error('Error details:', err.response?.data || err.message);
+        setError('Failed to fetch analytics data. Please try again later.');
       } finally {
         setLoading(false);
       }

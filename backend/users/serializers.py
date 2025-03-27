@@ -1,22 +1,25 @@
 from rest_framework import serializers
-from .models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, min_length=8)
     
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'phone_number', 'role', 'profile_photo', 'age')
+        fields = ['id', 'username', 'email', 'role', 'first_name', 'last_name', 'profile_photo', 'date_joined', 'password', 'phone_number', 'age']
+        read_only_fields = ['date_joined']
         extra_kwargs = {
             'password': {'write_only': True, 'required': True},
             'email': {'required': True},
         }
 
     def to_representation(self, instance):
-        data = super().to_representation(instance)
+        representation = super().to_representation(instance)
         if instance.profile_photo:
-            data['profile_photo'] = self.context['request'].build_absolute_uri(instance.profile_photo.url)
-        return data
+            representation['profile_photo'] = self.context['request'].build_absolute_uri(instance.profile_photo.url)
+        return representation
 
     def validate_role(self, value):
         """Ensure role is one of the allowed choices."""
