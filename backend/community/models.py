@@ -9,11 +9,11 @@ class Forum(models.Model):
     ]
     
     CATEGORY_CHOICES = [
-        ('Pregnancy', 'Pregnancy'),  # Note: Using exact case matching with frontend
-        ('Postpartum', 'Postpartum'),
-        ('Parenting', 'Parenting'),
-        ('Mental Health', 'Mental Health'),
-        ('General', 'General'),
+        ('general', 'General'),
+        ('pregnancy', 'Pregnancy'), 
+        ('postpartum', 'Postpartum'),
+        ('parenting', 'Parenting'),
+        ('mental_health', 'Mental Health'),
     ]
 
     name = models.CharField(max_length=255, unique=True)
@@ -25,7 +25,7 @@ class Forum(models.Model):
     category = models.CharField(
         max_length=20, 
         choices=CATEGORY_CHOICES,
-        default='General'
+        default='general'
     )
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='forums', blank=True)
 

@@ -37,8 +37,100 @@
 .forum-card {
   background: white;
   border-radius: 8px;
-  padding: 15px;
+  padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.forum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.forum-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.visibility-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  background: #e9ecef;
+  color: #495057;
+}
+
+.forum-content {
+  flex: 1;
+}
+
+.forum-meta {
+  font-size: 0.9rem;
+  color: #6c757d;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.forum-meta p {
+  margin: 0;
+}
+
+.forum-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.forum-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.view-posts-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.add-member-btn {
+  background: #2196F3;
+  color: white;
+}
+
+.exit-btn {
+  background: #ff9800;
+  color: white;
+}
+
+.edit-btn {
+  background: #9c27b0;
+  color: white;
+}
+
+.delete-btn {
+  background: #f44336;
+  color: white;
+}
+
+.join-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.forum-actions button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .forum-image {

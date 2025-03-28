@@ -259,21 +259,34 @@ class UserProfileUpdateView(RetrieveUpdateAPIView):
 @permission_classes([IsAuthenticated])
 def get_moms(request):
     """Allow only healthcare providers & admins to view moms"""
+    try:
+        if request.user.role not in ["healthcare_provider", "admin"]:
+            return Response(
+                {"detail": "You do not have permission to view this resource."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-    print("Current User Role:", request.user.role)  # ✅ Debugging Step
-
-    if request.user.role not in ["healthcare_provider", "admin"]:
+        # Get all users with the role "mom" and debug
+        moms = User.objects.filter(role="mom")
+        print(f"Found {moms.count()} mom users")  # Debug print
+        
+        mom_data = [{
+            'id': mom.id,
+            'username': mom.username,
+            'email': mom.email,
+            'first_name': mom.first_name or '',
+            'last_name': mom.last_name or '',
+            'role': mom.role
+        } for mom in moms]
+        
+        return Response(mom_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        print(f"Error fetching moms: {str(e)}")
         return Response(
-            {"detail": "You do not have permission to view this resource."}, 
-            status=status.HTTP_403_FORBIDDEN
+            {"detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-    moms = User.objects.filter(role="mom")
-    print("Moms Found:", moms)  # ✅ Debugging Step
-
-    serializer = UserSerializer(moms, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 @api_view(["GET"])

@@ -50,9 +50,59 @@ class ForumViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        try:
+            # Debug print
+            print("Request data:", self.request.data)
+            print("Request user:", self.request.user)
+            print("Request files:", self.request.FILES)
+            
+            # Create forum and automatically add creator as member
+            forum = serializer.save(created_by=self.request.user)
+            forum.members.add(self.request.user)
+            
+            return forum
+            
+        except Exception as e:
+            print("Error creating forum:", str(e))
+            raise serializers.ValidationError(str(e))
 
-        
+    def create(self, request, *args, **kwargs):
+        try:
+            # Debug logging
+            print("Request data:", request.data)
+            print("Request files:", request.FILES)
+            
+            # Validate required fields
+            required_fields = ['name', 'description', 'category']
+            missing_fields = [field for field in required_fields if not request.data.get(field)]
+            
+            if missing_fields:
+                return Response(
+                    {"error": f"Missing required fields: {', '.join(missing_fields)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Create serializer
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Save with user
+            forum = serializer.save(created_by=request.user)
+            forum.members.add(request.user)
+            
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+            
+        except Exception as e:
+            print("Forum creation error:", str(e))
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
@@ -470,7 +520,7 @@ def add_member(request, forum_id):
             return Response({'detail': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
             
         User = get_user_model()
-        # Fixed: proper email lookup syntax
+        # Fixed: correct parentheses syntax
         new_member = User.objects.filter(email__iexact=email).first()
         
         if not new_member:

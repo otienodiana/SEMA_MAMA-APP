@@ -32,10 +32,13 @@ const ForumPosts = () => {
         'Support',
         'General'
     ]);
+    const [showPostForm, setShowPostForm] = useState(false);
+    const [forumName, setForumName] = useState("");
 
     useEffect(() => {
         fetchUser();
         if (forumId) {
+            fetchForumDetails(forumId);
             fetchPosts(forumId);
         }
     }, [forumId]); // Update dependency array
@@ -65,6 +68,24 @@ const ForumPosts = () => {
         }
     }
 
+    async function fetchForumDetails(forumId) {
+        let token = localStorage.getItem("access");
+        try {
+            const response = await fetch(`http://localhost:8000/api/community/forums/${forumId}/`, {
+                headers: { 
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setForumName(data.name);
+            }
+        } catch (error) {
+            console.error("Error fetching forum details:", error);
+        }
+    }
+
     async function fetchPosts(forumId) {
         let token = localStorage.getItem("access");
         if (!token) {
@@ -72,38 +93,80 @@ const ForumPosts = () => {
             return;
         }
         
-        if (!forumId) {
-            setError("Invalid forum ID");
-            return;
-        }
-    
         try {
             setError(null);
             setLoading(true);
             setMessage(null);
 
+            // First get the currently logged-in user
+            const userResponse = await fetch("http://localhost:8000/api/users/me/", {
+                headers: { 
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+            });
+            
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                setUser(userData);
+            }
+
             const response = await fetch(`http://localhost:8000/api/community/forums/${forumId}/posts/`, {
-                method: "GET",
                 headers: { 
                     "Authorization": `Bearer ${token}`, 
                     "Content-Type": "application/json" 
                 },
             });
 
-            if (!response.ok) {
-                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`Server returned ${response.status}: ${response.statusText}`);
 
             const data = await response.json();
-            setPosts(Array.isArray(data) ? data : []);
+            // Transform the data to ensure we have creator names
+            const postsWithCreators = await Promise.all(data.map(async (post) => {
+                if (post.user) {
+                    const userResponse = await fetch(`http://localhost:8000/api/users/${post.user}/`, {
+                        headers: { 
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        },
+                    });
+                    if (userResponse.ok) {
+                        const userData = await userResponse.json();
+                        return {
+                            ...post,
+                            creator_name: userData.username || userData.email,
+                            creator_email: userData.email
+                        };
+                    }
+                }
+                return post;
+            }));
+
+            // Add comment counts to posts
+            const postsWithCommentsCount = await Promise.all(postsWithCreators.map(async (post) => {
+                const commentsResponse = await fetch(`http://localhost:8000/api/community/posts/${post.id}/comments/`, {
+                    headers: { 
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                });
+                
+                if (commentsResponse.ok) {
+                    const comments = await commentsResponse.json();
+                    return {
+                        ...post,
+                        comments_count: comments.length
+                    };
+                }
+                return post;
+            }));
+
+            setPosts(postsWithCommentsCount);
             setMessage("Posts loaded successfully");
 
         } catch (error) {
             console.error("Error fetching posts:", error);
-            setError(error.message === "Failed to fetch" ? 
-                "Unable to connect to server. Please check if the backend is running." : 
-                error.message
-            );
+            setError(error.message);
         } finally {
             setLoading(false);
         }
@@ -117,8 +180,9 @@ const ForumPosts = () => {
         const newPostData = { 
             title: newTitle, 
             content: newContent, 
-            forum: parseInt(forumId), // Use the forumId from params
+            forum: parseInt(forumId),
             user: user.id,
+            creator_name: user.username || user.email,  // Set creator name from current user
             topic: topicFilter !== 'all' ? topicFilter : 'General'
         };
 
@@ -139,10 +203,12 @@ const ForumPosts = () => {
             }
 
             const responseData = await response.json();
-            setPosts([...posts, responseData]);
+            setPosts([responseData, ...posts]); // Add new post at the beginning
             setNewTitle("");
             setNewContent("");
+            setShowPostForm(false); // Close the form
             setMessage("Post created successfully! ✅");
+            
         } catch (error) {
             console.error("Error creating post:", error);
             setError(error.message);
@@ -259,13 +325,33 @@ const ForumPosts = () => {
         link.click();
     };
 
+    // Update the navigation path based on user role
+    const handleViewPost = (postId) => {
+        const userRole = user?.role || 'mom'; // Default to mom if role not found
+        const basePath = {
+            'admin': '/dashboard/admin',
+            'healthcare_provider': '/dashboard/provider',
+            'mom': '/dashboard/mom'
+        }[userRole];
+        
+        navigate(`${basePath}/post/${postId}`);
+    };
+
     return (
         <div className="forum-posts-container">
-            <h2>{t('forumPosts.title')}</h2>
+            <div className="forum-header">
+                <h1>{forumName}</h1>
+                <button 
+                    className="add-post-button" 
+                    onClick={() => setShowPostForm(!showPostForm)}
+                >
+                    {showPostForm ? 'Cancel' : 'Add Post'}
+                </button>
+            </div>
 
-            {loading && <p className="loading-message">{t('forumPosts.loading')}</p>}
+            {message && <p className="success-message">{message}</p>}
             {error && <p className="error-message">Error: {error}</p>}
-                    <p>Loading posts...</p>
+
             <div className="filters-container">
                 <div className="filter-group">
                     <label><FaFilter /> {t('forumPosts.filterByTopic')}</label>
@@ -285,41 +371,70 @@ const ForumPosts = () => {
                     </select>
                 </div>
             </div>
-            <form onSubmit={handlePostSubmit} className="post-form">
-                <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Post Title..." required />
-                <select value={topicFilter} onChange={(e) => setTopicFilter(e.target.value)} required>
-                    {topics.map(topic => (
-                        <option key={topic} value={topic}>{topic}</option>
-                    ))}
-                </select>
-                <textarea value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Write your post..." required></textarea>
-                <button type="submit">Post</button>
-            </form>
-            <div className="posts-grid">
-                {sortPosts(filterPosts(posts)).map((post) => (
-                    <div key={post.id} className="post-card">
-                        <h3>{post.title}</h3>
-                        <p>{post.content}</p>
-                        <p className="post-meta"><strong>Posted by:</strong> {post.username || "Unknown"}</p>
-                        <div className="post-actions">
-                            <button onClick={() => navigate(`/post/${post.id}`)}>View Post</button>
-                            <div className="action-menu">
-                                <button className="menu-button" onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)}>
-                                    <FaEllipsisV />
-                                </button>
-                                {menuOpen === post.id && (
-                                    <div className="dropdown-menu">
-                                        <button onClick={() => handleUpdatePost(post.id)}><FaEdit /> Edit</button>
-                                        <button onClick={() => handleDelete(post.id)}><FaTrash /> Delete</button>
-                                        <button onClick={() => handleShare(post.id)}><FaShareAlt /> Share</button>
-                                        <button onClick={() => handleDownload(post)}><FaDownload /> Download</button>
+
+            {loading ? (
+                <p className="loading-message">{t('forumPosts.loading')}</p>
+            ) : (
+                <div className="posts-grid">
+                    {sortPosts(filterPosts(posts)).map((post) => (
+                        <div key={post.id} className="post-card">
+                            <div className="post-header">
+                                <div className="post-meta-top">
+                                    <span className="post-topic">{post.topic}</span>
+                                    <span className="post-date">
+                                        {new Date(post.created_at).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="post-content">
+                                <h3>{post.title}</h3>
+                                <p className="post-text">{post.content}</p>
+                            </div>
+                            <div className="post-footer">
+                                <div className="post-meta">
+                                    <span className="post-author">
+                                        Posted by: {post.creator_name || "Anonymous"}
+                                    </span>
+                                    <span className="post-comments">
+                                        {post.comments_count || 0} comments
+                                    </span>
+                                </div>
+                                <div className="post-actions">
+                                    <button onClick={() => handleViewPost(post.id)}>
+                                        View Post
+                                    </button>
+                                    <div className="action-menu">
+                                        <button className="menu-button" onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)}>
+                                            <FaEllipsisV />
+                                        </button>
+                                        {menuOpen === post.id && (
+                                            <div className="dropdown-menu">
+                                                <button onClick={() => handleUpdatePost(post.id)}><FaEdit /> Edit</button>
+                                                <button onClick={() => handleDelete(post.id)}><FaTrash /> Delete</button>
+                                                <button onClick={() => handleShare(post.id)}><FaShareAlt /> Share</button>
+                                                <button onClick={() => handleDownload(post)}><FaDownload /> Download</button>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
+
+            {showPostForm && (
+                <form onSubmit={handlePostSubmit} className="post-form">
+                    <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Post Title..." required />
+                    <select value={topicFilter} onChange={(e) => setTopicFilter(e.target.value)} required>
+                        {topics.map(topic => (
+                            <option key={topic} value={topic}>{topic}</option>
+                        ))}
+                    </select>
+                    <textarea value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Write your post..." required></textarea>
+                    <button type="submit">Post</button>
+                </form>
+            )}
         </div>
     );
 };

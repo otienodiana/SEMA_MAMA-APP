@@ -2,41 +2,47 @@ from rest_framework import serializers, generics, permissions
 from .models import Forum, Post, Comment
 
 class ForumSerializer(serializers.ModelSerializer):
-    created_by = serializers.CharField(source="created_by.username", read_only=True)
-    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S",read_only=True)  # Format date-time
-    profile_picture = serializers.ImageField(required=False)
-    members = serializers.SerializerMethodField()
-
     class Meta:
         model = Forum
-        read_only_fields = ['created_at', 'created_by', 'members']
-        fields = ['id', 'name', 'description', 'visibility', 'created_by', 'created_at', 'profile_picture', 'category', 'members']
+        fields = ['id', 'name', 'description', 'category', 'visibility', 'profile_picture', 'created_by', 'members', 'created_at']
+        read_only_fields = ['created_by', 'created_at']
 
-    def validate_category(self, value):
-        """Ensure category matches one of the valid options"""
-        valid_categories = [choice[0] for choice in Forum.CATEGORY_CHOICES]
-        if value not in valid_categories:
-            raise serializers.ValidationError(f"Category must be one of: {', '.join(valid_categories)}")
-        return value
+    def validate(self, attrs):
+        # Validate required fields
+        required_fields = ['name', 'description', 'category']
+        errors = {}
+        
+        for field in required_fields:
+            if field not in attrs:
+                errors[field] = f"{field} is required"
+            elif not attrs[field]:
+                errors[field] = f"{field} cannot be empty"
+                
+        if errors:
+            raise serializers.ValidationError(errors)
 
-    def validate(self, data):
-        if not data.get('category'):
-            data['category'] = 'General'
-        elif data['category'] not in dict(Forum.CATEGORY_CHOICES):
-            raise serializers.ValidationError({
-                'category': f"Invalid category. Must be one of: {', '.join(dict(Forum.CATEGORY_CHOICES).keys())}"
-            })
-        return data
+        # Validate string fields
+        if 'name' in attrs and len(attrs['name'].strip()) < 3:
+            errors['name'] = "Name must be at least 3 characters long"
+            
+        if 'description' in attrs and len(attrs['description'].strip()) < 10:
+            errors['description'] = "Description must be at least 10 characters long"
+            
+        if errors:
+            raise serializers.ValidationError(errors)
 
-    def get_members(self, obj):
-        return [
-            {
-                'id': member.id,
-                'username': member.username,
-                'profile_picture': member.profile.profile_picture.url if hasattr(member, 'profile') and member.profile.profile_picture else None
-            }
-            for member in obj.members.all()
-        ]
+        # Normalize category to lowercase
+        if 'category' in attrs:
+            attrs['category'] = attrs['category'].lower()
+
+        return attrs
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except Exception as e:
+            print("Serializer create error:", str(e))
+            raise serializers.ValidationError({"detail": str(e)})
 
 class PostSerializer(serializers.ModelSerializer):
     likes = serializers.SerializerMethodField()

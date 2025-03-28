@@ -29,7 +29,7 @@ router.register(r'posts', PostViewSet)
 router.register(r'comments', CommentViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', include(router.urls)),  # This includes /forums/ endpoint
     path('forums/', ForumListView.as_view(), name='forum-list'),  # Automatically includes /forums/, /posts/, and /comments/
     path('forums/<int:pk>/', ForumDetailView.as_view(), name='forum-detail'),
     path('posts/', PostListCreateView.as_view(), name='post-list-create'),

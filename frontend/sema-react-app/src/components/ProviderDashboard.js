@@ -2,6 +2,7 @@ import React from "react";
 import { Outlet, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import "./providerDashboard.css";
+import ProviderAppointments from './ProviderAppointments';
 
 function ProviderDashboard() {
   const { t } = useTranslation();
@@ -12,9 +13,9 @@ function ProviderDashboard() {
 
       <nav className="provider-dashboard-nav">
         <ul>
-          <li><Link to="">{t('provider.dashboard.header')}</Link></li>
           <li><Link to="profile">{t('provider.dashboard.profile')}</Link></li>
-          <li><Link to="/dashboard/provider/appointments">{t('provider.dashboard.appointments')}</Link></li>
+          <li><Link to="appointments">{t('provider.dashboard.appointments')}</Link></li>
+          
           <li><Link to="educational-contents">{t('provider.dashboard.healthcorner')}</Link></li>
           <li><Link to="community">{t('provider.dashboard.community')}</Link></li>
           <li><Link to="settings">{t('provider.dashboard.settings')}</Link></li>

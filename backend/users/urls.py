@@ -24,4 +24,5 @@ urlpatterns = [
     path('roles/<int:role_id>/delete/', delete_role, name='delete_role'),
     path('all/', get_all_users, name='get-all-users'),
     path('analytics/', get_analytics, name='user-analytics'),
+    path('moms/', get_moms, name='get-moms'),  # Add this new URL pattern
 ]

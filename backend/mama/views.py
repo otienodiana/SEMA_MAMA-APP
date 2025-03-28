@@ -51,3 +51,26 @@ class SubmitAssessmentView(generics.CreateAPIView):
             'risk_level': result.risk_level,
             'notes': result.notes
         }, status=status.HTTP_201_CREATED)
+
+class AssessmentQuestionList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuestionSerializer
+    
+    def get_queryset(self):
+        return PostpartumDepressionQuestion.objects.filter(is_active=True).order_by('order')
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            if not queryset.exists():
+                return Response(
+                    {'message': 'No assessment questions available'}, 
+                    status=404
+                )
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {'message': f'Error fetching questions: {str(e)}'}, 
+                status=500
+            )

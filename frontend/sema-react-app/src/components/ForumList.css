@@ -1,0 +1,14 @@
+.forum-stats {
+    margin: 10px 0;
+    padding: 8px;
+    background: var(--who-light-blue);
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+}
+
+.posts-count {
+    color: var(--who-dark-blue);
+    font-size: 0.9rem;
+    font-weight: 500;
+}

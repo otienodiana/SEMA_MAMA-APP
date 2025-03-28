@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./AdminCommunity.css";
-import { useAuth } from "./AuthContext"; // Add this import
+import { useAuth } from "./AuthContext"; 
 import { useNavigate } from "react-router-dom";
 
 const AdminCommunity = () => {
@@ -18,11 +18,11 @@ const AdminCommunity = () => {
   const FORUMS_PER_CATEGORY = 3; // Number of forums to show initially
 
   const categories = [
-    'Pregnancy',
-    'Postpartum',
-    'Parenting',
-    'Mental Health',
-    'General'
+    'general',
+    'pregnancy',
+    'postpartum',
+    'parenting',
+    'mental_health'
   ];
 
   const [newForum, setNewForum] = useState({
@@ -43,24 +43,22 @@ const AdminCommunity = () => {
       return 'General';
     }
 
-    const normalized = rawCategory.trim().toLowerCase();
-    
-    // Try exact match first
-    const exactMatch = categories.find(cat => cat.toLowerCase() === normalized);
+    // Try exact match first (case sensitive)
+    const exactMatch = categories.find(cat => cat === rawCategory);
     if (exactMatch) {
       console.log(`Found exact match: ${exactMatch} for ${rawCategory}`);
       return exactMatch;
     }
 
-    // Try partial match
-    const partialMatch = categories.find(cat => 
-      normalized.includes(cat.toLowerCase()) || 
-      cat.toLowerCase().includes(normalized)
+    // Try case-insensitive match
+    const normalizedInput = rawCategory.trim();
+    const match = categories.find(cat => 
+      cat.toLowerCase() === normalizedInput.toLowerCase()
     );
     
-    if (partialMatch) {
-      console.log(`Found partial match: ${partialMatch} for ${rawCategory}`);
-      return partialMatch;
+    if (match) {
+      console.log(`Found case-insensitive match: ${match} for ${rawCategory}`);
+      return match;
     }
 
     console.log(`No match found for "${rawCategory}", defaulting to General`);
@@ -108,6 +106,13 @@ const AdminCommunity = () => {
 
   const handleCreateForum = async (e) => {
     e.preventDefault();
+    
+    // Validate description length
+    if (newForum.description.trim().length < 10) {
+        setError("Description must be at least 10 characters long");
+        return;
+    }
+
     try {
       const token = localStorage.getItem('access');
       const formData = new FormData();
@@ -432,7 +437,7 @@ const AdminCommunity = () => {
                 className="create-forum-btn"
                 onClick={() => {
                   setSelectedCategory(category);
-                  setNewForum(prev => ({...prev, category: category.toLowerCase()}));
+                  setNewForum(prev => ({...prev, category: category}));
                   setShowCreateModal(true);
                 }}
               >
@@ -460,6 +465,7 @@ const AdminCommunity = () => {
         <div className="modal-overlay">
           <div className="modal">
             <h2>Create New Forum in {selectedCategory}</h2>
+            {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleCreateForum}>
               <input
                 type="text"
@@ -469,10 +475,11 @@ const AdminCommunity = () => {
                 required
               />
               <textarea
-                placeholder="Forum Description"
+                placeholder="Forum Description (minimum 10 characters)"
                 value={newForum.description}
                 onChange={(e) => setNewForum({...newForum, description: e.target.value})}
                 required
+                minLength={10}
               />
               <select
                 value={newForum.visibility}

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'analytics',
     'appointments',
     'community',
+    'educational.apps.EducationalConfig',  # Ensure this line exists and is uncommented
 ]
 
 REST_FRAMEWORK = {

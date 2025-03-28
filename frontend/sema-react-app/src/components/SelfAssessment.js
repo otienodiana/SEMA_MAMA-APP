@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './SelfAssessment.css'; // We'll create this next
 
 const SelfAssessment = () => {
   const [questions, setQuestions] = useState([]);
@@ -17,33 +18,50 @@ const SelfAssessment = () => {
   const fetchQuestions = async () => {
     try {
       const token = localStorage.getItem('access');
-      console.log('Attempting to fetch questions...');
-      console.log('Using token:', token);
-      
-      const response = await axios.get('http://127.0.0.1:8000/api/mama/assessment/questions/', {
+      if (!token) {
+        setError('Please login to access the assessment');
+        setLoading(false);
+        return;
+      }
+
+      // Updated endpoint URL
+      const response = await axios.get(`${BASE_URL}/api/mama/assessment/questions/`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        withCredentials: true
+        }
       });
       
-      console.log('Response received:', response);
-      if (Array.isArray(response.data)) {
+      if (response.data && Array.isArray(response.data)) {
         setQuestions(response.data);
+        setError(null);
       } else {
-        console.error('Unexpected response format:', response.data);
-        setError('Invalid response format from server');
+        console.error('Invalid response format:', response.data);
+        throw new Error('Invalid response format from server');
       }
       setLoading(false);
+
     } catch (err) {
-      console.error('Network Error Details:', {
-        message: err.message,
-        config: err.config,
-        response: err.response,
-        status: err.response?.status
+      console.error('Error details:', {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        message: err.message
       });
-      setError(`Failed to fetch questions: ${err.message}`);
+      
+      let errorMessage = 'Failed to fetch questions: ';
+      if (!err.response) {
+        errorMessage += 'Network error - Please check your connection';
+      } else if (err.response.status === 404) {
+        errorMessage += 'Assessment questions not found - Please try again later';
+      } else if (err.response.status === 401) {
+        errorMessage += 'Session expired - Please login again';
+        // Optionally redirect to login page
+      } else {
+        errorMessage += err.response.data?.message || err.message;
+      }
+      
+      setError(errorMessage);
       setLoading(false);
     }
   };

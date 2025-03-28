@@ -1,0 +1,6 @@
+// ...existing imports...
+
+urlpatterns = [
+    // ...existing paths...
+    path('api/educational/', include('educational.urls')),
+]

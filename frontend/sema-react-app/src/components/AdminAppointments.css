@@ -46,8 +46,10 @@
 .appointment-card {
   background: white;
   border-radius: 8px;
-  padding: 15px;
+  padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .appointment-header {
@@ -64,19 +66,25 @@
   font-weight: bold;
 }
 
-.status-badge.pending { background-color: #ffd700; color: #000; }
+.status-badge.pending { background-color: #fff3cd; color: #856404; }
 .status-badge.approved { background-color: #90EE90; color: #000; }
 .status-badge.rejected { background-color: #ffcccb; color: #000; }
-.status-badge.canceled { background-color: #808080; color: #fff; }
+.status-badge.canceled { background-color: #f8d7da; color: #721c24; }
+.status-badge.confirmed { background-color: #d4edda; color: #155724; }
+.status-badge.completed { background-color: #cce5ff; color: #004085; }
 
 .appointment-details {
   margin-bottom: 15px;
+  flex: 1;
 }
 
 .appointment-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
 }
 
 .approve-btn,
@@ -193,4 +201,18 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: #f9f9f9;
+}
+
+.appointments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.reschedule-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
 }

@@ -27,15 +27,24 @@ const AdminEducationalContents = () => {
   const fetchResources = async () => {
     const token = localStorage.getItem("access");
     try {
-      const response = await axios.get(
-        "http://localhost:8000/api/content/contents/",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { include_creator: true } // Request creator details
-        }
-      );
-      console.log("Resources:", response.data); // Debug log
-      setResources(response.data);
+      // Add additional endpoint to fetch pending content
+      const [allContent, pendingContent] = await Promise.all([
+        axios.get("http://localhost:8000/api/content/contents/", {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get("http://localhost:8000/api/educational/content/pending/", {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      // Combine both regular and pending content
+      const combinedResources = [
+        ...allContent.data,
+        ...pendingContent.data
+      ];
+
+      console.log("Resources:", combinedResources); // Debug log
+      setResources(combinedResources);
       setLoading(false);
     } catch (err) {
       console.error("Fetch error:", err);
@@ -175,8 +184,8 @@ const AdminEducationalContents = () => {
   const handleApprove = async (id) => {
     const token = localStorage.getItem("access");
     try {
-      await axios.patch(
-        `http://localhost:8000/api/content/contents/${id}/approve/`,
+      const response = await axios.patch(
+        `http://localhost:8000/api/educational/content/approve/${id}/`,
         {},
         {
           headers: { 
@@ -185,9 +194,21 @@ const AdminEducationalContents = () => {
           },
         }
       );
-      fetchResources();
-      alert("Resource approved successfully!");
+
+      if (response.data.status === 'success') {
+        // Update the local state immediately
+        setResources(prev => 
+          prev.map(resource => 
+            resource.id === id 
+              ? { ...resource, status: 'approved' } 
+              : resource
+          )
+        );
+        alert("Resource approved successfully!");
+        fetchResources(); // Refresh the list
+      }
     } catch (err) {
+      console.error("Approval error:", err.response?.data);
       setError("Failed to approve resource");
     }
   };
@@ -292,10 +313,8 @@ const AdminEducationalContents = () => {
 
   // Add a status badge component
   const StatusBadge = ({ status }) => {
-    if (!status) return null; // Add null check
-
     const getStatusColor = () => {
-      switch (status.toLowerCase()) { // Add toLowerCase()
+      switch (status?.toLowerCase()) {
         case 'pending': return '#ffc107';
         case 'approved': return '#28a745';
         case 'rejected': return '#dc3545';
@@ -306,12 +325,12 @@ const AdminEducationalContents = () => {
     return (
       <span style={{
         backgroundColor: getStatusColor(),
-        color: status.toLowerCase() === 'pending' ? 'black' : 'white',
+        color: status?.toLowerCase() === 'pending' ? 'black' : 'white',
         padding: '4px 8px',
         borderRadius: '12px',
         fontSize: '0.85rem',
       }}>
-        {status ? status.toUpperCase() : ''}
+        {status ? status.toUpperCase() : 'N/A'}
       </span>
     );
   };

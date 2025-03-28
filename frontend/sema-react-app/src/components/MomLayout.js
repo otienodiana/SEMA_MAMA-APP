@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import "./momDashboard.css"; // ✅ Keep the styling
+import "./momDashboard.css"; 
 
 function MomLayout() {
   return (

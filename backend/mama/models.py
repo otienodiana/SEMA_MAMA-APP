@@ -46,10 +46,12 @@ class PostpartumDepressionQuestion(models.Model):
     order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['order']
-        app_label = 'mama'  # Add this line
+        db_table = 'mama_postpartumdepressionquestion'
+        app_label = 'mama'
 
     def __str__(self):
         return self.question_text

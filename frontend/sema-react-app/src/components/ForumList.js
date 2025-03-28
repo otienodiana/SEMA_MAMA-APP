@@ -14,11 +14,36 @@ const ForumList = () => {
     useEffect(() => {
         const fetchForums = async () => {
             try {
-                const response = await fetch(`${BASE_URL}/forums/`);
+                const response = await fetch(`${BASE_URL}/forums/`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                });
                 if (!response.ok) throw new Error(`Error fetching forums: ${response.status}`);
                 
-                const data = await response.json();
-                setForums(Array.isArray(data) ? data : []);
+                const forumsData = await response.json();
+
+                // Fetch post counts for each forum
+                const forumsWithCounts = await Promise.all(forumsData.map(async (forum) => {
+                    const postsResponse = await fetch(`${BASE_URL}/forums/${forum.id}/posts/`, {
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        },
+                    });
+                    
+                    if (postsResponse.ok) {
+                        const posts = await postsResponse.json();
+                        return {
+                            ...forum,
+                            posts_count: Array.isArray(posts) ? posts.length : 0
+                        };
+                    }
+                    return { ...forum, posts_count: 0 };
+                }));
+
+                setForums(forumsWithCounts);
             } catch (error) {
                 console.error("Error fetching forums:", error);
                 setForums([]);
@@ -95,6 +120,11 @@ const ForumList = () => {
                         <p>{forum.description}</p>
                         <p><strong>Visibility:</strong> {forum.visibility}</p>
                         <p><strong>Created By:</strong> {forum.created_by ? forum.created_by.username : "Unknown"}</p>
+                        <div className="forum-stats">
+                            <span className="posts-count">
+                                {forum.posts_count} Posts
+                            </span>
+                        </div>
 
                         {joinedForums.includes(forum.id) ? (
                             <button onClick={() => navigate(`/community/forums/${forum.id}/posts`)}>View Posts</button>

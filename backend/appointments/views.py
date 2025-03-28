@@ -7,7 +7,9 @@ from .serializers import AppointmentSerializer
 from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class MomAppointmentsView(generics.ListCreateAPIView):
     """View to list and create appointments for mothers"""
@@ -72,16 +74,32 @@ class CancelAppointmentView(APIView):
 
 #  NEW: View all appointments (for providers)
 class ProviderAppointmentsView(generics.ListAPIView):
-    """Providers can see only their assigned appointments and pending ones"""
     serializer_class = AppointmentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """Fetch both pending and assigned appointments for the provider"""
-        return Appointment.objects.filter(
-            provider=self.request.user
-        ) | Appointment.objects.filter(status="pending")
+        user = self.request.user
+        if user.role != 'healthcare_provider':
+            return Appointment.objects.none()
+            
+        return (Appointment.objects.filter(provider=user) | 
+                Appointment.objects.filter(status="pending"))
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+        
+        # Add username to each appointment
+        for appointment in data:
+            try:
+                user = User.objects.get(id=appointment['user'])
+                appointment['username'] = user.username  # Just add the username
+            except User.DoesNotExist:
+                appointment['username'] = "Unknown User"
+                
+        return Response(data)
 
 
 #  NEW: Approve or Reject an appointment

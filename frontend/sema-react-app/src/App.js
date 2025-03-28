@@ -37,6 +37,10 @@ import UserManagement from './components/UserManagement';
 import AdminEducationalContents from './components/AdminEducationalContents';
 import ForumDetail from './components/ForumDetail';
 import AdminAppointments from "./components/AdminAppointments";
+import ProviderHealthCorner from './components/ProviderHealthCorner';
+import ProviderForum from './components/ProviderForum';
+import ProviderForumDetail from './components/ProviderForumDetail';
+import MomCommunity from './components/MomCommunity';
 
 function App() {
   return (
@@ -75,6 +79,7 @@ function App() {
                 <Route path="content/:id" element={<ContentDetail />} />
                 <Route path="users/*" element={<UserManagement />} />
                 <Route path="community/forums/:forumId" element={<ForumDetail />} />
+                <Route path="post/:postId" element={<PostDetail />} />
               </Route>
             </Route>
 
@@ -84,26 +89,38 @@ function App() {
                 <Route index element={<Profile />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="appointments" element={<ProviderAppointments />} />
-                <Route path="educational-contents" element={<EducationalContents />} />
+                <Route path="educational-contents" element={<ProviderHealthCorner />} />
                 <Route path="content/:id" element={<ContentDetail />} />
                 <Route path="community/forums/:forumId/posts" element={<ForumPosts />} />
-                <Route path="community" element={<Community />} />
+                <Route path="community" element={<ProviderForum />} />
+                <Route path="community/forums/:forumId" element={<ForumDetail />} />
+                <Route path="community/forums/:forumId" element={<ProviderForumDetail />} />
                 <Route path="messages" element={<PatientMessages />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="logout" element={<Logout />} />
+                <Route path="post/:postId" element={<PostDetail />} />
               </Route>
             </Route>
 
+            {/* Mom profile redirect */}
+            <Route
+              path="/dashboard/profile"
+              element={<Navigate to="/dashboard/mom" replace />}
+            />
+
             {/* Protected Mom Routes */}
             <Route element={<ProtectedRoute allowedRoles={["mom"]} />}>
-              <Route path="/dashboard/profile/*" element={<MomDashboard />}>
+              <Route path="/dashboard/mom" element={<MomDashboard />}>
                 <Route index element={<Profile />} />
-                <Route path="community" element={<Community />} />
+                <Route path="community" element={<MomCommunity />} />
+                <Route path="community/forums/:forumId/posts" element={<ForumPosts />} />
+                <Route path="community/forums/:forumId" element={<ForumDetail />} />
                 <Route path="educational-contents" element={<AdminEducationalContents />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="appointments" element={<MomAppointments />} />
                 <Route path="self-assessment" element={<SelfAssessment />} />
                 <Route path="logout" element={<Logout />} />
+                <Route path="post/:postId" element={<PostDetail />} />
               </Route>
             </Route>
 

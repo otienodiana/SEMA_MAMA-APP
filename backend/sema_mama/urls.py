@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/appointments/', include('appointments.urls')),
     path('api/community/', include('community.urls')),
     path('api/analytics/', include('analytics.urls')),  # Make sure this line exists
+    path('api/educational/', include('educational.urls')),
 ]
 
 if settings.DEBUG:

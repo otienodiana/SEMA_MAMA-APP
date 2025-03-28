@@ -2,14 +2,15 @@ import React from "react";
 import { Outlet, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import "./momDashboard.css";
-import MomAppointments from "./MomAppointments";
 
 function MomDashboard() {
   const { t } = useTranslation();
 
   return (
     <div className="mom-dashboard-container">
-      <header className="mom-dashboard-header">Moms Dashboard</header>
+      <header className="mom-dashboard-header">
+        <span>Moms Dashboard</span>
+      </header>
 
       <nav className="mom-dashboard-nav">
         <ul>
