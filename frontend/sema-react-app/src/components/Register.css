@@ -101,3 +101,25 @@ body {
 .form-input.error:focus {
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
+
+.privacy-group {
+  margin: 15px 0;
+  text-align: left;
+}
+
+.privacy-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.privacy-link {
+  color: #008DC9;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.privacy-link:hover {
+  color: #006d9f;
+}

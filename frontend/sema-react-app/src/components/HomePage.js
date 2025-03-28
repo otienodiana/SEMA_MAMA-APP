@@ -146,7 +146,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="home-container">
+    <div className="home-container" style={{ paddingTop: '80px' }}>
       <Navbar />
 
       <div style={styles.languageSelector}>
@@ -189,13 +189,17 @@ const HomePage = () => {
 
       {/* Hero Section with Enhanced Visuals */}
       <section className="hero-section">
-        <div className="hero-content">
-          <h1>{t('home.welcome')}</h1>
-          <p className="hero-message">
+        <div className="hero-content" style={{ textAlign: 'center' }}>
+          <h1 style={{ color: '#ffffff' }}>{t('home.welcome')}</h1>
+          <p className="hero-message" style={{ color: '#ffffff' }}>
             {t('home.message')}
           </p>
           {!isAuthenticated && (
-            <Link to="/login" className="cta-button">
+            <Link to="/login" className="cta-button" style={{ 
+              display: 'inline-block',
+              margin: '0 auto',
+              marginTop: '20px'
+            }}>
               {t('home.joinCommunity')}
             </Link>
           )}

@@ -22,3 +22,6 @@ class SettingAdmin(admin.ModelAdmin):
     list_display = ('user', 'language', 'notifications')
     list_filter = ('language', 'notifications')
 
+from .models import Info
+
+admin.site.register(Info)

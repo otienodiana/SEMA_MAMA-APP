@@ -6,6 +6,7 @@ from .views import (
     RejectContentView,
     ListContentView,
     DeleteContentView,  # Add this import
+    MultimediaContentView,  # Add this import
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('content/approve/<int:pk>/', ApproveContentView.as_view(), name='approve-content'),
     path('content/reject/<int:pk>/', RejectContentView.as_view(), name='reject-content'),
     path('content/<int:pk>/', DeleteContentView.as_view(), name='delete-content'),  # Add this line
+    path('multimedia/', MultimediaContentView.as_view(), name='multimedia-content'),
 ]

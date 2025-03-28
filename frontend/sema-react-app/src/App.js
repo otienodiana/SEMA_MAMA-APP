@@ -41,6 +41,9 @@ import ProviderHealthCorner from './components/ProviderHealthCorner';
 import ProviderForum from './components/ProviderForum';
 import ProviderForumDetail from './components/ProviderForumDetail';
 import MomCommunity from './components/MomCommunity';
+import DailyLog from './components/DailyLog';
+import Chat from "./components/Chat";
+import ChatProviderList from "./components/ChatProviderList";
 
 function App() {
   return (
@@ -99,6 +102,7 @@ function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="logout" element={<Logout />} />
                 <Route path="post/:postId" element={<PostDetail />} />
+                <Route path="chat/:momId" element={<Chat />} />
               </Route>
             </Route>
 
@@ -115,12 +119,13 @@ function App() {
                 <Route path="community" element={<MomCommunity />} />
                 <Route path="community/forums/:forumId/posts" element={<ForumPosts />} />
                 <Route path="community/forums/:forumId" element={<ForumDetail />} />
-                <Route path="educational-contents" element={<AdminEducationalContents />} />
+                <Route path="educational-contents" element={<EducationalContents />} />
+                <Route path="self-assessment" element={<DailyLog />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="appointments" element={<MomAppointments />} />
-                <Route path="self-assessment" element={<SelfAssessment />} />
                 <Route path="logout" element={<Logout />} />
                 <Route path="post/:postId" element={<PostDetail />} />
+                <Route path="chat" element={<Chat />} />
               </Route>
             </Route>
 

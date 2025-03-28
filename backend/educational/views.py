@@ -147,3 +147,14 @@ class DeleteContentView(generics.DestroyAPIView):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class MultimediaContentView(generics.ListAPIView):
+    """View to list video/multimedia content"""
+    serializer_class = EducationalContentSerializer 
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return EducationalContent.objects.filter(
+            content_type__in=['video', 'multimedia'],
+            status='approved'
+        ).order_by('-created_at')

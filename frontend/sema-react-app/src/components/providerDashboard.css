@@ -1,17 +1,34 @@
 :root {
-  --who-blue: #005C99;
-  --who-light-blue: #007BFF;
-  --who-yellow: #FFCC00;
+  --who-blue: #008DC9;
   --who-dark-blue: #003366;
-  --who-gray: #F4F4F4;
+  --who-light-blue: #E3F3F9;
+  --who-accent-blue: #41B6E6;
+  --who-yellow: #FFCC00;
+  --who-gray: #4D4D4D;
+  --who-light-grey: #F2F2F2;
   --who-text: #333333;
+  --who-success-green: #217645;
+  --who-warning-yellow: #FFB612;
+  --who-alert-red: #CC0000;
+  --who-white: #FFFFFF;
 }
 
-/* 🌿 Full Layout */
-.provider-dashboard-container {
-  display: flex;
-  height: 100vh;
-  background-color: var(--who-gray); /* Soft Lavender */
+/* Reset & Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--who-light-grey);
+  color: var(--who-text);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* 🌊 Sidebar */
@@ -108,11 +125,20 @@
   box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
   width: 75%;
   min-height: 60vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  margin: 80px auto 0;
   max-width: 1200px;
-  margin: 0 auto;
+}
+
+/* Admin Community Layout */
+.admin-community-container {
+  margin-top: 80px;
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  padding: 20px;
+  overflow-x: hidden;
+  min-height: calc(100vh - 80px);
+  background-color: var(--who-white);
+  position: relative;
 }
 
 /* 🗂 Appointments Page */
@@ -188,7 +214,6 @@
       padding: 8px;
   }
 }
-
 
 /* Profile Page Inside Dashboard */
 .profile-container {

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { API_BASE_URL, API_ENDPOINTS } from '../config';
 import "./Register.css";
+import PrivacyPolicy from './PrivacyPolicy';
 
 function Register() {
   const { t } = useTranslation();
@@ -15,6 +16,8 @@ function Register() {
   const [profilePhoto, setProfilePhoto] = useState(null); // New state for file upload
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const navigate = useNavigate(); // Initialize navigate
 
   // Check if current path is admin route
@@ -24,6 +27,11 @@ function Register() {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    if (!acceptedPrivacyPolicy) {
+      setError("Please accept the privacy policy to continue");
+      return;
+    }
 
     // Password validation
     if (password.length < 8) {
@@ -177,10 +185,40 @@ function Register() {
           />
         </div>
 
+        <div className="form-group privacy-group">
+          <label className="privacy-label">
+            <input
+              type="checkbox"
+              checked={acceptedPrivacyPolicy}
+              onChange={() => setShowPrivacyPolicy(true)}
+            />
+            I accept the {' '}
+            <span 
+              className="privacy-link"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowPrivacyPolicy(true);
+              }}
+            >
+              Privacy Policy
+            </span>
+          </label>
+        </div>
+
         <button type="submit" className="submit-button">
           {t('register.button')}
         </button>
       </form>
+
+      {showPrivacyPolicy && (
+        <PrivacyPolicy
+          onClose={() => setShowPrivacyPolicy(false)}
+          onAccept={() => {
+            setAcceptedPrivacyPolicy(true);
+            setShowPrivacyPolicy(false);
+          }}
+        />
+      )}
     </div>
   );
 }

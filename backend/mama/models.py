@@ -1,5 +1,29 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import Group, Permission
+
+class CustomUser(AbstractUser):
+    groups = models.ManyToManyField(
+        Group,
+        verbose_name='groups',
+        blank=True,
+        related_name='mama_user_set',
+        help_text='The groups this user belongs to.',
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name='user permissions',
+        blank=True,
+        related_name='mama_user_set',
+        help_text='Specific permissions for this user.',
+    )
+    role = models.CharField(max_length=20, choices=[
+        ('mom', 'Mom'),
+        ('healthcare_provider', 'Healthcare Provider'),
+        ('admin', 'Admin')
+    ])
+    specialization = models.CharField(max_length=100, blank=True, null=True)
 
 class Setting(models.Model):
     LANGUAGE_CHOICES = [
@@ -100,3 +124,71 @@ class AssessmentResult(models.Model):
 
     class Meta:
         app_label = 'mama'  # Add this line
+
+class Info(models.Model):
+    CONTENT_TYPES = [
+        ('article', 'Article'),
+        ('video', 'Video'),
+        ('picture', 'Picture'),
+        ('youtube', 'YouTube Link'),
+    ]
+
+    title = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=10, choices=CONTENT_TYPES)
+    description = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to='info_files/', blank=True, null=True)  # For images, videos, PDFs
+    youtube_link = models.URLField(blank=True, null=True)  # For YouTube links
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+class DailyLog(models.Model):
+    MOOD_CHOICES = [
+        ('very_happy', 'Very Happy and Content'),
+        ('mostly_good', 'Mostly Good'),
+        ('up_and_down', 'Up and Down'),
+        ('somewhat_low', 'Somewhat Low'),
+        ('very_low', 'Very Low or Depressed'),
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    emotional_state = models.CharField(max_length=50, choices=MOOD_CHOICES)
+    anxiety_level = models.CharField(max_length=50)
+    sleep_quality = models.CharField(max_length=50)
+    social_support = models.CharField(max_length=50)
+    physical_symptoms = models.CharField(max_length=50)
+    baby_bonding = models.CharField(max_length=50)
+    self_care = models.CharField(max_length=50)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+class ChatMessage(models.Model):
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        related_name='sent_messages',
+        on_delete=models.CASCADE
+    )
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='received_messages',
+        on_delete=models.CASCADE,
+        null=True,  # Keep this for now
+        blank=True  # Keep this for now
+    )
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['timestamp']
+        indexes = [
+            models.Index(fields=['sender', 'recipient']),
+            models.Index(fields=['timestamp']),
+        ]
+
+    def __str__(self):
+        return f'From {self.sender.username} to {self.recipient.username if self.recipient else "Unknown"} at {self.timestamp}'
