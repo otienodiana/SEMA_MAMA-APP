@@ -46,6 +46,7 @@ class Appointment(models.Model):
         null=True,
         help_text="Any technical requirements or preferences for virtual consultation"
     )
+    user_email = models.EmailField(null=True, blank=True)  # Add this field
 
     def __str__(self):
         return f"{self.title} ({self.status}) - {self.date.strftime('%Y-%m-%d %H:%M')}"

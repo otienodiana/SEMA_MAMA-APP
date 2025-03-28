@@ -48,7 +48,8 @@ const ProviderAppointments = () => {
       console.log("Mom users response:", response.data);
 
       if (Array.isArray(response.data)) {
-        setMomUsers(response.data);
+        const momUsers = response.data.filter(user => user.role === 'mom' && user.email);
+        setMomUsers(momUsers);
       } else {
         console.error("Invalid response format:", response.data);
         setError("Failed to fetch patients: Invalid data format");
@@ -63,14 +64,25 @@ const ProviderAppointments = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("access");
+      const selectedMom = momUsers.find(user => user.id === parseInt(newAppointment.user));
+      
+      if (!selectedMom) {
+        console.error("Selected mom not found");
+        return;
+      }
+
       const updatedAppointment = {
         ...newAppointment,
         provider: token ? JSON.parse(atob(token.split('.')[1])).user_id : null,
-        status: "pending"
+        status: "pending",
+        user_email: selectedMom.email,
+        user: selectedMom.id
       };
 
-      await axios.post(
-        "http://localhost:8000/api/appointments/create/",
+      console.log("Creating appointment with data:", updatedAppointment);
+
+      const response = await axios.post(
+        "http://localhost:8000/api/appointments/provider/",
         updatedAppointment,
         {
           headers: {
@@ -79,6 +91,8 @@ const ProviderAppointments = () => {
           }
         }
       );
+
+      console.log("Appointment creation response:", response.data);
       
       fetchAppointments();
       setShowBookingForm(false);
@@ -400,8 +414,8 @@ const deleteAppointment = async (id) => {
               <h3>{appointment.title}</h3>
               <div className="appointment-details">
                 <p>
-                  <strong>{t('provider.appointments.momName')}:</strong> 
-                  {appointment.user_email}
+                  <strong>Appointment With:</strong> 
+                  {appointment.user_email || (appointment.user_details && appointment.user_details.email) || "Unknown User"}
                 </p>
                 <p>
                   <strong>{t('provider.appointments.date')}:</strong> 

@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -26,9 +27,28 @@ class MomAppointmentsView(generics.ListCreateAPIView):
             return Appointment.objects.all()
         return Appointment.objects.none()
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     def perform_create(self, serializer):
-        """Ensure the logged-in mom is assigned to the appointment"""
-        serializer.save(user=self.request.user)
+        """Save appointment with mom as user and selected provider"""
+        provider_id = self.request.data.get('provider')
+        provider = None
+        if provider_id:
+            try:
+                provider = User.objects.get(id=provider_id, role='healthcare_provider')
+            except User.DoesNotExist:
+                raise ValidationError("Selected healthcare provider does not exist")
+        
+        # Explicitly set both user and provider
+        serializer.save(
+            user=self.request.user,
+            provider=provider,
+            status='pending'
+        )
+        print("Created appointment:", serializer.data)  # Debug log
         
     def create(self, request, *args, **kwargs):
         """Override create to handle validation errors gracefully"""
@@ -73,31 +93,68 @@ class CancelAppointmentView(APIView):
 
 
 #  NEW: View all appointments (for providers)
-class ProviderAppointmentsView(generics.ListAPIView):
+class ProviderAppointmentsView(generics.ListCreateAPIView):
     serializer_class = AppointmentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Fetch both pending and assigned appointments for the provider"""
+        """Fetch appointments for the logged-in provider"""
         user = self.request.user
         if user.role != 'healthcare_provider':
             return Appointment.objects.none()
+        return Appointment.objects.filter(provider=user)
+
+    def perform_create(self, serializer):
+        """Save the appointment with the provider set to current user"""
+        user_id = self.request.data.get('user')
+        user_email = self.request.data.get('user_email')
+        
+        try:
+            mom = User.objects.get(id=user_id, role='mom')
+            if not user_email:
+                user_email = mom.email
             
-        return (Appointment.objects.filter(provider=user) | 
-                Appointment.objects.filter(status="pending"))
+            print(f"Creating appointment with mom: {mom.email}, user_email: {user_email}")  # Debug log
+            
+            appointment = serializer.save(
+                provider=self.request.user,
+                status='pending',
+                user=mom,
+                user_email=user_email
+            )
+            print(f"Created appointment: {appointment.user_email}")  # Debug log
+            
+        except User.DoesNotExist:
+            raise ValidationError("Selected user must be a registered mom")
+        except Exception as e:
+            raise ValidationError(f"Error creating appointment: {str(e)}")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        appointments = list(queryset)
+        
+        # Debug log
+        for app in appointments:
+            print(f"Appointment {app.id} user_email: {app.user_email}")
+        
+        serializer = self.get_serializer(appointments, many=True)
         data = serializer.data
         
-        # Add username to each appointment
+        # Add user details to each appointment
         for appointment in data:
             try:
-                user = User.objects.get(id=appointment['user'])
-                appointment['username'] = user.username  # Just add the username
+                mom = User.objects.get(id=appointment['user'])
+                appointment['user_details'] = {
+                    'id': mom.id,
+                    'email': mom.email,
+                    'first_name': mom.first_name,
+                    'last_name': mom.last_name
+                }
+                # Ensure user_email is set
+                if not appointment.get('user_email'):
+                    appointment['user_email'] = mom.email
             except User.DoesNotExist:
-                appointment['username'] = "Unknown User"
+                appointment['user_details'] = None
                 
         return Response(data)
 
@@ -271,3 +328,37 @@ def delete_appointment(request, pk):
 
     except Appointment.DoesNotExist:
         return Response({"error": "Appointment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class HealthcareProvidersView(generics.ListAPIView):
+    """View to list all healthcare providers"""
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        providers = User.objects.filter(role='healthcare_provider')
+        print(f"DEBUG: Found {providers.count()} healthcare providers")
+        if providers.exists():
+            print("DEBUG: Provider List:", [
+                {
+                    'id': p.id,
+                    'name': f"{p.first_name} {p.last_name}",
+                    'email': p.email
+                } for p in providers
+            ])
+        else:
+            print("DEBUG: No healthcare providers found in database. Available roles:", 
+                  User.objects.values_list('role', flat=True).distinct())
+        return providers
+
+    def list(self, request, *args, **kwargs):
+        providers = self.get_queryset()
+        data = [{
+            'id': provider.id,
+            'first_name': provider.first_name,
+            'last_name': provider.last_name,
+            'email': provider.email,
+            'role': provider.role
+        } for provider in providers]
+        
+        # Return empty list with 200 status instead of 404
+        return Response(data, status=status.HTTP_200_OK)

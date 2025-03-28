@@ -27,11 +27,18 @@ const styles = {
     marginBottom: '20px',
   },
   select: {
-    padding: '8px 12px',
-    marginLeft: '10px',
-    border: '1px solid #008DC9',
-    borderRadius: '4px',
-    color: '#008DC9',
+    width: '100%',
+    padding: '12px 15px',
+    marginBottom: '15px',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    fontSize: '1em',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+    '&:focus': {
+      borderColor: '#008DC9',
+      outline: 'none'
+    }
   },
   form: {
     background: '#f5f5f5',
@@ -41,10 +48,17 @@ const styles = {
   },
   input: {
     width: '100%',
-    padding: '10px',
+    padding: '12px 15px',
     marginBottom: '15px',
-    border: '1px solid #008DC9',
-    borderRadius: '4px',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    fontSize: '1em',
+    transition: 'border-color 0.3s ease',
+    '&:focus': {
+      borderColor: '#008DC9',
+      outline: 'none',
+      boxShadow: '0 0 0 2px rgba(0,141,201,0.1)'
+    }
   },
   button: {
     backgroundColor: '#008DC9',
@@ -93,6 +107,103 @@ const styles = {
     fontSize: '0.9em',
     fontWeight: 'bold',
   },
+  createButton: {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    backgroundColor: '#008DC9',
+    color: 'white',
+    padding: '10px 20px',
+    borderRadius: '4px',
+    border: 'none',
+    cursor: 'pointer'
+  },
+  modal: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: '30px',
+    borderRadius: '15px',
+    width: '90%',
+    maxWidth: '600px',
+    boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  },
+  formTitle: {
+    color: '#008DC9',
+    marginBottom: '25px',
+    textAlign: 'center',
+    fontSize: '1.8em',
+    fontWeight: '600'
+  },
+  formGroup: {
+    marginBottom: '20px'
+  },
+  label: {
+    display: 'block',
+    marginBottom: '8px',
+    color: '#444',
+    fontSize: '0.95em',
+    fontWeight: '500'
+  },
+  textarea: {
+    width: '100%',
+    padding: '12px 15px',
+    marginBottom: '15px',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    fontSize: '1em',
+    minHeight: '100px',
+    resize: 'vertical',
+    '&:focus': {
+      borderColor: '#008DC9',
+      outline: 'none'
+    }
+  },
+  buttonGroup: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '15px',
+    marginTop: '30px'
+  },
+  submitButton: {
+    backgroundColor: '#008DC9',
+    color: 'white',
+    padding: '12px 25px',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '1em',
+    fontWeight: '500',
+    transition: 'background-color 0.3s ease',
+    '&:hover': {
+      backgroundColor: '#007ab0'
+    }
+  },
+  formSection: {
+    marginBottom: '25px',
+    padding: '20px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '8px',
+    border: '1px solid #e9ecef'
+  },
+  formSectionTitle: {
+    color: '#008DC9',
+    marginBottom: '15px',
+    fontSize: '1.1em',
+    fontWeight: '500'
+  }
 };
 
 const getStatusColor = (status) => {
@@ -109,13 +220,14 @@ const MomAppointments = () => {
   const { t } = useTranslation();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Add these two missing state variables
+  const [providers, setProviders] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [newAppointment, setNewAppointment] = useState({
     title: "",
     description: "",
     date: "",
+    provider: "",
     consultation_type: "virtual",
     meeting_link: "",
     notes_for_provider: "",
@@ -125,19 +237,19 @@ const MomAppointments = () => {
   });
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [updatedData, setUpdatedData] = useState({ title: "", description: "", date: "" });
-  const [filterStatus, setFilterStatus] = useState("all"); // ✅ Added state for filtering
+  const [filterStatus, setFilterStatus] = useState("all");
 
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const token = localStorage.getItem("access"); // Changed from "token" to "access"
+        const token = localStorage.getItem("access");
         if (!token) {
           console.error("No access token found");
           return;
         }
-        const response = await axios.get("http://127.0.0.1:8000/api/appointments/moms/appointments/", {
+        const response = await axios.get("http://127.0.0.1:8000/api/appointments/list/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAppointments(response.data);
@@ -147,7 +259,46 @@ const MomAppointments = () => {
         setLoading(false);
       }
     };
+
+    const fetchProviders = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) {
+          console.error("No access token found");
+          return;
+        }
+        console.log("DEBUG: Fetching providers..."); 
+        const response = await axios.get("http://127.0.0.1:8000/api/appointments/providers/", {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+        
+        console.log("DEBUG: Raw provider response:", response.data);
+        
+        if (Array.isArray(response.data)) {
+          if (response.data.length === 0) {
+            console.log("DEBUG: No providers returned from API");
+          }
+          setProviders(response.data);
+        } else {
+          console.error("Invalid providers data format:", response.data);
+          setProviders([]);
+        }
+      } catch (error) {
+        console.error("Error fetching providers:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          fullError: error
+        });
+        setProviders([]);
+      }
+    };
+
     fetchAppointments();
+    fetchProviders();
   }, []);
 
   const createAppointment = async () => {
@@ -157,24 +308,27 @@ const MomAppointments = () => {
       return;
     }
     try {
+      console.log("Creating appointment with data:", newAppointment); // Debug log
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/appointments/moms/appointments/create/", // Updated endpoint
-        newAppointment, // Send the entire newAppointment object
+        "http://127.0.0.1:8000/api/appointments/list/", // Changed from /create/ to /list/
+        newAppointment,
         { 
           headers: { 
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            'Accept': 'application/json'
           } 
         }
       );
+      console.log("Appointment creation response:", response); // Debug log
       
       if (response.data) {
-        setAppointments([...appointments, response.data]);
-        // Reset form
+        setAppointments(prevAppointments => [...prevAppointments, response.data]);
         setNewAppointment({ 
           title: "", 
           description: "", 
           date: "", 
+          provider: "",
           consultation_type: "virtual",
           meeting_link: "",
           notes_for_provider: "",
@@ -182,10 +336,16 @@ const MomAppointments = () => {
           technical_requirements: "",
           status: "pending"
         });
+        setShowForm(false);
       }
     } catch (error) {
-      console.error("Error creating appointment:", error.response?.data || error.message);
-      alert(error.response?.data?.error || "Failed to create appointment");
+      console.error("Error creating appointment:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        fullError: error
+      });
+      alert(error.response?.data?.error || "Failed to create appointment. Please try again.");
     }
   };
 
@@ -224,7 +384,8 @@ const MomAppointments = () => {
       return;
     }
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/appointments/cancel/${id}/`, {
+      // Changed from delete to put
+      await axios.put(`http://127.0.0.1:8000/api/appointments/cancel/${id}/`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAppointments(appointments.filter(app => app.id !== id));
@@ -233,7 +394,6 @@ const MomAppointments = () => {
     }
   };
 
-  // ✅ Filtered Appointments
   const filteredAppointments = appointments.filter(app => 
     filterStatus === "all" || app.status.toLowerCase() === filterStatus
   );
@@ -242,29 +402,132 @@ const MomAppointments = () => {
     <div style={styles.container}>
       <h1 style={styles.header}>{t('appointment.title')}</h1>
       
-      <div className="appointments-container">
-        <button onClick={() => setShowForm(true)} className="create-button">
-          {t('appointment.create')}
-        </button>
-        
-        <div className="filter-section">
-          <label>{t('appointment.filter')}</label>
-          <select onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">{t('appointment.status.all')}</option>
-            <option value="pending">{t('appointment.status.pending')}</option>
-            <option value="confirmed">{t('appointment.status.confirmed')}</option>
-            <option value="completed">{t('appointment.status.completed')}</option>
-            <option value="canceled">{t('appointment.status.canceled')}</option>
-          </select>
-        </div>
-        
-        {/* ...rest of appointments rendering... */}
-      </div>
+      <button 
+        style={styles.createButton}
+        onClick={() => setShowForm(true)}
+      >
+        {t('appointment.create')}
+      </button>
 
-      <div style={styles.header}>
-        <h2>{t('appointment.title')}</h2>
-        <LanguageSelector />
-      </div>
+      {showForm && (
+        <div style={styles.modal}>
+          <div style={styles.modalContent}>
+            <h2 style={styles.formTitle}>{t('appointment.createNew')}</h2>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              createAppointment();
+            }}>
+              <div style={styles.formSection}>
+                <h3 style={styles.formSectionTitle}>Provider Details</h3>
+                <select
+                  style={styles.select}
+                  value={newAppointment.provider}
+                  onChange={(e) => setNewAppointment({...newAppointment, provider: e.target.value})}
+                  required
+                >
+                  <option value="">
+                    {providers.length === 0 
+                      ? "Loading providers... (If this persists, no providers are available)" 
+                      : t('appointment.selectProvider')}
+                  </option>
+                  {providers.map(provider => (
+                    <option key={provider.id} value={provider.id}>
+                      {`${provider.first_name} ${provider.last_name} - ${provider.email}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={styles.formSection}>
+                <h3 style={styles.formSectionTitle}>Appointment Details</h3>
+                <input
+                  style={styles.input}
+                  type="text"
+                  placeholder={t('appointment.placeholders.title')}
+                  value={newAppointment.title}
+                  onChange={(e) => setNewAppointment({...newAppointment, title: e.target.value})}
+                  required
+                />
+                
+                <select
+                  style={styles.select}
+                  value={newAppointment.consultation_type}
+                  onChange={(e) => setNewAppointment({ ...newAppointment, consultation_type: e.target.value })}
+                >
+                  <option value="virtual">{t('appointment.consultation.virtual')}</option>
+                  <option value="in_person">{t('appointment.consultation.inperson')}</option>
+                </select>
+
+                <textarea
+                  style={styles.textarea}
+                  placeholder={t('appointment.placeholders.description')}
+                  value={newAppointment.description}
+                  onChange={(e) => setNewAppointment({ ...newAppointment, description: e.target.value })}
+                />
+
+                <input
+                  style={styles.input}
+                  type="datetime-local"
+                  value={newAppointment.date}
+                  onChange={(e) => setNewAppointment({ ...newAppointment, date: e.target.value })}
+                  required
+                />
+              </div>
+
+              {newAppointment.consultation_type === 'virtual' && (
+                <div style={styles.formSection}>
+                  <h3 style={styles.formSectionTitle}>Virtual Meeting Details</h3>
+                  <input
+                    style={styles.input}
+                    type="url"
+                    placeholder="Meeting Link (optional)"
+                    value={newAppointment.meeting_link}
+                    onChange={(e) => setNewAppointment({ ...newAppointment, meeting_link: e.target.value })}
+                  />
+
+                  <textarea
+                    style={styles.textarea}
+                    placeholder="Technical Requirements"
+                    value={newAppointment.technical_requirements}
+                    onChange={(e) => setNewAppointment({ ...newAppointment, technical_requirements: e.target.value })}
+                  />
+                </div>
+              )}
+
+              <div style={styles.formSection}>
+                <h3 style={styles.formSectionTitle}>Additional Information</h3>
+                <input
+                  style={styles.input}
+                  type="text"
+                  placeholder="Preferred Language"
+                  value={newAppointment.preferred_language}
+                  onChange={(e) => setNewAppointment({ ...newAppointment, preferred_language: e.target.value })}
+                />
+
+                <textarea
+                  style={styles.textarea}
+                  placeholder="Notes for Provider"
+                  value={newAppointment.notes_for_provider}
+                  onChange={(e) => setNewAppointment({ ...newAppointment, notes_for_provider: e.target.value })}
+                />
+              </div>
+
+              <div style={styles.buttonGroup}>
+                <button 
+                  type="button" 
+                  style={styles.cancelButton}
+                  onClick={() => setShowForm(false)}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button type="submit" style={styles.submitButton}>
+                  {t('appointment.create')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div style={styles.filterSection}>
         <label>{t('appointment.filter')}:</label>
@@ -279,77 +542,6 @@ const MomAppointments = () => {
           <option value="completed">{t('appointment.status.completed')}</option>
           <option value="canceled">{t('appointment.status.canceled')}</option>
         </select>
-      </div>
-
-      <div style={styles.form}>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder={t('appointment.placeholders.title')}
-          value={newAppointment.title}
-          onChange={(e) => setNewAppointment({ ...newAppointment, title: e.target.value })}
-          required
-        />
-        
-        <select
-          style={styles.input}
-          value={newAppointment.consultation_type}
-          onChange={(e) => setNewAppointment({ ...newAppointment, consultation_type: e.target.value })}
-        >
-          <option value="virtual">{t('appointment.consultation.virtual')}</option>
-          <option value="in_person">{t('appointment.consultation.inperson')}</option>
-        </select>
-
-        <textarea
-          style={styles.input}
-          placeholder={t('appointment.placeholders.description')}
-          value={newAppointment.description}
-          onChange={(e) => setNewAppointment({ ...newAppointment, description: e.target.value })}
-        />
-
-        <input
-          style={styles.input}
-          type="datetime-local"
-          value={newAppointment.date}
-          onChange={(e) => setNewAppointment({ ...newAppointment, date: e.target.value })}
-          required
-        />
-
-        {newAppointment.consultation_type === 'virtual' && (
-          <>
-            <input
-              style={styles.input}
-              type="url"
-              placeholder="Meeting Link (optional)"
-              value={newAppointment.meeting_link}
-              onChange={(e) => setNewAppointment({ ...newAppointment, meeting_link: e.target.value })}
-            />
-
-            <textarea
-              style={styles.input}
-              placeholder="Technical Requirements"
-              value={newAppointment.technical_requirements}
-              onChange={(e) => setNewAppointment({ ...newAppointment, technical_requirements: e.target.value })}
-            />
-          </>
-        )}
-
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="Preferred Language"
-          value={newAppointment.preferred_language}
-          onChange={(e) => setNewAppointment({ ...newAppointment, preferred_language: e.target.value })}
-        />
-
-        <textarea
-          style={styles.input}
-          placeholder="Notes for Provider"
-          value={newAppointment.notes_for_provider}
-          onChange={(e) => setNewAppointment({ ...newAppointment, notes_for_provider: e.target.value })}
-        />
-
-        <button style={styles.button} onClick={createAppointment}>Create Appointment</button>
       </div>
 
       {loading ? <p>Loading...</p> : null}
@@ -369,7 +561,7 @@ const MomAppointments = () => {
                     onChange={(e) => setUpdatedData({ ...updatedData, title: e.target.value })}
                   />
                   <textarea
-                    style={styles.input}
+                    style={styles.textarea}
                     value={updatedData.description}
                     onChange={(e) => setUpdatedData({ ...updatedData, description: e.target.value })}
                   />
@@ -385,6 +577,11 @@ const MomAppointments = () => {
               ) : (
                 <div>
                   <h3 style={styles.appointmentTitle}>{appointment.title}</h3>
+                  <p><strong>Healthcare Provider:</strong> {
+                    appointment.provider_details ? 
+                    `${appointment.provider_details.first_name} ${appointment.provider_details.last_name} - ${appointment.provider_details.email}` :
+                    "No provider assigned"
+                  }</p>
                   <p><strong>Date:</strong> {new Date(appointment.date).toLocaleString()}</p>
                   {appointment.description && <p><strong>Description:</strong> {appointment.description}</p>}
                   <p>
