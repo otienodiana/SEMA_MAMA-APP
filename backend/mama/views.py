@@ -107,26 +107,26 @@ def home(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def provider_list(request):
+    """Get list of healthcare providers"""
     try:
         User = get_user_model()
-        logger.debug(f"Fetching providers with role='healthcare_provider'")
-        
         providers = User.objects.filter(role='healthcare_provider')
-        logger.debug(f"Found {providers.count()} providers")
+        
+        # Debug logging
+        logger.info(f"Fetching providers. Total found: {providers.count()}")
+        for provider in providers:
+            logger.info(f"Provider found - ID: {provider.id}, Email: {provider.email}")
         
         if not providers.exists():
-            return Response(
-                {"message": "No healthcare providers found"}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
+            return Response([], status=status.HTTP_200_OK)
+            
         serializer = ProviderSerializer(providers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
     except Exception as e:
-        logger.error(f"Error in provider_list: {str(e)}")
+        logger.exception(f"Error in provider_list: {str(e)}")
         return Response(
-            {"error": "Failed to fetch providers", "detail": str(e)},
+            {"error": f"Failed to fetch providers: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -193,21 +193,33 @@ def chat_history(request, other_user_id=None):
 def send_message(request):
     try:
         logger.debug("=== Send Message Request ===")
-        logger.debug(f"User: {request.user.id}")
+        logger.debug(f"User: {request.user.email}")
         logger.debug(f"Request data: {request.data}")
 
+        recipient_id = request.data.get('recipient_id')
         content = request.data.get('content', '').strip()
-        if not content:
+
+        if not content or not recipient_id:
             return Response(
-                {"error": "Message content is required"}, 
+                {"error": "Message content and recipient_id are required"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Create message
+        # Get recipient user
+        User = get_user_model()
+        try:
+            recipient = User.objects.get(id=recipient_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Recipient not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Create and save message
         message = ChatMessage.objects.create(
             sender=request.user,
-            content=content,
-            recipient=None  # Make sure your model allows null recipient
+            recipient=recipient,
+            content=content
         )
 
         # Serialize and return
@@ -217,6 +229,69 @@ def send_message(request):
 
     except Exception as e:
         logger.exception("Error in send_message")
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def chat_users_list(request):
+    """Get list of mom users who have chatted with the provider"""
+    try:
+        logger.debug(f"Fetching chats for provider: {request.user.email}")
+        
+        # Check if user is a healthcare provider
+        if request.user.role != 'healthcare_provider':
+            return Response(
+                {"error": "Only healthcare providers can access this endpoint"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get all users with role 'mom' who have sent messages to this provider
+        User = get_user_model()
+        mom_users = User.objects.filter(role='mom')
+        
+        logger.debug(f"Found {mom_users.count()} mom users")
+
+        # Get messages for each mom
+        user_dict = {}
+        for mom in mom_users:
+            # Check if there are any messages between this mom and the provider
+            messages = ChatMessage.objects.filter(
+                (Q(sender=mom, recipient=request.user) |
+                 Q(sender=request.user, recipient=mom))
+            ).order_by('-timestamp')
+
+            if messages.exists():  # Only include moms with messages
+                latest_message = messages.first()
+                unread_count = messages.filter(
+                    sender=mom,
+                    recipient=request.user,
+                    is_read=False
+                ).count()
+
+                user_dict[mom.id] = {
+                    'id': mom.id,
+                    'first_name': mom.first_name,
+                    'last_name': mom.last_name,
+                    'email': mom.email,
+                    'unread_count': unread_count,
+                    'last_message': latest_message.content,
+                    'last_message_time': latest_message.timestamp.isoformat()
+                }
+
+        users = list(user_dict.values())
+        # Sort by unread messages and then by latest message time
+        users.sort(key=lambda x: (-x['unread_count'], x['last_message_time']), reverse=True)
+        
+        logger.debug(f"Returning {len(users)} mom users with chat history")
+        logger.debug(f"User details: {users}")
+        
+        return Response(users)
+        
+    except Exception as e:
+        logger.exception("Error in chat_users_list")
         return Response(
             {"error": str(e)}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

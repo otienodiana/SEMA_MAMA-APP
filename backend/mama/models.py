@@ -176,8 +176,8 @@ class ChatMessage(models.Model):
         settings.AUTH_USER_MODEL,
         related_name='received_messages',
         on_delete=models.CASCADE,
-        null=True,  # Keep this for now
-        blank=True  # Keep this for now
+        null=False,  # Change to non-nullable
+        blank=False  # Change to required
     )
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)

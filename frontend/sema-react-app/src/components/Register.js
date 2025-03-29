@@ -96,129 +96,131 @@ function Register() {
 
   return (
     <div className="register-container">
-      <h2 className="register-title">
-        {isAdminRoute ? t('register.adminTitle') : t('register.title')}
-      </h2>
+      <div className="register-card">
+        <h2 className="register-title">
+          {isAdminRoute ? t('register.adminTitle') : t('register.title')}
+        </h2>
 
-      {error && <p className="error-message">{t('register.error')}</p>}
-      {success && <p className="success-message">{t('register.success')}</p>}
+        {error && <p className="error-message">{error}</p>}
+        {success && <p className="success-message">{success}</p>}
 
-      <form onSubmit={handleRegister} className="register-form" encType="multipart/form-data">
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder={t('register.username')}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <input
-            type="email"
-            placeholder={t('register.email')}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <input
-            type="password"
-            placeholder={t('register.password')}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className={`form-input ${password && password.length < 8 ? 'error' : ''}`}
-          />
-          {password && password.length < 8 && (
-            <small className="error-text">Password must be at least 8 characters long</small>
-          )}
-        </div>
-
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder={t('register.phoneNumber')}
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            className="form-input"
-          />
-        </div>
-
-        {/* Show role selection only for non-admin registration */}
-        {!isAdminRoute && (
+        <form onSubmit={handleRegister} className="register-form" encType="multipart/form-data">
           <div className="form-group">
-            <label className="role-label">{t('register.role')}</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="form-select"
-            >
-              <option value="mom">{t('register.role.mom')}</option>
-              <option value="healthcare_provider">{t('register.role.provider')}</option>
-            </select>
-          </div>
-        )}
-
-        <div className="form-group">
-          <input
-            type="number"
-            placeholder={t('register.age')}
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="role-label">{t('register.profilePhoto')}</label>
-          <input
-            type="file"
-            onChange={(e) => setProfilePhoto(e.target.files[0])}
-            accept="image/*"
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group privacy-group">
-          <label className="privacy-label">
             <input
-              type="checkbox"
-              checked={acceptedPrivacyPolicy}
-              onChange={() => setShowPrivacyPolicy(true)}
+              type="text"
+              placeholder={t('register.username')}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="form-input"
             />
-            I accept the {' '}
-            <span 
-              className="privacy-link"
-              onClick={(e) => {
-                e.preventDefault();
-                setShowPrivacyPolicy(true);
-              }}
-            >
-              Privacy Policy
-            </span>
-          </label>
-        </div>
+          </div>
 
-        <button type="submit" className="submit-button">
-          {t('register.button')}
-        </button>
-      </form>
+          <div className="form-group">
+            <input
+              type="email"
+              placeholder={t('register.email')}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="form-input"
+            />
+          </div>
 
-      {showPrivacyPolicy && (
-        <PrivacyPolicy
-          onClose={() => setShowPrivacyPolicy(false)}
-          onAccept={() => {
-            setAcceptedPrivacyPolicy(true);
-            setShowPrivacyPolicy(false);
-          }}
-        />
-      )}
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder={t('register.password')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className={`form-input ${password && password.length < 8 ? 'error' : ''}`}
+            />
+            {password && password.length < 8 && (
+              <small className="error-text">Password must be at least 8 characters long</small>
+            )}
+          </div>
+
+          <div className="form-group">
+            <input
+              type="text"
+              placeholder={t('register.phoneNumber')}
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="form-input"
+            />
+          </div>
+
+          {/* Show role selection only for non-admin registration */}
+          {!isAdminRoute && (
+            <div className="form-group">
+              <label className="role-label">{t('register.role')}</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="form-select"
+              >
+                <option value="mom">{t('register.role.mom')}</option>
+                <option value="healthcare_provider">{t('register.role.provider')}</option>
+              </select>
+            </div>
+          )}
+
+          <div className="form-group">
+            <input
+              type="number"
+              placeholder={t('register.age')}
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="role-label">{t('register.profilePhoto')}</label>
+            <input
+              type="file"
+              onChange={(e) => setProfilePhoto(e.target.files[0])}
+              accept="image/*"
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group privacy-group">
+            <label className="privacy-label">
+              <input
+                type="checkbox"
+                checked={acceptedPrivacyPolicy}
+                onChange={() => setShowPrivacyPolicy(true)}
+              />
+              I accept the {' '}
+              <span 
+                className="privacy-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowPrivacyPolicy(true);
+                }}
+              >
+                Privacy Policy
+              </span>
+            </label>
+          </div>
+
+          <button type="submit" className="submit-button">
+            {t('register.button')}
+          </button>
+        </form>
+
+        {showPrivacyPolicy && (
+          <PrivacyPolicy
+            onClose={() => setShowPrivacyPolicy(false)}
+            onAccept={() => {
+              setAcceptedPrivacyPolicy(true);
+              setShowPrivacyPolicy(false);
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

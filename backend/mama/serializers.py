@@ -28,15 +28,18 @@ class DailyLogSerializer(serializers.ModelSerializer):
 class ProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ['id', 'first_name', 'last_name', 'email', 'specialization']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role']
         
     def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        # Set default values for missing fields
-        representation['first_name'] = instance.first_name or 'Unknown'
-        representation['last_name'] = instance.last_name or 'Provider'
-        representation['specialization'] = instance.specialization or 'Healthcare Provider'
-        return representation
+        data = super().to_representation(instance)
+        # Just use the actual values without defaults
+        data.update({
+            'first_name': instance.first_name,
+            'last_name': instance.last_name,
+            'email': instance.email,
+            'role': instance.role
+        })
+        return data
 
 class ChatMessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.SerializerMethodField()

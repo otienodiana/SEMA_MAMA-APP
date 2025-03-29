@@ -17,7 +17,6 @@ function ProviderDashboard() {
 
       <nav className="provider-dashboard-nav">
         <ul>
-          <li><Link to="">{t('provider.dashboard.messages')}</Link></li> {/* Default route */}
           <li><Link to="profile">{t('provider.dashboard.profile')}</Link></li>
           <li><Link to="appointments">{t('provider.dashboard.appointments')}</Link></li>
           <li><Link to="educational-contents">{t('provider.dashboard.healthcorner')}</Link></li>
@@ -31,19 +30,20 @@ function ProviderDashboard() {
         <Outlet />
       </div>
 
-      {/* Floating Message Button */}
+      {/* Floating chat button */}
       <button 
-        className="floating-message-button"
+        className="chat-float-btn"
         onClick={() => setShowMessages(!showMessages)}
-        title="Chat with Moms"
+        title={t('provider.dashboard.messages')}
       >
-        <i className="fas fa-comment-dots"></i>
+        <i className="fas fa-comments"></i>
       </button>
 
+      {/* Messages modal */}
       {showMessages && (
-        <div className="messages-modal-overlay">
-          <div className="messages-modal">
-            <button className="close-modal" onClick={() => setShowMessages(false)}>×</button>
+        <div className="messages-modal">
+          <div className="messages-content">
+            <button className="close-btn" onClick={() => setShowMessages(false)}>×</button>
             <ProviderMessages />
           </div>
         </div>

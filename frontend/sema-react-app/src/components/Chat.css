@@ -32,29 +32,37 @@
 }
 
 .message {
-  max-width: 70%;
-  padding: 10px 15px;
-  border-radius: 15px;
-  margin: 5px 0;
-  word-break: break-word;
+  max-width: 75%;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 12px;
+  position: relative;
 }
 
 .sent {
-  align-self: flex-end;
-  background-color: #007bff;
-  color: white;
+  background-color: #dcf8c6;
+  margin-left: auto;
+  color: #000;
 }
 
 .received {
-  align-self: flex-start;
-  background-color: #e9ecef;
-  color: #212529;
+  background-color: #fff;
+  margin-right: auto;
+  color: #000;
+}
+
+.message-sender {
+  font-size: 0.8rem;
+  color: #1a75ff;
+  margin-bottom: 2px;
+  font-weight: 500;
 }
 
 .message-timestamp {
-  font-size: 0.75rem;
-  margin-top: 5px;
-  opacity: 0.7;
+  font-size: 0.7rem;
+  color: #667781;
+  margin-top: 2px;
+  text-align: right;
 }
 
 .no-messages {
@@ -160,4 +168,190 @@
 
 .provider-card:hover {
   background-color: #f8f9fa;
+}
+
+.provider-chat-container {
+  display: flex;
+  height: 600px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.chat-users-list {
+  width: 300px;
+  border-right: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.users-list {
+  overflow-y: auto;
+  height: calc(100% - 60px);
+}
+
+.chat-user-item {
+  padding: 15px;
+  border-bottom: 1px solid #dee2e6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-user-item:hover {
+  background-color: #e9ecef;
+}
+
+.chat-user-item.active {
+  background-color: #e3f2fd;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 500;
+}
+
+.user-email {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.unread-badge {
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+.chat-messages-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background-color: #f0f2f5;
+}
+
+.no-chat-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.selected-user-header {
+  padding: 15px;
+  background-color: var(--who-light-blue);
+  border-bottom: 1px solid var(--who-accent-blue);
+  font-weight: bold;
+  color: var(--who-dark-blue);
+}
+
+.last-message {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.no-chats {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.error-message {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--who-alert-red);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--who-gray);
+}
+
+.messages-modal {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 400px;
+  height: 500px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hide the chat users list in modal view */
+.messages-modal .chat-users-list {
+  display: none;
+}
+
+.modal-header {
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #1a1f36;
+}
+
+.cancel-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #f1f5f9;
+  color: #ef4444;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
