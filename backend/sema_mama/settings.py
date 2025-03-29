@@ -134,22 +134,21 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 
 # Database Configuration
 import os
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Database Configuration
-if os.getenv('DJANGO_DEBUG') == 'True':  # Use environment variable for DEBUG mode
-    # Local Database
+if DEBUG:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'sema_mama_db',
             'USER': 'Diana',
-            'PASSWORD': 'Dee0000!',  # Consider using an environment variable for this
+            'PASSWORD': 'Dee0000!',  # Store this securely!
             'HOST': 'localhost',
             'PORT': '3306',
         }
     }
 else:
-    # Production Database (Google Cloud SQL)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -165,13 +164,10 @@ else:
         }
     }
 
-# Update database for local development
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# Debug Mode
+DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
+# Database Configuration
+
 
 # Update CORS settings
 CORS_ALLOWED_ORIGINS = [
