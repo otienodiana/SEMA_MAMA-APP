@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { API_BASE_URL, API_ENDPOINTS, API_CONFIG } from '../config';
+import axios from 'axios';  // Add this import
 
 const AuthContext = createContext();
 
@@ -50,69 +51,41 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const loginUrl = `${API_BASE_URL}/api/users/login/`;
-      console.log('Full login URL:', loginUrl);
-      console.log('Login credentials:', { 
-        username: credentials.username,
-        is_admin_login: credentials.is_admin_login 
+      console.log('Attempting login at:', loginUrl);
+
+      const response = await axios({
+        method: 'post',
+        url: loginUrl,
+        data: credentials,
+        headers: API_CONFIG.baseHeaders,
+        withCredentials: true,
+        timeout: 5000,
       });
 
-      const response = await fetch(loginUrl, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: credentials.username,
-          password: credentials.password,
-          is_admin_login: credentials.is_admin_login || false
-        }),
-        mode: 'cors',
-        credentials: 'include'
-      });
-
-      // Log full response for debugging
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers));
-
-      let responseData;
-      try {
-        const text = await response.text();
-        console.log('Raw response:', text);
-        responseData = text ? JSON.parse(text) : null;
-      } catch (e) {
-        console.error('Error parsing response:', e);
-        throw new Error('Invalid server response format');
+      if (response.status === 200 && response.data.access) {
+        localStorage.setItem('access', response.data.access);
+        if (response.data.refresh) {
+          localStorage.setItem('refresh', response.data.refresh);
+        }
+        if (response.data.user) {
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          setUser(response.data.user);
+        }
+        return response.data;
       }
-
-      if (response.status === 500) {
-        console.error('Server error details:', responseData);
-        throw new Error('Server error - please try again later');
-      }
-
-      if (response.status === 401) {
-        throw new Error(responseData?.detail || 'Invalid credentials');
-      }
-
-      if (!response.ok || !responseData) {
-        throw new Error(responseData?.detail || 'Login failed');
-      }
-
-      if (!responseData.access) {
-        console.error('Missing access token in response:', responseData);
-        throw new Error('Invalid server response');
-      }
-
-      localStorage.setItem('access', responseData.access);
-      if (responseData.refresh) localStorage.setItem('refresh', responseData.refresh);
-      if (responseData.user) {
-        localStorage.setItem('user', JSON.stringify(responseData.user));
-        setUser(responseData.user);
-      }
-
-      return responseData;
+      
+      throw new Error('Invalid response from server');
     } catch (error) {
-      console.error('Detailed login error:', error);
+      console.error('Login error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      if (!error.response) {
+        throw new Error('Network error - please check if the server is running');
+      }
+      
       throw error;
     }
   };

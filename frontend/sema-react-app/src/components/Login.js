@@ -9,6 +9,7 @@ function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
@@ -19,6 +20,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
       const data = await login({ 
@@ -28,27 +30,27 @@ function Login() {
       });
 
       if (!data.user || !data.user.role) {
-        setError("Invalid response from server");
+        setError("Unable to retrieve user information");
         return;
       }
 
-      if (data.user.role === 'admin') {
-        navigate('/dashboard/admin', { replace: true });
+      // Handle navigation
+      const roleRoutes = {
+        admin: '/dashboard/admin',
+        healthcare_provider: '/dashboard/provider',
+        mom: '/dashboard/profile'
+      };
+
+      const targetRoute = roleRoutes[data.user.role];
+      if (targetRoute) {
+        navigate(targetRoute, { replace: true });
       } else {
-        switch (data.user.role) {
-          case "healthcare_provider":
-            navigate("/dashboard/provider");
-            break;
-          case "mom":
-            navigate("/dashboard/profile");
-            break;
-          default:
-            setError("Invalid user role");
-        }
+        setError("Invalid user role");
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.message || "Failed to login. Please check your credentials and try again.");
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,6 +67,7 @@ function Login() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            disabled={loading}
             className="login-input"
           />
           <div className="form-group">
@@ -74,14 +77,12 @@ function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
               className={`login-input ${error && error.includes('password') ? 'error' : ''}`}
             />
-            {error && error.includes('password') && (
-              <small className="error-text">{error}</small>
-            )}
           </div>
-          <button type="submit" className="login-button">
-            {t('login.button')}
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? t('login.loading') : t('login.button')}
           </button>
         </form>
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import { API_BASE_URL, API_ENDPOINTS } from '../config';
 import "./Register.css";
 import PrivacyPolicy from './PrivacyPolicy';
@@ -33,7 +34,6 @@ function Register() {
       return;
     }
 
-    // Password validation
     if (password.length < 8) {
       setError("Password must be at least 8 characters long");
       return;
@@ -53,44 +53,42 @@ function Register() {
     }
 
     try {
-      console.log("Sending registration data:", {
-        username,
-        email,
-        role: isAdminRoute ? "admin" : role,
-        age
-      });
-
-      const response = await fetch(`${API_BASE_URL}/api/users/register/`, {
-        method: 'POST',
-        body: formData,
+      console.log("Attempting registration at:", `${API_BASE_URL}/api/users/register/`);
+      
+      const response = await axios({
+        method: 'post',
+        url: `${API_BASE_URL}/api/users/register/`,
+        data: formData,
         headers: {
-          // Remove Content-Type header to let browser set it with boundary for FormData
           'Accept': 'application/json',
         },
-        mode: 'cors', // Add this
-        credentials: 'include', // Add this
+        timeout: 10000,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        if (data.password) {
-          throw new Error(data.password[0]); // Show first password error
-        } else if (data.detail) {
-          throw new Error(data.detail);
-        } else {
-          throw new Error('Registration failed');
-        }
-      }
-
-      const data = await response.json();
-      console.log("Registration response:", data);
-
+      console.log("Registration response:", response.data);
       setSuccess("Registration successful!");
-      // Redirect to appropriate login page
       setTimeout(() => navigate(isAdminRoute ? '/admin/login' : '/login'), 2000);
+
     } catch (err) {
-      console.error("Registration error details:", err);
-      setError(err.message || "Failed to connect to server");
+      console.error("Registration error:", err);
+      let errorMessage = "Registration failed";
+      
+      if (err.response) {
+        // Server responded with error
+        if (err.response.data.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (err.response.data.password) {
+          errorMessage = err.response.data.password[0];
+        }
+      } else if (err.code === 'ECONNABORTED') {
+        errorMessage = "Server taking too long to respond. Please try again.";
+      } else if (!navigator.onLine) {
+        errorMessage = "No internet connection. Please check your network.";
+      }
+      
+      setError(errorMessage);
     }
   };
 

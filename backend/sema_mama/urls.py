@@ -10,13 +10,7 @@ def home(request):
 urlpatterns = [
     path("", home),
     path('admin/', admin.site.urls),
-    path('api/mama/', include('mama.urls')),
     path('api/users/', include('users.urls')),
-    path('api/content/', include('content.urls')),
-    path('api/appointments/', include('appointments.urls')),
-    path('api/community/', include('community.urls')),
-    path('api/analytics/', include('analytics.urls')),
-    path('api/educational/', include('educational.urls')),
 ]
 
 if settings.DEBUG:
