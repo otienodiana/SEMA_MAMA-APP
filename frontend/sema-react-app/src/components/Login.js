@@ -20,17 +20,6 @@ function Login() {
     e.preventDefault();
     setError("");
 
-    // Basic validation
-    if (!username || !password) {
-      setError("Username and password are required");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long");
-      return;
-    }
-
     try {
       const data = await login({ 
         username, 
@@ -38,10 +27,15 @@ function Login() {
         is_admin_login: isAdminRoute
       });
 
-      if (data?.user?.role === 'admin') {
+      if (!data.user || !data.user.role) {
+        setError("Invalid response from server");
+        return;
+      }
+
+      if (data.user.role === 'admin') {
         navigate('/dashboard/admin', { replace: true });
       } else {
-        switch (data?.user?.role) {
+        switch (data.user.role) {
           case "healthcare_provider":
             navigate("/dashboard/provider");
             break;
@@ -54,11 +48,7 @@ function Login() {
       }
     } catch (err) {
       console.error("Login error:", err);
-      if (err.message.includes("password")) {
-        setError("Password must be at least 8 characters long");
-      } else {
-        setError(err.message || "Failed to login");
-      }
+      setError(err.message || "Failed to login. Please check your credentials and try again.");
     }
   };
 

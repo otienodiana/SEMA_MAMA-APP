@@ -1,9 +1,10 @@
+console.log("Environment:", process.env.REACT_APP_ENV);
 console.log("API Base URL:", process.env.REACT_APP_API_URL);
 
-export const API_BASE_URL = process.env.REACT_APP_API_URL || "Fallback URL if needed";
+export const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 export const API_ENDPOINTS = {
-  login: "/api/users/login/",
+  login: "/api/users/login/",  // added back slashes
   register: "/api/users/register/",
   profile: "/api/users/me/",
   users: "/api/users/users/",
@@ -12,11 +13,11 @@ export const API_ENDPOINTS = {
 
 export const API_CONFIG = {
   baseHeaders: {
-    Accept: "application/json",
-    "Content-Type": "application/json",
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
   },
   fetchOptions: {
-    mode: "cors",
-    credentials: "include",
+    mode: 'cors',
+    credentials: process.env.REACT_APP_ENV === 'production' ? 'include' : 'same-origin'
   },
 };

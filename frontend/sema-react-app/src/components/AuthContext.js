@@ -49,50 +49,55 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      console.log('Attempting login with:', credentials);
-
-      const response = await fetch(`${API_BASE_URL}/api/users/login/`, {
+      const loginUrl = `${API_BASE_URL}${API_ENDPOINTS.login}`;
+      console.log('Attempting login at:', loginUrl);
+      
+      const response = await fetch(loginUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        ...API_CONFIG.fetchOptions,
+        headers: API_CONFIG.baseHeaders,
         body: JSON.stringify({
           username: credentials.username,
           password: credentials.password,
           is_admin_login: credentials.is_admin_login || false
-        }),
-        credentials: 'include',
-        mode: 'cors'
+        })
       });
 
-      // Log the full response for debugging
-      console.log('Raw response:', response);
+      // Log response status and headers for debugging
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers));
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Server not found. Please check your connection.');
-        }
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Login failed');
+      if (response.status === 500) {
+        throw new Error('Internal server error. Please try again later.');
       }
 
-      const data = await response.json();
-      console.log('Login response:', data);
+      const data = await response.json().catch(e => {
+        throw new Error('Invalid response from server');
+      });
 
-      if (data.access) {
-        localStorage.setItem('access', data.access);
-        localStorage.setItem('refresh', data.refresh);
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-          setUser(data.user);
-        }
+      if (response.status === 401) {
+        throw new Error(data.detail || 'Invalid credentials');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || 'An error occurred during login');
+      }
+
+      if (!data.access) {
+        throw new Error('No access token received');
+      }
+
+      localStorage.setItem('access', data.access);
+      if (data.refresh) localStorage.setItem('refresh', data.refresh);
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
       }
 
       return data;
     } catch (error) {
       console.error('Login error:', error);
-      throw error;
+      throw new Error(error.message || 'An error occurred during login');
     }
   };
 
