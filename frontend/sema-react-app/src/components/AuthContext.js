@@ -49,55 +49,71 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const loginUrl = `${API_BASE_URL}${API_ENDPOINTS.login}`;
-      console.log('Attempting login at:', loginUrl);
-      
+      const loginUrl = `${API_BASE_URL}/api/users/login/`;
+      console.log('Full login URL:', loginUrl);
+      console.log('Login credentials:', { 
+        username: credentials.username,
+        is_admin_login: credentials.is_admin_login 
+      });
+
       const response = await fetch(loginUrl, {
         method: 'POST',
-        ...API_CONFIG.fetchOptions,
-        headers: API_CONFIG.baseHeaders,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           username: credentials.username,
           password: credentials.password,
           is_admin_login: credentials.is_admin_login || false
-        })
+        }),
+        mode: 'cors',
+        credentials: 'include'
       });
 
-      // Log response status and headers for debugging
+      // Log full response for debugging
       console.log('Response status:', response.status);
       console.log('Response headers:', Object.fromEntries(response.headers));
 
-      if (response.status === 500) {
-        throw new Error('Internal server error. Please try again later.');
+      let responseData;
+      try {
+        const text = await response.text();
+        console.log('Raw response:', text);
+        responseData = text ? JSON.parse(text) : null;
+      } catch (e) {
+        console.error('Error parsing response:', e);
+        throw new Error('Invalid server response format');
       }
 
-      const data = await response.json().catch(e => {
-        throw new Error('Invalid response from server');
-      });
+      if (response.status === 500) {
+        console.error('Server error details:', responseData);
+        throw new Error('Server error - please try again later');
+      }
 
       if (response.status === 401) {
-        throw new Error(data.detail || 'Invalid credentials');
+        throw new Error(responseData?.detail || 'Invalid credentials');
       }
 
-      if (!response.ok) {
-        throw new Error(data.detail || data.message || 'An error occurred during login');
+      if (!response.ok || !responseData) {
+        throw new Error(responseData?.detail || 'Login failed');
       }
 
-      if (!data.access) {
-        throw new Error('No access token received');
+      if (!responseData.access) {
+        console.error('Missing access token in response:', responseData);
+        throw new Error('Invalid server response');
       }
 
-      localStorage.setItem('access', data.access);
-      if (data.refresh) localStorage.setItem('refresh', data.refresh);
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
+      localStorage.setItem('access', responseData.access);
+      if (responseData.refresh) localStorage.setItem('refresh', responseData.refresh);
+      if (responseData.user) {
+        localStorage.setItem('user', JSON.stringify(responseData.user));
+        setUser(responseData.user);
       }
 
-      return data;
+      return responseData;
     } catch (error) {
-      console.error('Login error:', error);
-      throw new Error(error.message || 'An error occurred during login');
+      console.error('Detailed login error:', error);
+      throw error;
     }
   };
 
