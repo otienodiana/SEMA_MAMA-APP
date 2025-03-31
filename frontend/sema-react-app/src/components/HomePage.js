@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { Link, Navigate } from 'react-router-dom';
 import "./HomePageStyles.css";
 import Navbar from "./Navbar";
-import mamaImage from "../assets/dep1.jpg";
-import supportImage from "../assets/dep2.jpg";
-import communityImage from "../assets/dep3.jpg";
-import professionalImage from "../assets/dep4.jpg";
-import mentalHealthImage from "../assets/dep5.jpg";
-import pregnancyTipsImage from "../assets/dep6.jpg";
+import mamaImage from "../assets/sema1.jpg";
+import supportImage from "../assets/sema7.jpg";
+import communityImage from "../assets/sema3.jpg";
+import professionalImage from "../assets/sema4.png";
+import mentalHealthImage from "../assets/sema5.jpg";
+import pregnancyTipsImage from "../assets/sema6p.jpg";
 import { useAuth } from "./AuthContext";
 
 const HomePage = () => {
