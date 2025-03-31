@@ -1,11 +1,38 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { FaEllipsisV } from 'react-icons/fa';
 import "./momDashboard.css";
 
 function MomDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [educationalContent, setEducationalContent] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);
+
+  useEffect(() => {
+    const fetchEducationalContent = async () => {
+      try {
+        const token = localStorage.getItem('access');
+        const response = await axios.get('http://localhost:8000/api/content/contents/', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setEducationalContent(response.data);
+      } catch (err) {
+        setError('Failed to load educational content');
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEducationalContent();
+  }, []);
 
   return (
     <div className="mom-dashboard-container">
@@ -26,6 +53,69 @@ function MomDashboard() {
       </nav>
 
       <div className="mom-dashboard-content">
+        {loading ? (
+          <div>Loading educational content...</div>
+        ) : error ? (
+          <div className="error-message">{error}</div>
+        ) : (
+          <div className="educational-content">
+            <h2>Educational Resources</h2>
+            <div className="content-grid">
+              {educationalContent.map(content => (
+                <div key={content.id} className="content-card">
+                  <h3>{content.title}</h3>
+                  <p>{content.description}</p>
+                  {content.content_type === 'image' && (
+                    <img src={content.file_url || content.uploaded_file} alt={content.title} />
+                  )}
+                  {content.content_type === 'video' && (
+                    <video controls>
+                      <source src={content.file_url || content.uploaded_file} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  )}
+                  
+                  <div className="card-actions">
+                    <button 
+                      className="menu-dots"
+                      onClick={() => setActiveMenu(activeMenu === content.id ? null : content.id)}
+                    >
+                      <FaEllipsisV />
+                    </button>
+
+                    {activeMenu === content.id && (
+                      <div className="action-menu">
+                        <button onClick={() => window.open(content.file_url || content.uploaded_file, '_blank')}>
+                          View
+                        </button>
+                        <button onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = content.file_url || content.uploaded_file;
+                          link.download = content.title;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}>
+                          Download
+                        </button>
+                        {content.content_type === 'document' && (
+                          <button onClick={() => window.open(content.file_url || content.uploaded_file, '_blank')}>
+                            Open Document
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="content-meta">
+                    <span>Type: {content.content_type}</span>
+                    <span>Added: {new Date(content.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <Outlet />
       </div>
 

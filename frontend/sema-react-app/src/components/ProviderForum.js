@@ -178,8 +178,8 @@ const ProviderForum = () => {
 
       if (response.data.status === 'already_member' || response.data.status === 'joined') {
         await fetchForums();
-        // Update navigation to go to posts view
-        navigate(`/dashboard/mom/community/forums/${forumId}/posts`);
+        // Fix: Change navigation path for provider
+        navigate(`/dashboard/provider/community/forums/${forumId}/posts`);
       } else {
         setError('Unexpected response from server');
       }
@@ -348,7 +348,7 @@ const ProviderForum = () => {
           <>
             <button 
               className="view-posts-btn"
-              onClick={() => navigate(`/dashboard/mom/community/forums/${forum.id}/posts`)}
+              onClick={() => navigate(`/dashboard/provider/community/forums/${forum.id}/posts`)}  // Fixed path
             >
               View Posts
             </button>
@@ -484,7 +484,48 @@ const ProviderForum = () => {
             </div>
           );
         })}
-        {/* Rest of your modals */}
+
+        {/* Add Create Forum Modal */}
+        {showCreateModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h2>Create New Forum in {selectedCategory}</h2>
+              {error && <div className="error-message">{error}</div>}
+              <form onSubmit={handleCreateForum}>
+                <input
+                  type="text"
+                  placeholder="Forum Name"
+                  value={newForum.name}
+                  onChange={(e) => setNewForum({...newForum, name: e.target.value})}
+                  required
+                />
+                <textarea
+                  placeholder="Forum Description (minimum 10 characters)"
+                  value={newForum.description}
+                  onChange={(e) => setNewForum({...newForum, description: e.target.value})}
+                  required
+                  minLength={10}
+                />
+                <select
+                  value={newForum.visibility}
+                  onChange={(e) => setNewForum({...newForum, visibility: e.target.value})}
+                >
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+                <input
+                  type="file"
+                  onChange={(e) => setNewForum({...newForum, profile_picture: e.target.files[0]})}
+                  accept="image/*"
+                />
+                <div className="modal-buttons">
+                  <button type="submit">Create Forum</button>
+                  <button type="button" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

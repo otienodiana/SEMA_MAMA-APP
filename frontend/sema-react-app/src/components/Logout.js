@@ -1,26 +1,49 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from 'react-i18next';
-import "./Logout.css";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
+import './Logout.css';
 
 const Logout = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [showConfirm, setShowConfirm] = useState(true);
 
-  const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    sessionStorage.clear();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.clear(); // Clear all localStorage items
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Navigate to login even if there's an error
+      navigate('/login', { replace: true });
+    }
   };
 
+  const handleCancel = () => {
+    navigate(-1); // Go back to previous page
+  };
+
+  // If somehow showConfirm is false, redirect to previous page
+  useEffect(() => {
+    if (!showConfirm) {
+      handleCancel();
+    }
+  }, [showConfirm]);
+
   return (
-    <div className="dashboard-container">
-      <div className="main-content">
-        <h1>{t('logout.title')}</h1>
-        <p>{t('logout.confirm')}</p>
-        <button className="logout-btn" onClick={handleLogout}>
-          {t('logout.button')}
-        </button>
+    <div className="logout-container">
+      <div className="logout-modal">
+        <h2>Confirm Logout</h2>
+        <p>Are you sure you want to logout?</p>
+        <div className="logout-buttons">
+          <button onClick={handleLogout} className="logout-btn confirm">
+            Yes, Logout
+          </button>
+          <button onClick={handleCancel} className="logout-btn cancel">
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );

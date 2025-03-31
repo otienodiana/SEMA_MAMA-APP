@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { FaEllipsisV } from 'react-icons/fa';
+import { useAuth } from "./AuthContext"; // Change this line to use correct path
 import "./Community.css";
 
 const BASE_URL = "http://localhost:8000/api/community";
 
 const Community = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const { user } = useAuth(); // Add this line
     const [forums, setForums] = useState([]);
     const [joinedForums, setJoinedForums] = useState([]);
     const [newForumName, setNewForumName] = useState("");
@@ -15,6 +19,8 @@ const Community = () => {
     const [newForumPicture, setNewForumPicture] = useState(null);
     const [forumFilter, setForumFilter] = useState('all');
     const [forumCategory, setForumCategory] = useState('general');
+    const [activeMenu, setActiveMenu] = useState(null);
+    const [showAddMemberForm, setShowAddMemberForm] = useState(false);
     const categories = [
         'Pregnancy',
         'Postpartum',
@@ -22,7 +28,6 @@ const Community = () => {
         'Mental Health',
         'General'
     ];
-    const navigate = useNavigate();
     const token = localStorage.getItem("access");
 
     // Fetch All Forums
@@ -156,6 +161,22 @@ const Community = () => {
         }
     };
 
+    const handleEdit = (community) => {
+        console.log("Edit community:", community);
+    };
+
+    const handleDelete = (communityId) => {
+        console.log("Delete community with ID:", communityId);
+    };
+
+    const handleShare = (community) => {
+        console.log("Share community:", community);
+    };
+
+    const handleExitForum = (forumId) => {
+        console.log("Exit forum with ID:", forumId);
+    };
+
     return (
         <div className="community-container">
             <h1>{t('community.title')}</h1>
@@ -228,15 +249,48 @@ const Community = () => {
                                         <div className="forum-placeholder">No Image</div>
                                     )}
 
-                                    <h3>{forum.name}</h3>
-                                    <p>{forum.description}</p>
-                                    <p><strong>Visibility:</strong> {forum.visibility}</p>
-                                    <p><strong>Created By:</strong> {forum.created_by || "Unknown"}</p>
+                                    <div className="card-header">
+                                        <h3>{forum.name}</h3>
+                                        <button 
+                                            className="menu-dots"
+                                            onClick={() => setActiveMenu(activeMenu === forum.id ? null : forum.id)}
+                                        >
+                                            <FaEllipsisV />
+                                        </button>
+                                    </div>
 
-                                    {joinedForums.includes(forum.id) ? (
-                                        <button onClick={() => navigate(`/community/forums/${forum.id}/posts`)}>View Posts</button>
-                                    ) : (
-                                        <button onClick={() => joinForum(forum.id)}>Join Forum</button>
+                                    <div className="card-content">
+                                        <p>{forum.description}</p>
+                                        <p><strong>Visibility:</strong> {forum.visibility}</p>
+                                        <p><strong>Created By:</strong> {forum.created_by || "Unknown"}</p>
+                                    </div>
+
+                                    {activeMenu === forum.id && (
+                                        <div className="action-menu">
+                                            {forum.is_member ? (
+                                                <>
+                                                    <button onClick={() => navigate(`/community/forums/${forum.id}/posts`)}>
+                                                        View Posts
+                                                    </button>
+                                                    <button onClick={() => setShowAddMemberForm(true)}>
+                                                        Add Member
+                                                    </button>
+                                                    <button onClick={() => handleExitForum(forum.id)}>
+                                                        Exit Forum
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button onClick={() => joinForum(forum.id)}>
+                                                    Join Forum
+                                                </button>
+                                            )}
+                                            {(user?.role === 'admin' || forum.created_by === user?.id) && (
+                                                <>
+                                                    <button onClick={() => handleEdit(forum)}>Edit</button>
+                                                    <button onClick={() => handleDelete(forum.id)}>Delete</button>
+                                                </>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             ))}

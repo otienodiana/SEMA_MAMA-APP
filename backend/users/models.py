@@ -24,7 +24,12 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='mom', null=False)
     age = models.PositiveIntegerField(blank=True, null=True)
-    profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
+    profile_photo = models.ImageField(
+        upload_to='profile_photos/',
+        null=True,
+        blank=True,
+        help_text="User's profile picture"
+    )
 
     # Set default values for date fields
     date_joined = models.DateTimeField(default=timezone.now)

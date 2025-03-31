@@ -164,7 +164,13 @@ class DailyLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        db_table = 'mama_dailylog'
         ordering = ['-created_at']
+        app_label = 'mama'
+        managed = True  # Add this line
+
+    def __str__(self):
+        return f"Log for {self.user.username} on {self.created_at}"
 
 class ChatMessage(models.Model):
     sender = models.ForeignKey(
@@ -192,3 +198,46 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f'From {self.sender.username} to {self.recipient.username if self.recipient else "Unknown"} at {self.timestamp}'
+
+class Forum(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mama_created_forums'  # Changed from 'created_forums'
+    )
+    members = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='mama_joined_forums',  # Changed from 'joined_forums'
+        blank=True
+    )
+    visibility = models.CharField(
+        max_length=10,
+        choices=[('public', 'Public'), ('private', 'Private')],
+        default='public'
+    )
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('general', 'General'),
+            ('pregnancy', 'Pregnancy'),
+            ('postpartum', 'Postpartum'),
+            ('parenting', 'Parenting'),
+            ('mental_health', 'Mental Health')
+        ],
+        default='general'
+    )
+    profile_picture = models.ImageField(
+        upload_to='forum_pictures/',
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name

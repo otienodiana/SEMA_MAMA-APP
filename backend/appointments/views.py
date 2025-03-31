@@ -362,3 +362,25 @@ class HealthcareProvidersView(generics.ListAPIView):
         
         # Return empty list with 200 status instead of 404
         return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def provider_appointments(request):
+    """Handle appointments for healthcare providers"""
+    if request.user.role != 'healthcare_provider':
+        return Response(
+            {"detail": "Only healthcare providers can access this endpoint"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+        
+    try:
+        # Get all appointments for this provider
+        appointments = Appointment.objects.filter(healthcare_provider=request.user)
+        serializer = AppointmentSerializer(appointments, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

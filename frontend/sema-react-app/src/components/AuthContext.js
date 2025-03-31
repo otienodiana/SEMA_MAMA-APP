@@ -11,36 +11,50 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem("access");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       try {
-        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.profile}`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          mode: 'cors'
-        });
+        // Add retry logic
+        const maxRetries = 3;
+        let attempt = 0;
+        
+        while (attempt < maxRetries) {
+          try {
+            const token = localStorage.getItem("access");
+            if (!token) {
+              setLoading(false);
+              return;
+            }
 
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        } else {
-          // Token invalid - clear storage
-          localStorage.removeItem("access");
-          localStorage.removeItem("refresh");
+            const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.profile}`, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              mode: 'cors'
+            });
+
+            if (response.ok) {
+              const userData = await response.json();
+              setUser(userData);
+              setLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.log(`Attempt ${attempt + 1} failed:`, err);
+            attempt++;
+            if (attempt === maxRetries) throw err;
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        setLoading(false);
-      } finally {
+        // Clear potentially invalid auth data
+        localStorage.removeItem("access");
+        localStorage.removeItem("user");
+        setUser(null);
         setLoading(false);
       }
     };
@@ -90,10 +104,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+  const logout = async () => {
     setUser(null);
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
+    localStorage.removeItem('userRole');
   };
 
   return (

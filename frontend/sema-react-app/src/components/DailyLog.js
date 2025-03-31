@@ -27,8 +27,7 @@ const DailyLog = () => {
       const token = localStorage.getItem('access');
       const response = await axios.get('http://localhost:8000/api/mama/daily-logs/', {
         headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -37,8 +36,12 @@ const DailyLog = () => {
         setError(null);
       }
     } catch (err) {
-      console.error('Error details:', err.response?.data || err.message);
-      setError('Unable to load previous logs. Please try again later.');
+      console.error('Error details:', err);
+      if (err.code === 'ECONNREFUSED') {
+        setError('Unable to connect to server. Please ensure the server is running.');
+      } else {
+        setError('Unable to load previous logs. Please try again later.');
+      }
     }
   };
 
@@ -52,8 +55,7 @@ const DailyLog = () => {
         newLog,
         { 
           headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -70,11 +72,16 @@ const DailyLog = () => {
           notes: ''
         });
         fetchLogs();
+        setShowForm(false);
         setError(null);
       }
     } catch (err) {
-      console.error('Submit error:', err.response?.data || err.message);
-      setError('Failed to submit log: ' + (err.response?.data?.message || 'Please try again'));
+      console.error('Submit error:', err);
+      if (err.code === 'ECONNREFUSED') {
+        setError('Unable to connect to server. Please ensure the server is running.');
+      } else {
+        setError('Failed to submit log: ' + (err.response?.data?.detail || 'Please try again'));
+      }
     } finally {
       setLoading(false);
     }

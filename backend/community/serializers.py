@@ -2,9 +2,13 @@ from rest_framework import serializers, generics, permissions
 from .models import Forum, Post, Comment
 
 class ForumSerializer(serializers.ModelSerializer):
+    created_by = serializers.PrimaryKeyRelatedField(read_only=True)
+    members = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Forum
-        fields = ['id', 'name', 'description', 'category', 'visibility', 'profile_picture', 'created_by', 'members', 'created_at']
+        fields = ['id', 'name', 'description', 'category', 'visibility', 
+                 'profile_picture', 'created_by', 'created_at', 'members']
         read_only_fields = ['created_by', 'created_at']
 
     def validate(self, attrs):
@@ -44,15 +48,52 @@ class ForumSerializer(serializers.ModelSerializer):
             print("Serializer create error:", str(e))
             raise serializers.ValidationError({"detail": str(e)})
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Include the count of members
+        data['members_count'] = instance.members.count()
+        return data
+
 class PostSerializer(serializers.ModelSerializer):
     likes = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     created_by = serializers.IntegerField(source='user.id', read_only=True)
+    comments_count = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Post
-        fields = ['id', 'forum', 'created_by', 'title', 'content', 'created_at', 'likes', 'author']
-        read_only_fields = ['created_at', 'likes', 'author']
+        fields = ['id', 'forum', 'created_by', 'title', 'content', 'created_at', 'likes', 'author', 'comments_count']
+        read_only_fields = ['created_at', 'likes', 'author', 'comments_count', 'created_by']
+
+    def validate_forum(self, value):
+        try:
+            forum = Forum.objects.get(id=value.id)
+            return forum
+        except Forum.DoesNotExist:
+            raise serializers.ValidationError(f"Forum with id {value} does not exist")
+
+    def validate(self, attrs):
+        # Ensure title and content are not empty
+        if not attrs.get('title', '').strip():
+            raise serializers.ValidationError({'title': 'Title cannot be empty'})
+        
+        if not attrs.get('content', '').strip():
+            raise serializers.ValidationError({'content': 'Content cannot be empty'})
+        
+        return attrs
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        forum_id = self.context.get('forum_id')
+
+        if not request or not request.user.is_authenticated:
+            raise serializers.ValidationError("Authentication required")
+
+        validated_data['user'] = request.user
+        validated_data['forum_id'] = forum_id
+        validated_data['comments_count'] = 0
+
+        return super().create(validated_data)
 
     def get_likes(self, obj):
         return [user.id for user in obj.likes.all()]

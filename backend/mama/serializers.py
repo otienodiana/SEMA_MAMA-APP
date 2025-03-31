@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Setting, PostpartumDepressionQuestion, AssessmentResult, DailyLog, ChatMessage
+from .models import Setting, PostpartumDepressionQuestion, AssessmentResult, DailyLog, ChatMessage, Forum
 
 class SettingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,3 +85,33 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             return super().create(validated_data)
         except Exception as e:
             raise serializers.ValidationError(f"Error creating message: {str(e)}")
+
+class ForumSerializer(serializers.ModelSerializer):
+    members_count = serializers.SerializerMethodField()
+    created_by = serializers.SerializerMethodField()
+    is_member = serializers.SerializerMethodField()
+    profile_picture = serializers.ImageField(required=False)
+
+    class Meta:
+        model = Forum
+        fields = [
+            'id', 'name', 'description', 'created_at', 'updated_at',
+            'created_by', 'members', 'visibility', 'category',
+            'profile_picture', 'members_count', 'is_member'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'created_by']
+
+    def get_members_count(self, obj):
+        return obj.members.count()
+
+    def get_created_by(self, obj):
+        return {
+            'id': obj.created_by.id,
+            'username': obj.created_by.username
+        } if obj.created_by else None
+
+    def get_is_member(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user in obj.members.all()
+        return False

@@ -5,7 +5,7 @@ from . import views
 app_name = 'mama'
 
 router = DefaultRouter()
-router.register('daily-logs', views.DailyLogViewSet, basename='daily-log')
+router.register(r'daily-logs', views.DailyLogViewSet, basename='daily-logs')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -16,5 +16,6 @@ urlpatterns = [
     path('chat/history/', views.chat_history, name='chat-history'),
     path('chat/history/<int:other_user_id>/', views.chat_history, name='chat-history-with-user'),
     path('chat/send/', views.send_message, name='send-message'),
-    path('chats/users/', views.chat_users_list, name='chat-users-list'),
+    path('chat/users/', views.get_chat_users, name='chat-users'),
+    path('api/community/forums/public/', views.public_forums, name='public-forums'),
 ]

@@ -16,6 +16,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import "./AdminDashboard.css";
+import AdminChat from './AdminChat';
 
 const AdminDashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -171,6 +172,7 @@ const AdminDashboard = () => {
           <Outlet />
         </div>
       </main>
+      <AdminChat />
     </div>
   );
 };

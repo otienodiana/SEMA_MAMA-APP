@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated  # Fix: Change = to import
+from rest_framework.permissions import AllowAny, IsAuthenticated  # Fixed import syntax
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.views import APIView
@@ -23,6 +23,7 @@ from .models import User, Role  # Add Role import
 from django.utils import timezone
 from django.db.models import Count
 from community.models import Post, Comment
+from django.conf import settings
 
 
 User = get_user_model()
@@ -75,14 +76,14 @@ class RegisterUserView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         try:
-            if 'password' not in request.data:
-                return Response(
-                    {"detail": "Password is required"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            # Log the incoming request data
+            print("Registration request data:", request.data)
+            print("Files:", request.FILES)
 
             serializer = self.get_serializer(data=request.data)
+            
             if not serializer.is_valid():
+                print("Validation errors:", serializer.errors)  # Add logging
                 return Response(
                     serializer.errors,
                     status=status.HTTP_400_BAD_REQUEST
@@ -95,7 +96,7 @@ class RegisterUserView(generics.CreateAPIView):
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
-            print(f"Registration error: {str(e)}")  # Debug log
+            print(f"Registration error: {str(e)}")
             return Response(
                 {"detail": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
@@ -187,32 +188,31 @@ def custom_login(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_users(request):
-    """Get all users (admin only)"""
+    """Get all users based on role filter"""
     try:
-        # Check if user is admin
-        if not request.user.role == 'admin':
-            return Response(
-                {"detail": "Only administrators can view user list"}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        # Get all users and order by most recent
-        users = User.objects.all().order_by('-date_joined')
-        serializer = UserSerializer(users, many=True, context={'request': request})  # Add context
+        role = request.query_params.get('role', None)
+        users = User.objects.all()
         
-        print(f"Fetched {len(users)} users successfully") # Debug log
+        if role:
+            users = users.filter(role=role)
+            
+        serialized_users = [{
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'role': user.role,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+        } for user in users]
+        
         return Response({
-            "status": "success",
-            "count": len(users),
-            "users": serializer.data
+            'users': serialized_users
         }, status=status.HTTP_200_OK)
-
+        
     except Exception as e:
-        print(f"Error fetching users: {str(e)}")  # Debug log
-        return Response(
-            {"detail": f"Failed to fetch users: {str(e)}"}, 
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 #  Refresh Token API
 class RefreshTokenView(TokenRefreshView):
@@ -261,17 +261,27 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == 200:
-            user = self.user
-            response.data['user'] = {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': user.role,
-                'profile_photo': user.profile_photo.url if user.profile_photo else None,
-            }
-        return response
+        try:
+            response = super().post(request, *args, **kwargs)
+            if response.status_code == 200:
+                # Get user from the serializer instead of self
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                user = serializer.user
+                
+                response.data['user'] = {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'role': user.role,
+                    'profile_photo': user.profile_photo.url if user.profile_photo else None,
+                }
+            return response
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
 
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -698,5 +708,63 @@ def get_analytics(request):
         print(f"Analytics error: {str(e)}")
         return Response(
             {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_moms(request):
+    """List all mom users for provider chat"""
+    try:
+        print(f"Fetching moms for provider: {request.user.email}")  # Debug log
+        
+        # Verify the requester is a healthcare provider
+        if request.user.role != 'healthcare_provider':
+            return Response(
+                {'detail': 'Only healthcare providers can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Fetch mom users with all necessary fields
+        moms = User.objects.filter(role='mom').values(
+            'id', 
+            'username', 
+            'email',
+            'first_name',
+            'last_name',
+            'profile_photo',
+            'last_login',
+            'phone_number'
+        )
+        
+        print(f"Found {len(moms)} mom users")  # Debug log
+        
+        # Process each mom's data
+        mom_list = []
+        for mom in moms:
+            mom_data = {
+                'id': mom['id'],
+                'username': mom['username'],
+                'email': mom['email'],
+                'name': f"{mom['first_name']} {mom['last_name']}".strip() or mom['username'],
+                'phone_number': mom.get('phone_number', ''),
+                'profile_photo_url': None
+            }
+            
+            # Add profile photo URL if exists
+            if mom['profile_photo']:
+                mom_data['profile_photo_url'] = request.build_absolute_uri(
+                    settings.MEDIA_URL + str(mom['profile_photo'])
+                )
+                
+            mom_list.append(mom_data)
+
+        print(f"Returning {len(mom_list)} processed mom records")  # Debug log
+        return Response(mom_list, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        print(f"Error in list_moms: {str(e)}")  # Debug log
+        return Response(
+            {'detail': str(e)}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

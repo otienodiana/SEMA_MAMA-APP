@@ -66,6 +66,7 @@ const resources = {
       'resources.mentalHealthDesc': 'Access resources for emotional wellbeing',
       'resources.pregnancyTips': 'Pregnancy Tips',
       'resources.pregnancyTipsDesc': 'Essential guidance for your journey',
+      'resources.quickAccess': 'Quick Access Resources',
       
       // Messages page
       'messages.title': 'Messages',
@@ -81,6 +82,42 @@ const resources = {
       'about.contactText': 'We\'d love to hear from you!',
       'about.email': 'Email:',
       'about.phone': 'Phone:',
+      'about.howItWorks': 'How It Works',
+      'about.cards': {
+        'community': {
+          'title': 'Join a Community',
+          'description': 'Become a part of a vibrant community of mothers and experts.'
+        },
+        'support': {
+          'title': 'Get Real-Time Support',
+          'description': 'Chat and interact in forums to receive instant help and support.'
+        },
+        'expert': {
+          'title': 'Access Expert Advice',
+          'description': 'Access valuable educational content on parenting and health.'
+        }
+      },
+      'about.testimonials': 'What Our Members Say',
+      'testimonials': {
+        'testimonial1': {
+          'text': "Sema Mama has been a game-changer for me. It's more than just a forum — it's a family, a place where I feel heard and supported in my motherhood journey.",
+          'author': "Sarah",
+          'role': "Mother of 2",
+          'initials': "SA"
+        },
+        'testimonial2': {
+          'text': "The support I've received here during my pregnancy journey has been incredible. The healthcare providers are so responsive and caring. I feel much more confident now.",
+          'author': "Janet",
+          'role': "Mother-to-be",
+          'initials': "JM"
+        },
+        'testimonial3': {
+          'text': "As a first-time mom, I had so many questions. The community here is amazing - always ready to share experiences and advice. It's like having a village of supportive mothers.",
+          'author': "Lisa",
+          'role': "First-time Mom",
+          'initials': "LW"
+        }
+      },
 
       // Settings page
       'settings.title': 'Settings',
@@ -265,7 +302,20 @@ const resources = {
         'english': 'English',
         'swahili': 'Kiswahili',
         'french': 'Français'
-      }
+      },
+      'featured.title': 'Featured Support Videos',
+      // Footer
+      'footer.quickLinks': 'Quick Links',
+      'footer.support': 'Support',
+      'footer.helpCenter': 'Help Center',
+      'footer.terms': 'Terms of Service',
+      'footer.privacy': 'Privacy Policy',
+      'footer.contact': 'Contact Us',
+      'footer.email': 'Email: support@semamama.com',
+      'footer.phone': 'Phone: +123 456 7890',
+      'footer.location': 'Location: Nairobi, Kenya',
+      'footer.copyright': '© 2024 Sema Mama. All rights reserved.',
+      'footer.who': 'Supported by World Health Organization (WHO)'
     }
   },
   sw: {
@@ -332,6 +382,7 @@ const resources = {
       'resources.mentalHealthDesc': 'Pata rasilimali za ustawi wa kihisia',
       'resources.pregnancyTips': 'Vidokezo vya Ujauzito',
       'resources.pregnancyTipsDesc': 'Mwongozo muhimu kwa safari yako',
+      'resources.quickAccess': 'Rasilimali za Haraka',
 
       // Messages page
       'messages.title': 'Ujumbe',
@@ -347,6 +398,42 @@ const resources = {
       'about.contactText': 'Tungependa kusikia kutoka kwako!',
       'about.email': 'Barua pepe:',
       'about.phone': 'Simu:',
+      'about.howItWorks': 'Jinsi Inavyofanya Kazi',
+      'about.cards': {
+        'community': {
+          'title': 'Jiunge na Jamii',
+          'description': 'Kuwa sehemu ya jamii yenye nguvu ya akina mama na wataalamu.'
+        },
+        'support': {
+          'title': 'Pata Msaada wa Haraka',
+          'description': 'Zungumza na kushirikiana katika majukwaa ili kupata msaada wa papo hapo.'
+        },
+        'expert': {
+          'title': 'Pata Ushauri wa Wataalamu',
+          'description': 'Pata maudhui muhimu ya elimu kuhusu malezi na afya.'
+        }
+      },
+      'about.testimonials': 'Wanachosema Wanachama Wetu',
+      'testimonials': {
+        'testimonial1': {
+          'text': "Sema Mama imebadilisha maisha yangu kabisa. Ni zaidi ya jukwaa - ni familia, mahali ninapohisi kusikilizwa na kusaidiwa katika safari yangu ya uzazi.",
+          'author': "Sarah",
+          'role': "Mama wa Watoto 2",
+          'initials': "SA"
+        },
+        'testimonial2': {
+          'text': "Msaada niliopata hapa wakati wa safari yangu ya ujauzito umekuwa wa ajabu. Watoa huduma za afya wanaitikia haraka na kutunza. Nina uhakika zaidi sasa.",
+          'author': "Janet",
+          'role': "Mjamzito",
+          'initials': "JM"
+        },
+        'testimonial3': {
+          'text': "Kama mama wa kwanza, nilikuwa na maswali mengi. Jamii hapa ni ya ajabu - daima tayari kushiriki uzoefu na ushauri. Ni kama kuwa na kijiji cha akina mama wanaosaidia.",
+          'author': "Lisa",
+          'role': "Mama wa Kwanza",
+          'initials': "LW"
+        }
+      },
 
       // Settings page
       'settings.title': 'Mipangilio',
@@ -531,7 +618,20 @@ const resources = {
         'english': 'Kiingereza',
         'swahili': 'Kiswahili',
         'french': 'Kifaransa'
-      }
+      },
+      'featured.title': 'Video za Msaada Zilizochaguliwa',
+      // Footer
+      'footer.quickLinks': 'Viungo vya Haraka',
+      'footer.support': 'Msaada',
+      'footer.helpCenter': 'Kituo cha Msaada',
+      'footer.terms': 'Masharti ya Huduma',
+      'footer.privacy': 'Sera ya Faragha',
+      'footer.contact': 'Wasiliana Nasi',
+      'footer.email': 'Barua pepe: support@semamama.com',
+      'footer.phone': 'Simu: +123 456 7890',
+      'footer.location': 'Mahali: Nairobi, Kenya',
+      'footer.copyright': '© 2024 Sema Mama. Haki zote zimehifadhiwa.',
+      'footer.who': 'Inaungwa mkono na Shirika la Afya Duniani (WHO)'
     }
   },
   fr: {
@@ -598,6 +698,7 @@ const resources = {
       'resources.mentalHealthDesc': 'Accédez aux ressources pour le bien-être émotionnel',
       'resources.pregnancyTips': 'Conseils de Grossesse',
       'resources.pregnancyTipsDesc': 'Guide essentiel pour votre parcours',
+      'resources.quickAccess': 'Ressources à Accès Rapide',
 
       // Messages page
       'messages.title': 'Messages',
@@ -613,6 +714,42 @@ const resources = {
       'about.contactText': 'Nous aimerions avoir de vos nouvelles!',
       'about.email': 'Email:',
       'about.phone': 'Téléphone:',
+      'about.howItWorks': 'Comment Ça Marche',
+      'about.cards': {
+        'community': {
+          'title': 'Rejoignez une Communauté',
+          'description': 'Faites partie d\'une communauté dynamique de mères et d\'experts.'
+        },
+        'support': {
+          'title': 'Obtenez un Soutien en Temps Réel',
+          'description': 'Discutez et interagissez dans les forums pour recevoir une aide instantanée.'
+        },
+        'expert': {
+          'title': 'Accédez à des Conseils d\'Experts',
+          'description': 'Accédez à des contenus éducatifs précieux sur la parentalité et la santé.'
+        }
+      },
+      'about.testimonials': 'Ce que Disent Nos Membres',
+      'testimonials': {
+        'testimonial1': {
+          'text': "Sema Mama a changé ma vie. C'est plus qu'un forum - c'est une famille, un endroit où je me sens écoutée et soutenue dans mon parcours de maternité.",
+          'author': "Sarah",
+          'role': "Mère de 2 enfants",
+          'initials': "SA"
+        },
+        'testimonial2': {
+          'text': "Le soutien que j'ai reçu ici pendant ma grossesse a été incroyable. Les professionnels de santé sont très réactifs et attentionnés. Je me sens beaucoup plus confiante maintenant.",
+          'author': "Janet",
+          'role': "Future maman",
+          'initials': "JM"
+        },
+        'testimonial3': {
+          'text': "En tant que nouvelle maman, j'avais tellement de questions. La communauté ici est incroyable - toujours prête à partager des expériences et des conseils. C'est comme avoir un village de mères qui vous soutiennent.",
+          'author': "Lisa",
+          'role': "Première fois maman",
+          'initials': "LW"
+        }
+      },
 
       // Settings page
       'settings.title': 'Paramètres',
@@ -797,7 +934,121 @@ const resources = {
         'english': 'Anglais',
         'swahili': 'Swahili',
         'french': 'Français'
-      }
+      },
+      'featured.title': 'Vidéos de Support en Vedette',
+      // Footer
+      'footer.quickLinks': 'Liens Rapides',
+      'footer.support': 'Support',
+      'footer.helpCenter': 'Centre d\'Aide',
+      'footer.terms': 'Conditions d\'Utilisation',
+      'footer.privacy': 'Politique de Confidentialité',
+      'footer.contact': 'Contactez-nous',
+      'footer.email': 'Email: support@semamama.com',
+      'footer.phone': 'Téléphone: +123 456 7890',
+      'footer.location': 'Emplacement: Nairobi, Kenya',
+      'footer.copyright': '© 2024 Sema Mama. Tous droits réservés.',
+      'footer.who': 'Soutenu par l\'Organisation Mondiale de la Santé (OMS)'
+    }
+  },
+  luo: {
+    translation: {
+      // Navigation
+      'nav.home': 'Dala',
+      'nav.about': 'Kuomwa',
+      'nav.services': 'Tich',
+      'nav.contact': 'Tudruok',
+      'nav.community': 'Gweng\'',
+      'nav.resources': 'Gik Mokonyi',
+
+      // Home page
+      'home.welcome': 'Orwaku e Sema Mama',
+      'home.subtitle': 'Jatich Mari kuom Ngima Mon Makech',
+      'home.chooseLanguage': 'Yier dhok ma ihero',
+      'home.getStarted': 'Chak Sani',
+      'home.message': 'Kar maber ma mine konyo mine. Ok in kendi e wuoth ni.',
+      'home.joinCommunity': 'Donj e Gweng\'wa',
+      'home.helpTitle': 'Wanyalo Konyi Nade Kawuono?',
+      'home.talkToMoms': '💭 Wuo gi Mine Mamoko',
+      'home.talkToMomsDesc': 'Pim gi yud kony kuom gweng\'wa',
+      'home.resources': 'Gik Mokonyi',
+      'home.resourcesDesc': 'Yud puonj madier kuom ngima mine makech',
+      'home.professionalHelp': 'Kony mar Jothieth',
+      'home.professionalHelpDesc': 'Tudri gi jothieth',
+
+      // Settings
+      'settings.language': 'Dhok',
+      'settings.darkMode': 'Kit Mudho',
+      'settings.avatar': 'Picha',
+      'settings.notifications': 'Wach Manyien',
+      'settings.privacy': 'Kindi',
+
+      // Login/Register
+      'login.title': 'Donjo',
+      'login.username': 'Nying Tiyo',
+      'login.password': 'Password',
+      'login.button': 'Donjo',
+      'login.register': 'Onge akaunti?',
+      'login.registerLink': 'Ndiki ka',
+
+      // Community
+      'community.title': 'Forum mar Gweng\'',
+      'community.createForum': 'Los Forum Manyien',
+      'community.joinForum': 'Donj e Forum',
+      'community.loginRequired': 'Nyaka idonj mondo ilos forum!',
+
+      // Resources
+      'resources.title': 'Gik Mokonyi mag SEMA MAMA',
+      'resources.search': 'Manyo gik mokonyi...',
+      'resources.mentalHealth': 'Kony mar Paro',
+      'resources.mentalHealthDesc': 'Yud gik mokonyi kuom ngima mar chuny',
+      'resources.quickAccess': 'Gik Mokonyi Mapiyo',
+
+      // Errors and Messages
+      'common.loading': 'Timo...',
+      'common.error': 'Rach osetimore',
+      'common.success': 'Osetimore!',
+      'common.submit': 'Or',
+      'common.cancel': 'Weyo',
+      'common.save': 'Kano',
+      'common.edit': 'Loko',
+      'common.delete': 'Golo',
+      'common.search': 'Manyo',
+      'common.filter': 'Yiero',
+      'common.select': 'Yiero',
+      'common.required': 'Ochuno',
+      'testimonials': {
+        'testimonial1': {
+          'text': "Sema Mama osebedo gima oloko ngimana. En moloyo forum - en anyuola, kar ma awinjo ni iwinya kendo ikonya e wuodha mar bedo miyo.",
+          'author': "Sarah",
+          'role': "Min nyithindo 2",
+          'initials': "SA"
+        },
+        'testimonial2': {
+          'text': "Kony ma ayudo ka e wuodha mar ich ber ahinya. Jothieth tiyogi piyo kendo girito maber. Koro an gi chir moloyo.",
+          'author': "Janet",
+          'role': "Madhi nywolo",
+          'initials': "JM"
+        },
+        'testimonial3': {
+          'text': "Kaka min nyathi mokwongo, ne an gi penjo mangeny. Oganda ka ber ahinya - kinde duto giikore mar pogo paro gi rieko. Chalo ka bedo gi gweng' mar mine ma konyo.",
+          'author': "Lisa",
+          'role': "Min nyathi mokwongo",
+          'initials': "LW"
+        }
+      },
+      'featured.title': 'Video Moyier mar Kony',
+      // Footer
+      'footer.quickLinks': 'Tuoche Mayot',
+      'footer.support': 'Kony',
+      'footer.helpCenter': 'Kar Kony',
+      'footer.terms': 'Chike mag Tiyo',
+      'footer.privacy': 'Chike mag Kindi',
+      'footer.contact': 'Tudri Kodwa',
+      'footer.email': 'Email: support@semamama.com',
+      'footer.phone': 'Simu: +123 456 7890',
+      'footer.location': 'Kar: Nairobi, Kenya',
+      'footer.copyright': '© 2024 Sema Mama. Ratiro duto okan.',
+      'footer.who': 'Okonye gi World Health Organization (WHO)'
     }
   }
 };

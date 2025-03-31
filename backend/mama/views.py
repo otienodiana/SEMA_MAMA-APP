@@ -1,14 +1,17 @@
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from .models import Setting, PostpartumDepressionQuestion, AssessmentResponse, AssessmentResult, DailyLog, ChatMessage
-from .serializers import SettingSerializer, QuestionSerializer, AssessmentResultSerializer, DailyLogSerializer, ProviderSerializer, ChatMessageSerializer
+from django.conf import settings
+from .models import Setting, PostpartumDepressionQuestion, AssessmentResponse, AssessmentResult, DailyLog, ChatMessage, Forum
+from .serializers import SettingSerializer, QuestionSerializer, AssessmentResultSerializer, DailyLogSerializer, ProviderSerializer, ChatMessageSerializer, ForumSerializer
 import logging
 
 logger = logging.getLogger(__name__)
+
+User = get_user_model()  # Add this line at top level
 
 class UserSettingsView(generics.RetrieveUpdateAPIView):
     """
@@ -82,23 +85,44 @@ class AssessmentQuestionList(generics.ListAPIView):
             )
 
 class DailyLogViewSet(viewsets.ModelViewSet):
+    queryset = DailyLog.objects.all()
     serializer_class = DailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return DailyLog.objects.filter(user=self.request.user).order_by('-created_at')
+        logger.debug(f"User {self.request.user.id} requesting daily logs")
+        try:
+            return DailyLog.objects.filter(user=self.request.user).order_by('-created_at')
+        except Exception as e:
+            logger.error(f"Error in get_queryset: {str(e)}")
+            return DailyLog.objects.none()
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        logger.debug(f"Creating daily log for user {self.request.user.id}")
+        try:
+            serializer.save(user=self.request.user)
+        except Exception as e:
+            logger.error(f"Error in perform_create: {str(e)}")
+            raise
 
     def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        logger.debug(f"Create request data: {request.data}")
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                serializer.data, 
+                status=status.HTTP_201_CREATED, 
+                headers=headers
+            )
+        except Exception as e:
+            logger.error(f"Error in create: {str(e)}")
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 def home(request):
     infos = Info.objects.all()
@@ -109,7 +133,6 @@ def home(request):
 def provider_list(request):
     """Get list of healthcare providers"""
     try:
-        User = get_user_model()
         providers = User.objects.filter(role='healthcare_provider')
         
         # Debug logging
@@ -206,7 +229,6 @@ def send_message(request):
             )
 
         # Get recipient user
-        User = get_user_model()
         try:
             recipient = User.objects.get(id=recipient_id)
         except User.DoesNotExist:
@@ -236,63 +258,62 @@ def send_message(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def chat_users_list(request):
-    """Get list of mom users who have chatted with the provider"""
+def get_chat_users(request):
+    """Get all users available for chat"""
     try:
-        logger.debug(f"Fetching chats for provider: {request.user.email}")
-        
-        # Check if user is a healthcare provider
-        if request.user.role != 'healthcare_provider':
+        # Verify token and user authentication
+        if not request.user.is_authenticated:
             return Response(
-                {"error": "Only healthcare providers can access this endpoint"},
-                status=status.HTTP_403_FORBIDDEN
+                {'detail': 'Authentication required'}, 
+                status=status.HTTP_401_UNAUTHORIZED
             )
 
-        # Get all users with role 'mom' who have sent messages to this provider
-        User = get_user_model()
-        mom_users = User.objects.filter(role='mom')
+        print(f"Fetching chat users for: {request.user.email} (role: {request.user.role})")
         
-        logger.debug(f"Found {mom_users.count()} mom users")
-
-        # Get messages for each mom
-        user_dict = {}
-        for mom in mom_users:
-            # Check if there are any messages between this mom and the provider
-            messages = ChatMessage.objects.filter(
-                (Q(sender=mom, recipient=request.user) |
-                 Q(sender=request.user, recipient=mom))
-            ).order_by('-timestamp')
-
-            if messages.exists():  # Only include moms with messages
-                latest_message = messages.first()
-                unread_count = messages.filter(
-                    sender=mom,
-                    recipient=request.user,
-                    is_read=False
-                ).count()
-
-                user_dict[mom.id] = {
-                    'id': mom.id,
-                    'first_name': mom.first_name,
-                    'last_name': mom.last_name,
-                    'email': mom.email,
-                    'unread_count': unread_count,
-                    'last_message': latest_message.content,
-                    'last_message_time': latest_message.timestamp.isoformat()
-                }
-
-        users = list(user_dict.values())
-        # Sort by unread messages and then by latest message time
-        users.sort(key=lambda x: (-x['unread_count'], x['last_message_time']), reverse=True)
+        # Get current user's role
+        current_user = request.user
         
-        logger.debug(f"Returning {len(users)} mom users with chat history")
-        logger.debug(f"User details: {users}")
+        # Filter users based on role
+        if current_user.role == 'healthcare_provider':
+            users = User.objects.filter(role__in=['mom', 'admin'])  # Include both moms and admins
+        elif current_user.role == 'mom':
+            users = User.objects.filter(role__in=['healthcare_provider', 'admin'])
+        else:
+            users = User.objects.exclude(id=current_user.id)
         
-        return Response(users)
-        
+        # Process user data
+        user_list = [{
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'role': user.role,
+            'profile_photo_url': request.build_absolute_uri(settings.MEDIA_URL + str(user.profile_photo)) if user.profile_photo else None,
+            'first_name': user.first_name or '',
+            'last_name': user.last_name or '',
+        } for user in users]
+
+        return Response(user_list, status=status.HTTP_200_OK)
+
     except Exception as e:
-        logger.exception("Error in chat_users_list")
+        print(f"Error in get_chat_users: {str(e)}")
         return Response(
-            {"error": str(e)}, 
+            {'detail': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # Allow unauthenticated access
+def public_forums(request):
+    """Get list of public forums without authentication"""
+    try:
+        forums = Forum.objects.filter(
+            visibility='public'
+        ).order_by('-created_at')[:3]  # Get latest 3 public forums
+        
+        serializer = ForumSerializer(forums, many=True, context={'request': request})
+        return Response(serializer.data)
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

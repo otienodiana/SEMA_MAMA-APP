@@ -87,24 +87,31 @@ function App() {
             </Route>
 
             {/* Protected Provider Routes */}
-            <Route element={<ProtectedRoute allowedRoles={["healthcare_provider"]} />}>
-              <Route path="/dashboard/provider/*" element={<ProviderDashboard />}>
-                <Route index element={<Profile />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="appointments" element={<ProviderAppointments />} />
-                <Route path="educational-contents" element={<ProviderHealthCorner />} />
-                <Route path="content/:id" element={<ContentDetail />} />
-                <Route path="community/forums/:forumId/posts" element={<ForumPosts />} />
-                <Route path="community" element={<ProviderForum />} />
-                <Route path="community/forums/:forumId" element={<ForumDetail />} />
-                <Route path="community/forums/:forumId" element={<ProviderForumDetail />} />
-                <Route path="messages" element={<PatientMessages />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="logout" element={<Logout />} />
-                <Route path="post/:postId" element={<PostDetail />} />
-                <Route path="chat/:momId" element={<Chat />} />
-              </Route>
+            <Route path="/dashboard/healthcare_provider" element={<ProviderDashboard />}>
+              <Route index element={<Profile />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="appointments" element={<ProviderAppointments />} />
+              <Route path="educational-contents" element={<ProviderHealthCorner />} />
+              <Route path="content/:id" element={<ContentDetail />} />
+              <Route path="community" element={<ProviderForum />} />
+              <Route path="community/forums/:forumId" element={<ForumDetail />} />
+              <Route path="community/forums/:forumId/posts" element={<ForumPosts />} /> {/* This line is correct */}
+              <Route path="messages" element={<PatientMessages />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="logout" element={<Logout />} />
+              <Route path="post/:postId" element={<PostDetail />} />
+              <Route path="chat/:momId" element={<Chat />} />
             </Route>
+
+            {/* Provider Dashboard Route */}
+            <Route 
+              path="/dashboard/healthcare_provider/*" 
+              element={
+                <ProtectedRoute allowedRoles={["healthcare_provider"]}>
+                  <ProviderDashboard />
+                </ProtectedRoute>
+              } 
+            />
 
             {/* Mom profile redirect */}
             <Route

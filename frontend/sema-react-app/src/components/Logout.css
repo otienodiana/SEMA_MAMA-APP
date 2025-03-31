@@ -65,3 +65,70 @@
 .logout-btn:hover {
     background-color: #003B54;
 }
+
+/* Logout Modal */
+.logout-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.logout-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+}
+
+.logout-modal h2 {
+  color: #2C3E50;
+  margin-bottom: 1rem;
+}
+
+.logout-modal p {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.logout-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn.confirm {
+  background: #e74c3c;
+  color: white;
+}
+
+.logout-btn.confirm:hover {
+  background: #c0392b;
+}
+
+.logout-btn.cancel {
+  background: #95a5a6;
+  color: white;
+}
+
+.logout-btn.cancel:hover {
+  background: #7f8c8d;
+}

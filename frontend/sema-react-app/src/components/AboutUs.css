@@ -1,0 +1,145 @@
+:root {
+  --who-primary-blue: #008DC9;
+  --who-light-blue: #E3F3F9;
+  --who-dark-blue: #005596;
+  --who-grey: #6C757D;
+}
+
+.how-it-works-section {
+  padding: 60px 20px;
+  background-color: #f8f9fa;
+  text-align: center;
+}
+
+.how-it-works-section h2 {
+  color: var(--who-primary-blue);
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.cards-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
+.how-it-works-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 2rem;
+}
+
+.card-wrapper {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.info-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  animation: float 6s ease-in-out infinite;
+  transition: all 0.3s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.info-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.info-card:nth-child(1) { animation-delay: 0s; }
+.info-card:nth-child(2) { animation-delay: 0.5s; }
+.info-card:nth-child(3) { animation-delay: 1s; }
+
+.info-card h3 {
+  color: #008DC9;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.info-card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+.card-icon {
+  font-size: 2.5rem;
+  color: #008DC9;
+  margin-bottom: 1rem;
+}
+
+.card-indicators {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.card-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--who-light-blue);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.card-dot.active {
+  background-color: var(--who-primary-blue);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@media (max-width: 768px) {
+  .info-card {
+    margin: 10px;
+    padding: 20px;
+  }
+
+  .how-it-works-section h2 {
+    font-size: 2rem;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .how-it-works-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}

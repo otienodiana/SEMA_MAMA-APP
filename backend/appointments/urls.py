@@ -8,12 +8,15 @@ from .views import (
     reject_appointment,
     RescheduleAppointmentView,
     delete_appointment,
-    HealthcareProvidersView
+    HealthcareProvidersView,
 )
 
+app_name = 'appointments'  # Add this line
+
 urlpatterns = [
-    path('list/', MomAppointmentsView.as_view(), name='appointment-list-create'),  # This will handle both GET and POST
-    path('provider/', ProviderAppointmentsView.as_view(), name='provider-appointments'),  # This will handle both GET and POST
+    path('list/', MomAppointmentsView.as_view(), name='appointment-list-create'),
+    path('create/', MomAppointmentsView.as_view(), name='appointment-create'),  # Add this line
+    path('provider/', ProviderAppointmentsView.as_view(), name='provider-appointments'),
     path('providers/', HealthcareProvidersView.as_view(), name='healthcare-providers'),
     path('update/<int:pk>/', UpdateAppointmentView.as_view(), name='update-appointment'),
     path('cancel/<int:pk>/', CancelAppointmentView.as_view(), name='cancel-appointment'),

@@ -177,17 +177,30 @@ const ForumPosts = () => {
         let token = localStorage.getItem("access");
         if (!token || !user) return;
 
-        const newPostData = { 
-            title: newTitle, 
-            content: newContent, 
-            forum: parseInt(forumId),
-            user: user.id,
-            creator_name: user.username || user.email,  // Set creator name from current user
-            topic: topicFilter !== 'all' ? topicFilter : 'General'
-        };
-
         try {
             setLoading(true);
+            setError(null);
+
+            const newPostData = { 
+                title: newTitle.trim(), 
+                content: newContent.trim(), 
+                forum: parseInt(forumId)
+            };
+
+            console.log('Sending post data:', newPostData);
+
+            // First verify forum exists and user is a member
+            const forumCheckResponse = await fetch(`http://localhost:8000/api/community/forums/${forumId}/`, {
+                headers: { 
+                    "Authorization": `Bearer ${token}`, 
+                    "Content-Type": "application/json" 
+                },
+            });
+
+            if (!forumCheckResponse.ok) {
+                throw new Error("Forum not found or you don't have access");
+            }
+
             const response = await fetch(`http://localhost:8000/api/community/forums/${forumId}/posts/`, {
                 method: "POST",
                 headers: { 
@@ -197,21 +210,21 @@ const ForumPosts = () => {
                 body: JSON.stringify(newPostData),
             });
 
+            const responseData = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || "Failed to create post");
+                throw new Error(responseData.detail || responseData.forum?.[0] || "Failed to create post");
             }
 
-            const responseData = await response.json();
-            setPosts([responseData, ...posts]); // Add new post at the beginning
+            setPosts([responseData, ...posts]);
             setNewTitle("");
             setNewContent("");
-            setShowPostForm(false); // Close the form
+            setShowPostForm(false);
             setMessage("Post created successfully! ✅");
-            
+                
         } catch (error) {
             console.error("Error creating post:", error);
-            setError(error.message);
+            setError(error.message || "Failed to create post");
         } finally {
             setLoading(false);
         }

@@ -89,6 +89,38 @@ export function DataProvider({ children }) {
     fetchFiles();
   }, []);
 
+  const fetchCommunityData = async () => {
+    try {
+      const token = localStorage.getItem("access");
+      if (!token) {
+        console.warn("No auth token available");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8000/api/community/data/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch from community:", error);
+      // Handle specific error types
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        console.log("Network error - Backend may be unavailable");
+      }
+      throw error;
+    }
+  };
+
   const createContent = async (contentData) => {
     const token = localStorage.getItem("access");
     

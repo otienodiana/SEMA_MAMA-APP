@@ -13,8 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-
-
+from django.conf.urls.static import static
 
 
 
@@ -36,6 +35,7 @@ ALLOWED_HOSTS = [
     "sema-react-app.vercel.app",
     "localhost",
     "127.0.0.1",
+    "*"  # Add this temporarily for testing
 ]
 
 
@@ -51,16 +51,16 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
-    'debug_toolbar',  # Add debug_toolbar only once here
+    'debug_toolbar',
     
     # Custom apps in dependency order
     'users',
-    'mama',
+    'mama.apps.MamaConfig',
     'content',
     'analytics',
     'appointments',
     'community',
-    'educational.apps.EducationalConfig',  # Ensure this line exists and is uncommented
+    'educational.apps.EducationalConfig',
 ]
 
 REST_FRAMEWORK = {
@@ -90,18 +90,20 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
-MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Must be first
-    'debug_toolbar.middleware.DebugToolbarMiddleware',  # Add this line
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.locale.LocaleMiddleware',  # Make sure this is after session and before common
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + [
+    m for m in [
+        'corsheaders.middleware.CorsMiddleware',
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.locale.LocaleMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    ] if m != 'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'sema_mama.urls'
@@ -162,17 +164,33 @@ DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
 
 
 # Simplified CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 
 # Password validation
@@ -208,18 +226,17 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'users.User'  # Ensure this line exists
 
-# Static files configuration
+# Static and Media files configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = []  # Empty list since we're using STATIC_ROOT
 
-# Ensure static and media directories exist
-MEDIA_URL = '/media/'
+MEDIA_URL = '/media/'  # Add leading slash
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Create directories if they don't exist
-os.makedirs(STATIC_ROOT, exist_ok=True)
+# Ensure media directories exist
 os.makedirs(MEDIA_ROOT, exist_ok=True)
+PROFILE_PHOTOS_DIR = os.path.join(MEDIA_ROOT, 'profile_photos')
+os.makedirs(PROFILE_PHOTOS_DIR, exist_ok=True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

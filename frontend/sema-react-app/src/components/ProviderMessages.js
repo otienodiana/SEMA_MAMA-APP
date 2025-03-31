@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 import { useAuth } from './AuthContext';
-import './Chat.css';
+import './ProviderMessages.css';
 
 const ProviderMessages = () => {
   const { user } = useAuth();
@@ -10,92 +11,50 @@ const ProviderMessages = () => {
   const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatUsers, setChatUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef(null);
   const [error, setError] = useState(null);
-
-  const loadSavedMessages = (userId) => {
-    try {
-      const savedMessages = localStorage.getItem(`provider_chat_${user?.id}_${userId}`);
-      return savedMessages ? JSON.parse(savedMessages) : [];
-    } catch (err) {
-      console.error('Error loading saved messages:', err);
-      return [];
-    }
-  };
-
-  const saveMessages = (userId, messageList) => {
-    try {
-      localStorage.setItem(`provider_chat_${user?.id}_${userId}`, JSON.stringify(messageList));
-    } catch (err) {
-      console.error('Error saving messages:', err);
-    }
-  };
+  const [showUsersList, setShowUsersList] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
-    if (user?.email) {
-      console.log('Provider logged in:', user.email);
-      fetchChatUsers();
-      const interval = setInterval(fetchChatUsers, 10000);
-      return () => clearInterval(interval);
-    } else {
-      console.error('No user email found');
-      setError('Not authenticated');
+    const token = localStorage.getItem('access');
+    if (!token) {
+      setError('Authentication token not found');
+      return;
     }
-  }, [user]);
 
-  useEffect(() => {
-    if (selectedChat) {
-      fetchChatHistory(selectedChat);
-      const interval = setInterval(() => fetchChatHistory(selectedChat), 5000); // Poll messages every 5 seconds
-      return () => clearInterval(interval);
-    }
-  }, [selectedChat]);
-
-  const fetchChatUsers = async () => {
-    try {
-      const token = localStorage.getItem('access');
-      if (!token) {
-        console.error('No access token found');
-        setError('Not authenticated');
-        return;
-      }
-
-      setLoading(true);
-      console.log('Fetching chats for provider:', user?.email);
-      
-      const response = await axios.get(
-        'http://localhost:8000/api/mama/chats/users/',
-        {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/mama/chat/users/`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
-        }
-      );
-
-      console.log('Chat users response:', response.data);
-
-      if (Array.isArray(response.data)) {
-        const sortedUsers = response.data.sort((a, b) => {
-          if (b.unread_count !== a.unread_count) {
-            return b.unread_count - a.unread_count;
-          }
-          return new Date(b.last_message_time) - new Date(a.last_message_time);
         });
-        setChatUsers(sortedUsers);
-        setError(null);
-      } else {
-        console.error('Invalid response format:', response.data);
-        setError('Invalid response format from server');
+        
+        if (Array.isArray(response.data)) {
+          setChatUsers(response.data);
+          setError(null);
+        }
+      } catch (err) {
+        if (err.response?.status === 401) {
+          setError('Session expired. Please login again.');
+          // Optional: Redirect to login
+          // window.location.href = '/login';
+        } else {
+          console.error('Error fetching chat users:', err);
+          setError('Failed to load users');
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error fetching chat users:', err.response?.data || err.message);
-      setError(err.response?.data?.error || 'Failed to load chat users');
-      setChatUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchChatHistory = async (userId) => {
     if (!userId) return;
@@ -103,17 +62,11 @@ const ProviderMessages = () => {
     try {
       setLoading(true);
       
-      const savedMessages = loadSavedMessages(userId);
-      if (savedMessages.length > 0) {
-        setMessages(savedMessages);
-        scrollToBottom();
-      }
-
       const token = localStorage.getItem('access');
       console.log('Fetching chat history for user:', userId);
 
       const response = await axios.get(
-        `http://localhost:8000/api/mama/chat/history/${userId}/`,
+        `${API_BASE_URL}/api/mama/chat/history/${userId}/`,
         {
           headers: { 
             'Authorization': `Bearer ${token}`,
@@ -125,7 +78,6 @@ const ProviderMessages = () => {
       if (Array.isArray(response.data)) {
         console.log('Received messages:', response.data);
         setMessages(response.data);
-        saveMessages(userId, response.data);
         scrollToBottom();
       } else {
         console.error('Invalid message format:', response.data);
@@ -145,7 +97,7 @@ const ProviderMessages = () => {
     try {
       const token = localStorage.getItem('access');
       const response = await axios.post(
-        'http://localhost:8000/api/mama/chat/send/',
+        `${API_BASE_URL}/api/mama/chat/send/`,
         {
           content: newMessage.trim(),
           recipient_id: selectedChat
@@ -161,10 +113,33 @@ const ProviderMessages = () => {
       if (response.data) {
         const updatedMessages = [...messages, response.data];
         setMessages(updatedMessages);
-        saveMessages(selectedChat, updatedMessages);
         setNewMessage('');
         scrollToBottom();
-        fetchChatUsers();
+        const fetchData = async () => {
+          try {
+            const response = await axios.get(`${API_BASE_URL}/api/mama/chat/users/`, {
+              headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (Array.isArray(response.data)) {
+              setChatUsers(response.data);
+              setError(null);
+            }
+          } catch (err) {
+            if (err.response?.status === 401) {
+              setError('Session expired. Please login again.');
+            } else {
+              console.error('Error fetching chat users:', err);
+              setError('Failed to load users');
+            }
+          } finally {
+            setLoading(false);
+          }
+        };
+        fetchData();
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -176,85 +151,157 @@ const ProviderMessages = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  useEffect(() => {
+    if (selectedChat) {
+      fetchChatHistory(selectedChat);
+    }
+  }, [selectedChat]);
+
+  const handleUserSelect = (user) => {
+    setSelectedChat(user.id);
+    setShowUsersList(false);
+    fetchChatHistory(user.id);
+  };
+
+  const filteredUsers = chatUsers.filter(user =>
+    user.username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="provider-chat-container">
-      <div className="chat-users-list">
-        <h3>Chat Messages</h3>
-        {loading ? (
-          <div className="loading">Loading chats...</div>
-        ) : chatUsers.length > 0 ? (
-          <div className="users-list">
-            {chatUsers.map(chatUser => (
-              <div
-                key={chatUser.id}
-                className={`chat-user-item ${selectedChat === chatUser.id ? 'active' : ''}`}
-                onClick={() => setSelectedChat(chatUser.id)}
-              >
-                <div className="user-info">
-                  <span className="user-name">
-                    {chatUser.first_name} {chatUser.last_name}
-                  </span>
-                  <span className="user-email">{chatUser.email}</span>
-                  {chatUser.last_message && (
-                    <span className="last-message">
-                      {chatUser.last_message.substring(0, 30)}...
-                    </span>
-                  )}
-                </div>
-                {chatUser.unread_count > 0 && (
-                  <span className="unread-badge">{chatUser.unread_count}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="no-chats">
-            {error || "No messages yet"}
-          </div>
-        )}
+    <div className={`provider-messages-container ${isCollapsed ? 'collapsed' : ''}`}>
+      <button className="close-chat-btn" onClick={() => setIsCollapsed(true)}>×</button>
+      <div className="collapse-button" onClick={() => setIsCollapsed(!isCollapsed)}>
+        {isCollapsed ? '↗' : '↙'}
       </div>
-
-      <div className="messages-modal">
-        <div className="chat-messages-container">
-          <div className="modal-header">
-            <h3>Messages</h3>
-            <button className="cancel-btn" onClick={() => window.history.back()}>
-              <i className="fas fa-times"></i>
-            </button>
+      <div className={`messages-layout ${!showUsersList ? 'expanded' : ''}`}>
+        <div className={`users-panel ${!showUsersList ? 'collapsed' : ''}`}>
+          <div className="users-header">
+            <h3>Available Patients</h3>
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Search patients..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <button className="close-users-list" onClick={() => setShowUsersList(false)}>×</button>
           </div>
-          <div className="messages-list">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`message ${msg.sender_id === user?.id ? 'sent' : 'received'}`}
-              >
-                {msg.sender_id !== user?.id && (
-                  <div className="message-sender">{msg.sender_name}</div>
-                )}
-                <div className="message-content">{msg.content}</div>
-                <div className="message-timestamp">
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <div className="users-list">
+            {chatUsers.length > 0 ? (
+              filteredUsers.map(user => (
+                <div
+                  key={user.id}
+                  className={`user-item ${selectedChat === user.id ? 'active' : ''}`}
+                  onClick={() => handleUserSelect(user)}
+                >
+                  <div className="user-avatar">
+                    <img
+                      src={user.profile_photo_url || '/default-avatar.png'}
+                      alt={user.username}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/default-avatar.png';
+                      }}
+                    />
+                  </div>
+                  <div className="user-info">
+                    <span className="user-name">{user.username}</span>
+                    <span className="user-email">{user.email}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="message-input">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-            />
-            <button onClick={sendMessage} disabled={!newMessage.trim()}>
-              Send
-            </button>
+              ))
+            ) : (
+              <div className="no-users">No patients available</div>
+            )}
           </div>
         </div>
-      </div>
 
+        <div className="chat-panel">
+          {selectedChat ? (
+            <>
+              <div className="chat-header">
+                <div className="chat-header-info">
+                  <button 
+                    className="back-button"
+                    onClick={() => {
+                      setSelectedChat(null);
+                      setShowUsersList(true);
+                    }}
+                  >
+                    ←
+                  </button>
+                  <div className="selected-user-info">
+                    {chatUsers.find(u => u.id === selectedChat) && (
+                      <>
+                        <div className="user-avatar">
+                          <img
+                            src={chatUsers.find(u => u.id === selectedChat).profile_photo_url || '/default-avatar.png'}
+                            alt={chatUsers.find(u => u.id === selectedChat).username}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '/default-avatar.png';
+                            }}
+                          />
+                        </div>
+                        <div className="user-details">
+                          <h3>{chatUsers.find(u => u.id === selectedChat).username}</h3>
+                          <span className="user-email">
+                            {chatUsers.find(u => u.id === selectedChat).email}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="messages-container">
+                <div className="chat-messages">
+                  {messages.map((msg, index) => (
+                    <div
+                      key={index}
+                      className={`message ${msg.sender_id === user?.id ? 'sent' : 'received'}`}
+                    >
+                      <div className="message-bubble">
+                        <p>{msg.content}</p>
+                        <span className="message-time">
+                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+              <div className="chat-input">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                />
+                <button 
+                  onClick={sendMessage} 
+                  disabled={!newMessage.trim()}
+                >
+                  Send
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="no-chat-selected">
+              <button 
+                className="collapse-welcome-btn" 
+                onClick={() => setIsCollapsed(true)}
+              >
+                ×
+              </button>
+              <h3>Select a patient to start chatting</h3>
+            </div>
+          )}
+        </div>
+      </div>
       {error && (
         <div className="error-message" onClick={() => setError(null)}>
           {error}

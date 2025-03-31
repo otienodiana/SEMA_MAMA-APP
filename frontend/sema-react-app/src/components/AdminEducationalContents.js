@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminEducationalContents.css';
 import { useNavigate } from 'react-router-dom';
+import { FaEllipsisV } from 'react-icons/fa';
 
 const AdminEducationalContents = () => {
   const [resources, setResources] = useState([]);
@@ -19,6 +20,7 @@ const AdminEducationalContents = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [selectedContent, setSelectedContent] = useState(null);
   const [showDetailView, setShowDetailView] = useState(false);
+  const [activeMenu, setActiveMenu] = useState(null);
 
   useEffect(() => {
     fetchResources();
@@ -27,7 +29,6 @@ const AdminEducationalContents = () => {
   const fetchResources = async () => {
     const token = localStorage.getItem("access");
     try {
-      // Add additional endpoint to fetch pending content
       const [allContent, pendingContent] = await Promise.all([
         axios.get("http://localhost:8000/api/content/contents/", {
           headers: { Authorization: `Bearer ${token}` }
@@ -37,13 +38,12 @@ const AdminEducationalContents = () => {
         })
       ]);
 
-      // Combine both regular and pending content
       const combinedResources = [
         ...allContent.data,
         ...pendingContent.data
       ];
 
-      console.log("Resources:", combinedResources); // Debug log
+      console.log("Resources:", combinedResources);
       setResources(combinedResources);
       setLoading(false);
     } catch (err) {
@@ -58,7 +58,6 @@ const AdminEducationalContents = () => {
 
     const token = localStorage.getItem("access");
     try {
-      // Updated endpoint path - removed /delete/
       await axios.delete(
         `http://localhost:8000/api/content/contents/${id}/`,
         {
@@ -107,7 +106,6 @@ const AdminEducationalContents = () => {
       return;
     }
 
-    // Change the field name to match backend expectation
     formData.append("file", fileInput.files[0]);
     formData.append("title", e.target.title.value.trim());
     formData.append("description", e.target.description.value.trim());
@@ -129,7 +127,7 @@ const AdminEducationalContents = () => {
         }
       );
 
-      console.log("Upload response:", response.data); // Debug log
+      console.log("Upload response:", response.data);
 
       const newResource = {
         ...response.data,
@@ -165,7 +163,6 @@ const AdminEducationalContents = () => {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      // Update status display and content preview
       setSelectedContent({
         ...response.data,
         status: response.data.status || 'pending'
@@ -196,7 +193,6 @@ const AdminEducationalContents = () => {
       );
 
       if (response.data.status === 'success') {
-        // Update the local state immediately
         setResources(prev => 
           prev.map(resource => 
             resource.id === id 
@@ -205,7 +201,7 @@ const AdminEducationalContents = () => {
           )
         );
         alert("Resource approved successfully!");
-        fetchResources(); // Refresh the list
+        fetchResources();
       }
     } catch (err) {
       console.error("Approval error:", err.response?.data);
@@ -293,14 +289,11 @@ const AdminEducationalContents = () => {
 
   const filteredResources = resources
     .filter(resource => {
-      // Filter by status first
       if (statusFilter !== 'all') return resource.status === statusFilter;
-      // For mom role, only show approved content
       if (userRole === 'mom') return resource.status === 'approved';
       return true;
     })
     .filter(resource => {
-      // Then filter by type
       if (filterType === 'all') return true;
       return resource.content_type === filterType;
     })
@@ -311,7 +304,6 @@ const AdminEducationalContents = () => {
       return a[sortBy].localeCompare(b[sortBy]);
     });
 
-  // Add a status badge component
   const StatusBadge = ({ status }) => {
     const getStatusColor = () => {
       switch (status?.toLowerCase()) {
@@ -344,7 +336,6 @@ const AdminEducationalContents = () => {
         <>
           <div className="header-section">
             <h2>{userRole === 'mom' ? 'Educational Resources' : 'Manage Educational Resources'}</h2>
-            {/* Only show upload button for admin and healthcare provider */}
             {(userRole === 'admin' || userRole === 'healthcare_provider') && (
               <button 
                 className="new-upload-btn"
@@ -355,7 +346,6 @@ const AdminEducationalContents = () => {
             )}
           </div>
 
-          {/* Only show upload form and filters for admin */}
           {(userRole === 'admin' || userRole === 'healthcare_provider') && showUploadForm && (
             <div className="upload-form-section">
               <form onSubmit={editingResource ? handleUpdate : handleUpload}>
@@ -435,74 +425,55 @@ const AdminEducationalContents = () => {
           )}
 
           <div className="resources-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Type</th>
-                  <th>Created By</th>
-                  <th>Date Added</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredResources.map((resource) => (
-                  <tr 
-                    key={resource.id} 
-                    className={`status-${resource.status || 'pending'}`} // Add fallback
+            {filteredResources.map((resource) => (
+              <div key={resource.id} className="resource-card">
+                <div className="card-header">
+                  <h3>{resource.title}</h3>
+                  <button 
+                    className="menu-dots"
+                    onClick={() => setActiveMenu(activeMenu === resource.id ? null : resource.id)}
                   >
-                    <td>{resource.title}</td>
-                    <td>{resource.content_type}</td>
-                    <td>{resource.created_by?.username || 'Unknown'}</td>
-                    <td>{new Date(resource.created_at).toLocaleDateString()}</td>
-                    <td>
-                      <StatusBadge status={resource.status || 'pending'} /> {/* Add fallback */}
-                    </td>
-                    <td className="action-buttons">
-                      <button 
-                        className="view-btn"
-                        onClick={() => handleView(resource.id)}
-                      >
-                        View
-                      </button>
-                      {userRole === 'admin' && resource.status === 'pending' && (
-                        <>
-                          <button 
-                            className="approve-btn"
-                            onClick={() => handleApprove(resource.id)}
-                          >
-                            Approve
-                          </button>
-                          <button 
-                            className="reject-btn"
-                            onClick={() => handleReject(resource.id)}
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-                      {resource.status === 'rejected' && (
-                        <span 
-                          className="rejection-reason"
-                          title={`Reason: ${resource.rejection_reason}`}
-                        >
-                          ⓘ
-                        </span>
-                      )}
-                      {(userRole === 'admin' || resource.created_by?.id === JSON.parse(localStorage.getItem('user')).id) && (
-                        <button 
-                          onClick={() => handleDelete(resource.id)}
-                          className="delete-btn"
-                        >
+                    <FaEllipsisV />
+                  </button>
+                </div>
+                
+                <div className="resource-content">
+                  <p>{resource.description}</p>
+                  <span>Type: {resource.content_type}</span>
+                </div>
+
+                {activeMenu === resource.id && (
+                  <div className="action-menu">
+                    <button onClick={() => handleView(resource.id)}>
+                      View
+                    </button>
+                    {userRole === 'admin' && resource.status === 'pending' && (
+                      <>
+                        <button onClick={() => handleApprove(resource.id)}>
+                          Approve
+                        </button>
+                        <button onClick={() => {
+                          const reason = prompt("Please enter rejection reason:");
+                          if (reason) handleReject(resource.id, reason);
+                        }}>
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {(userRole === 'admin' || resource.created_by?.id === JSON.parse(localStorage.getItem('user')).id) && (
+                      <>
+                        <button onClick={() => handleEdit(resource)}>
+                          Edit
+                        </button>
+                        <button onClick={() => handleDelete(resource.id)}>
                           Delete
                         </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </>
       ) : (
@@ -513,7 +484,7 @@ const AdminEducationalContents = () => {
               onClick={() => {
                 setShowDetailView(false);
                 setSelectedContent(null);
-                fetchResources(); // Refresh list after returning
+                fetchResources();
               }}
             >
               Back to List

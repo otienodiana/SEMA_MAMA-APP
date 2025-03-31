@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { FaEllipsisV } from 'react-icons/fa';
 import "./AdminAppointments.css";
 
 const AdminAppointments = () => {
@@ -16,6 +17,7 @@ const AdminAppointments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);
 
   const [newAppointment, setNewAppointment] = useState({
     user: "",
@@ -59,14 +61,12 @@ const AdminAppointments = () => {
       
       console.log("Users API Response:", response.data);
       
-      // Check if response.data.users exists, otherwise use response.data directly
       const userData = response.data.users || response.data;
       
       if (!Array.isArray(userData)) {
         throw new Error('Invalid user data received');
       }
 
-      // Group users by role
       const grouped = userData.reduce((acc, user) => {
         const role = user.role || 'unknown';
         if (!acc[role]) {
@@ -339,32 +339,42 @@ const AdminAppointments = () => {
               )}
             </div>
 
-            <div className="appointment-actions">
-              {appointment.status === "pending" && (
-                <>
-                  <button onClick={() => handleStatusChange(appointment.id, "approved")} className="approve-btn">
-                    Approve
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const reason = prompt("Please enter rejection reason:");
-                      if (reason) handleStatusChange(appointment.id, "rejected", reason);
-                    }} 
-                    className="reject-btn"
-                  >
-                    Reject
-                  </button>
-                </>
-              )}
-              <button onClick={() => handleDeleteAppointment(appointment.id)} className="delete-btn">
-                Delete
-              </button>
+            <div className="card-actions">
               <button 
-                onClick={() => setSelectedAppointment(appointment)} 
-                className="edit-btn"
+                className="menu-dots"
+                onClick={() => {
+                  setActiveMenu(activeMenu === appointment.id ? null : appointment.id);
+                  setSelectedAppointment(appointment);
+                }}
               >
-                Edit
+                <FaEllipsisV />
               </button>
+
+              {activeMenu === appointment.id && (
+                <div className="action-menu">
+                  {appointment.status === "pending" && (
+                    <>
+                      <button onClick={() => handleStatusChange(appointment.id, "approved")}>
+                        Approve
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const reason = prompt("Please enter rejection reason:");
+                          if (reason) handleStatusChange(appointment.id, "rejected", reason);
+                        }}
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  <button onClick={() => handleDeleteAppointment(appointment.id)}>
+                    Delete
+                  </button>
+                  <button onClick={() => setSelectedAppointment(appointment)}>
+                    Edit
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}

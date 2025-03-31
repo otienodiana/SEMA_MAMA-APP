@@ -46,61 +46,54 @@ def get_user_role(request):
 class ForumViewSet(viewsets.ModelViewSet):
     queryset = Forum.objects.all().order_by('-created_at')
     serializer_class = ForumSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]  # Anyone can view, only logged-in users can create
+    permission_classes = [IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser]
+
+    def list(self, request, *args, **kwargs):
+        try:
+            # Debug logging
+            print("Attempting to fetch forums...")
+            print("User:", request.user)
+            print("Available fields:", [f.name for f in Forum._meta.get_fields()])
+
+            # Get and serialize data
+            queryset = self.get_queryset()
+            print("Raw query:", str(queryset.query))
+            
+            # Execute query and catch database errors
+            try:
+                forums = list(queryset)
+                print(f"Found {len(forums)} forums")
+            except Exception as db_error:
+                print("Database error:", str(db_error))
+                raise
+
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+
+        except Exception as e:
+            print("Error in ForumViewSet.list:", str(e))
+            print("Full error:", e.__class__.__name__)
+            import traceback
+            print(traceback.format_exc())
+            return Response(
+                {
+                    "error": "Failed to fetch forums",
+                    "detail": str(e),
+                    "type": e.__class__.__name__
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def perform_create(self, serializer):
         try:
-            # Debug print
-            print("Request data:", self.request.data)
-            print("Request user:", self.request.user)
-            print("Request files:", self.request.FILES)
-            
-            # Create forum and automatically add creator as member
+            print("Creating forum with data:", self.request.data)  # Debug log
             forum = serializer.save(created_by=self.request.user)
             forum.members.add(self.request.user)
-            
             return forum
-            
         except Exception as e:
-            print("Error creating forum:", str(e))
+            print("Error creating forum:", str(e))  # Debug log
             raise serializers.ValidationError(str(e))
-
-    def create(self, request, *args, **kwargs):
-        try:
-            # Debug logging
-            print("Request data:", request.data)
-            print("Request files:", request.FILES)
-            
-            # Validate required fields
-            required_fields = ['name', 'description', 'category']
-            missing_fields = [field for field in required_fields if not request.data.get(field)]
-            
-            if missing_fields:
-                return Response(
-                    {"error": f"Missing required fields: {', '.join(missing_fields)}"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Create serializer
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            
-            # Save with user
-            forum = serializer.save(created_by=request.user)
-            forum.members.add(request.user)
-            
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-            
-        except Exception as e:
-            print("Forum creation error:", str(e))
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -358,17 +351,36 @@ class ForumPostListCreateView(generics.ListCreateAPIView):
         return Post.objects.filter(forum_id=forum_id)
 
     def perform_create(self, serializer):
-        forum_id = self.kwargs.get('forum_id')
-        forum = get_object_or_404(Forum, id=forum_id)
-        
-        # Check if user is a member of the forum
-        if not forum.members.filter(id=self.request.user.id).exists():
-            raise PermissionDenied("You must be a member of this forum to create posts.")
+        try:
+            forum_id = self.kwargs.get('forum_id')
             
-        serializer.save(
-            forum_id=forum_id,
-            user=self.request.user
-        )
+            # Check if forum exists
+            try:
+                forum = Forum.objects.get(id=forum_id)
+            except Forum.DoesNotExist:
+                raise serializers.ValidationError({"detail": f"Forum with id {forum_id} does not exist"})
+            
+            # Check membership
+            if not forum.members.filter(id=self.request.user.id).exists():
+                raise PermissionDenied("You must be a member of this forum to create posts.")
+            
+            # Save post with required fields
+            serializer.save(
+                forum=forum,  # Pass forum object instead of ID
+                user=self.request.user,
+                comments_count=0
+            )
+        except Forum.DoesNotExist:
+            raise serializers.ValidationError({"detail": f"Forum with id {forum_id} does not exist"})
+        except Exception as e:
+            print(f"Error creating post: {str(e)}")
+            raise
+
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'forum_id': self.kwargs.get('forum_id')
+        }
 
 class PostLikeView(APIView):
     def post(self, request, post_id):

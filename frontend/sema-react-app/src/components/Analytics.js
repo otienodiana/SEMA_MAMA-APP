@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
-import axios from 'axios';  // Add this import
+import axios from 'axios';
 import { Line as LineChart, Bar as BarChart } from 'react-chartjs-2';
 import { FaUsers, FaCalendar, FaBook, FaComments } from 'react-icons/fa';
 import {
@@ -16,7 +16,6 @@ import {
 } from 'chart.js';
 import './Analytics.css';
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -28,19 +27,22 @@ ChartJS.register(
   Legend
 );
 
-// Add this default data structure
 const defaultSummaryData = {
   user_statistics: {
     total_users: 0,
     active_users: 0,
     inactive_users: 0,
-    user_growth: [0, 0, 0, 0, 0, 0]
   },
-  engagement_metrics: {
+  appointment_metrics: {
     total_appointments: 0,
+    pending_appointments: 0,
+    completed_appointments: 0,
+  },
+  community_metrics: {
     total_posts: 0,
     total_comments: 0,
-    engagement_trends: [0, 0, 0, 0]
+    active_forums: 0,
+    engagement_rate: 0
   }
 };
 
@@ -73,9 +75,8 @@ const Analytics = () => {
           'Content-Type': 'application/json'
         };
 
-        // Update API endpoints to match your Django URLs
         const [analyticsResponse, forumsResponse] = await Promise.all([
-          axios.get('http://localhost:8000/api/users/analytics/', { headers }),
+          axios.get('http://localhost:8000/api/analytics/summary/', { headers }),
           axios.get('http://localhost:8000/api/community/stats/', { headers })
         ]);
 
@@ -85,12 +86,8 @@ const Analytics = () => {
         setSummary({
           ...defaultSummaryData,
           user_statistics: analyticsResponse.data.user_statistics || defaultSummaryData.user_statistics,
-          engagement_metrics: {
-            ...defaultSummaryData.engagement_metrics,
-            total_appointments: analyticsResponse.data.total_appointments || 0,
-            total_posts: analyticsResponse.data.total_posts || 0,
-            total_comments: analyticsResponse.data.total_comments || 0,
-          }
+          appointment_metrics: analyticsResponse.data.appointment_metrics || defaultSummaryData.appointment_metrics,
+          community_metrics: analyticsResponse.data.community_metrics || defaultSummaryData.community_metrics
         });
 
         setStats(prev => ({
@@ -118,7 +115,6 @@ const Analytics = () => {
       dateRange: dateRange
     };
 
-    // Create blob and download
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -133,10 +129,10 @@ const Analytics = () => {
   const prepareChartData = (data, type) => {
     if (type === 'user-growth') {
       return {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],  // Default labels
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
         datasets: [{
           label: 'User Growth',
-          data: data || [0, 0, 0, 0, 0, 0],  // Fallback data if none provided
+          data: data || [0, 0, 0, 0, 0, 0],
           borderColor: 'rgb(75, 192, 192)',
           tension: 0.1
         }]
@@ -214,7 +210,47 @@ const Analytics = () => {
         }}
       />
       <div className="metrics-grid">
-        {/* Engagement metrics display */}
+      </div>
+    </div>
+  );
+
+  const renderCommunityMetrics = () => (
+    <div className="metrics-section">
+      <h3>Community Engagement</h3>
+      <div className="metrics-grid">
+        <div className="metric-card">
+          <FaComments className="metric-icon" />
+          <div className="metric-details">
+            <h4>Posts & Comments</h4>
+            <p>Total Posts: {summary?.community_metrics?.total_posts}</p>
+            <p>Total Comments: {summary?.community_metrics?.total_comments}</p>
+            <p>Engagement Rate: {summary?.community_metrics?.engagement_rate}%</p>
+          </div>
+        </div>
+        <div className="metric-card">
+          <FaUsers className="metric-icon" />
+          <div className="metric-details">
+            <h4>Forums</h4>
+            <p>Active Forums: {summary?.community_metrics?.active_forums}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAppointmentMetrics = () => (
+    <div className="metrics-section">
+      <h3>Appointment Statistics</h3>
+      <div className="metrics-grid">
+        <div className="metric-card">
+          <FaCalendar className="metric-icon" />
+          <div className="metric-details">
+            <h4>Appointments Overview</h4>
+            <p>Total: {summary?.appointment_metrics?.total_appointments}</p>
+            <p>Pending: {summary?.appointment_metrics?.pending_appointments}</p>
+            <p>Completed: {summary?.appointment_metrics?.completed_appointments}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -259,7 +295,6 @@ const Analytics = () => {
     </div>
   );
 
-  // Modify the render conditions
   if (loading) return <div className="loading-state">Loading analytics...</div>;
   if (error) return <div className="error-state">Error: {error}</div>;
 
@@ -292,7 +327,9 @@ const Analytics = () => {
           <FaCalendar className="stat-icon" />
           <div className="stat-details">
             <h3>Appointments</h3>
-            <p>Total: {summary?.engagement_metrics?.total_appointments || 0}</p>
+            <p>Total: {summary?.appointment_metrics?.total_appointments || 0}</p>
+            <p>Pending: {summary?.appointment_metrics?.pending_appointments || 0}</p>
+            <p>Completed: {summary?.appointment_metrics?.completed_appointments || 0}</p>
           </div>
         </div>
 
@@ -300,8 +337,9 @@ const Analytics = () => {
           <FaBook className="stat-icon" />
           <div className="stat-details">
             <h3>Content</h3>
-            <p>Posts: {summary?.engagement_metrics?.total_posts || 0}</p>
-            <p>Comments: {summary?.engagement_metrics?.total_comments || 0}</p>
+            <p>Posts: {summary?.community_metrics?.total_posts || 0}</p>
+            <p>Comments: {summary?.community_metrics?.total_comments || 0}</p>
+            <p>Engagement Rate: {summary?.community_metrics?.engagement_rate || 0}%</p>
           </div>
         </div>
 
@@ -309,7 +347,7 @@ const Analytics = () => {
           <FaComments className="stat-icon" />
           <div className="stat-details">
             <h3>Community</h3>
-            <p>Active Forums: {details?.active_forums?.length || 0}</p>
+            <p>Active Forums: {summary?.community_metrics?.active_forums || 0}</p>
           </div>
         </div>
       </div>
@@ -321,14 +359,26 @@ const Analytics = () => {
         >
           Overview
         </button>
-        {/* ... other tab buttons */}
+        <button 
+          className={activeTab === 'appointments' ? 'active' : ''} 
+          onClick={() => setActiveTab('appointments')}
+        >
+          Appointments
+        </button>
+        <button 
+          className={activeTab === 'community' ? 'active' : ''} 
+          onClick={() => setActiveTab('community')}
+        >
+          Community
+        </button>
       </div>
 
       <div className="analytics-content">
         {activeTab === 'overview' && renderUserStatistics()}
+        {activeTab === 'appointments' && renderAppointmentMetrics()}
+        {activeTab === 'community' && renderCommunityMetrics()}
         {activeTab === 'engagement' && renderEngagementMetrics()}
         {activeTab === 'detailed' && renderDetailedMetrics()}
-        {/* ... other tab content */}
       </div>
     </div>
   );

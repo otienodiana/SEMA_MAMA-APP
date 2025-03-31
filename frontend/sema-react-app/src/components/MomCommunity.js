@@ -3,6 +3,7 @@ import axios from "axios";
 import "./AdminCommunity.css";
 import { useAuth } from "./AuthContext"; 
 import { useNavigate } from "react-router-dom";
+import { FaEllipsisV } from "react-icons/fa";
 
 const MomCommunity = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const MomCommunity = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingForum, setEditingForum] = useState(null);
   const { user } = useAuth();
+  const [activeMenu, setActiveMenu] = useState(null);
   const FORUMS_PER_CATEGORY = 3; // Number of forums to show initially
 
   const categories = [
@@ -343,92 +345,49 @@ const MomCommunity = () => {
       <p>Visibility: {forum.visibility}</p>
       <p>Members: {forum.members?.length || 0}</p>
       
-      <div className="forum-actions">
-        {forum.members?.includes(user?.id) ? (
-          <>
-            <button 
-              className="view-posts-btn"
-              onClick={() => navigate(`/dashboard/mom/community/forums/${forum.id}/posts`)}
-            >
-              View Posts
-            </button>
-            <button
-              className="add-member-btn"
-              onClick={() => {
-                setSelectedForum(forum);
-                setShowAddMemberForm(true);
-              }}
-            >
-              Add Member
-            </button>
-            <button
-              className="exit-btn"
-              onClick={() => handleExitForum(forum.id)}
-            >
-              Exit Forum
-            </button>
-          </>
-        ) : (
-          <button 
-            className="join-btn"
-            onClick={() => handleJoinForum(forum.id)}
-          >
-            Join Forum
-          </button>
-        )}
-        
-        {/* Show edit/delete buttons for admins and forum creators */}
-        {(user?.role === 'admin' || forum.created_by === user?.id) && (
-          <>
-            <button 
-              className="edit-btn"
-              onClick={() => {
-                setEditingForum(forum);
-                setShowEditModal(true);
-              }}
-            >
-              Edit
-            </button>
-            <button 
-              className="delete-btn"
-              onClick={() => handleDeleteForum(forum.id)}
-            >
-              Delete
-            </button>
-          </>
+      <div className="card-actions">
+        <button 
+          className="menu-dots"
+          onClick={() => setActiveMenu(activeMenu === forum.id ? null : forum.id)}
+        >
+          <FaEllipsisV />
+        </button>
+
+        {activeMenu === forum.id && (
+          <div className="action-menu">
+            {forum.members?.includes(user?.id) ? (
+              <>
+                <button onClick={() => navigate(`/dashboard/mom/community/forums/${forum.id}/posts`)}>
+                  View Posts
+                </button>
+                <button onClick={() => setShowAddMemberForm(true)}>
+                  Add Member
+                </button>
+                <button onClick={() => handleExitForum(forum.id)}>
+                  Exit Forum
+                </button>
+              </>
+            ) : (
+              <button onClick={() => handleJoinForum(forum.id)}>
+                Join Forum
+              </button>
+            )}
+            {(user?.role === 'admin' || forum.created_by === user?.id) && (
+              <>
+                <button onClick={() => {
+                  setEditingForum(forum);
+                  setShowEditModal(true);
+                }}>
+                  Edit
+                </button>
+                <button onClick={() => handleDeleteForum(forum.id)}>
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
-
-      {/* Add member form */}
-      {showAddMemberForm && selectedForum?.id === forum.id && (
-        <div className="add-member-form">
-          <h3>Add New Member</h3>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleAddMember(forum);
-          }}>
-            <input
-              type="email"
-              placeholder="Enter member's email"
-              value={newMemberEmail}
-              onChange={(e) => setNewMemberEmail(e.target.value)}
-              required
-            />
-            <div className="form-buttons">
-              <button type="submit">Add Member</button>
-              <button 
-                type="button"
-                onClick={() => {
-                  setShowAddMemberForm(false);
-                  setNewMemberEmail('');
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 

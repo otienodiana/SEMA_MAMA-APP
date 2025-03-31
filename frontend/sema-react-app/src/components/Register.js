@@ -34,60 +34,55 @@ function Register() {
       return;
     }
 
+    if (!username || !email || !password) {
+      setError("Username, email and password are required");
+      return;
+    }
+
     if (password.length < 8) {
       setError("Password must be at least 8 characters long");
       return;
     }
 
-    const formData = new FormData(); // Using FormData to handle file uploads
-
-    // Add all required fields to formData
-    formData.append("username", username);
-    formData.append("email", email);
-    formData.append("password", password); // Make sure password is added
-    formData.append("phone_number", phoneNumber);
+    const formData = new FormData();
+    formData.append("username", username.trim());
+    formData.append("email", email.trim());
+    formData.append("password", password);
     formData.append("role", isAdminRoute ? "admin" : role);
-    formData.append("age", age);
-    if (profilePhoto) {
-      formData.append("profile_photo", profilePhoto); // Append profile photo if selected
-    }
+    
+    if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
+    if (age) formData.append("age", age);
+    if (profilePhoto) formData.append("profile_photo", profilePhoto);  // Changed from profile_picture to profile_photo
 
     try {
-      console.log("Attempting registration at:", `${API_BASE_URL}/api/users/register/`);
-      
-      const response = await axios({
-        method: 'post',
-        url: `${API_BASE_URL}/api/users/register/`,
-        data: formData,
-        headers: {
-          'Accept': 'application/json',
-        },
-        timeout: 10000,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
+      console.log("Sending registration data:", {
+        username: username,
+        email: email,
+        role: isAdminRoute ? "admin" : role,
+        phoneNumber: phoneNumber,
+        age: age,
+        hasPhoto: !!profilePhoto
       });
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/users/register/`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
 
       console.log("Registration response:", response.data);
       setSuccess("Registration successful!");
       setTimeout(() => navigate(isAdminRoute ? '/admin/login' : '/login'), 2000);
 
     } catch (err) {
-      console.error("Registration error:", err);
-      let errorMessage = "Registration failed";
-      
-      if (err.response) {
-        // Server responded with error
-        if (err.response.data.detail) {
-          errorMessage = err.response.data.detail;
-        } else if (err.response.data.password) {
-          errorMessage = err.response.data.password[0];
-        }
-      } else if (err.code === 'ECONNABORTED') {
-        errorMessage = "Server taking too long to respond. Please try again.";
-      } else if (!navigator.onLine) {
-        errorMessage = "No internet connection. Please check your network.";
-      }
-      
+      console.error("Registration error:", err.response?.data || err.message);
+      const errorMessage = err.response?.data?.detail || 
+                         err.response?.data?.password?.[0] ||
+                         "Registration failed. Please try again.";
       setError(errorMessage);
     }
   };

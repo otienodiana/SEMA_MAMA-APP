@@ -84,7 +84,6 @@ class AnalyticsSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Check if user is admin
         if request.user.role != 'admin':
             return Response(
                 {"detail": "Only admins can access analytics"},
@@ -92,14 +91,34 @@ class AnalyticsSummaryView(APIView):
             )
 
         try:
+            # Get appointment statistics
+            total_appointments = Appointment.objects.count()
+            pending_appointments = Appointment.objects.filter(status='pending').count()
+            completed_appointments = Appointment.objects.filter(status='completed').count()
+
+            # Get community statistics
+            total_posts = Post.objects.count()
+            total_comments = Comment.objects.count()
+            active_forums = Forum.objects.filter(
+                posts__created_at__gte=timezone.now() - timezone.timedelta(days=30)
+            ).distinct().count()
+
             data = {
                 'user_statistics': {
                     'total_users': User.objects.count(),
                     'active_users': User.objects.filter(is_active=True).count(),
+                    'inactive_users': User.objects.filter(is_active=False).count(),
                 },
-                'engagement_metrics': {
-                    'total_posts': 0,  # Add real metrics when available
-                    'total_comments': 0,
+                'appointment_metrics': {
+                    'total_appointments': total_appointments,
+                    'pending_appointments': pending_appointments,
+                    'completed_appointments': completed_appointments,
+                },
+                'community_metrics': {
+                    'total_posts': total_posts,
+                    'total_comments': total_comments,
+                    'active_forums': active_forums,
+                    'engagement_rate': round((total_comments / total_posts if total_posts > 0 else 0) * 100, 2)
                 }
             }
             return Response(data, status=status.HTTP_200_OK)

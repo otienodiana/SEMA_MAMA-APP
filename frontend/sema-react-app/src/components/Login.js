@@ -17,6 +17,22 @@ function Login() {
   // Check if current path is admin route
   const isAdminRoute = window.location.pathname.includes('/admin/');
 
+  const handleLoginSuccess = (user) => {
+    const redirectPath = localStorage.getItem('redirectAfterLogin');
+    if (redirectPath) {
+      localStorage.removeItem('redirectAfterLogin');
+      navigate(redirectPath);
+    } else {
+      // Map role to correct dashboard path
+      const dashboardPaths = {
+        healthcare_provider: '/dashboard/healthcare_provider',
+        mom: '/dashboard/mom',
+        admin: '/dashboard/admin'
+      };
+      navigate(dashboardPaths[user.role] || '/');
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -34,19 +50,7 @@ function Login() {
         return;
       }
 
-      // Handle navigation
-      const roleRoutes = {
-        admin: '/dashboard/admin',
-        healthcare_provider: '/dashboard/provider',
-        mom: '/dashboard/profile'
-      };
-
-      const targetRoute = roleRoutes[data.user.role];
-      if (targetRoute) {
-        navigate(targetRoute, { replace: true });
-      } else {
-        setError("Invalid user role");
-      }
+      handleLoginSuccess(data.user);
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {

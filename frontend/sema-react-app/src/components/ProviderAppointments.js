@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useTranslation } from 'react-i18next';
+import { FaEllipsisV } from 'react-icons/fa';  // Add this import
 import "./AdminAppointments.css"; // We can reuse the admin styles
 
 const ProviderAppointments = () => {
@@ -13,6 +14,7 @@ const ProviderAppointments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);  // Add this state
 
   const [newAppointment, setNewAppointment] = useState({
     user: "",
@@ -436,27 +438,61 @@ const deleteAppointment = async (id) => {
               </div>
 
               <div className="appointment-actions">
-                {appointment.status === "pending" && (
-                  <>
-                    <button onClick={() => approveAppointment(appointment.id)} className="approve-btn">Approve</button>
-                    <button onClick={() => rejectAppointment(appointment.id)} className="reject-btn">Reject</button>
-                  </>
-                )}
+                <button 
+                  className="menu-dots"
+                  onClick={() => setActiveMenu(activeMenu === appointment.id ? null : appointment.id)}
+                >
+                  <FaEllipsisV />
+                </button>
 
-                {appointment.status === "confirmed" && (
-                  <div className="reschedule-group">
-                    <input 
-                      type="datetime-local" 
-                      onChange={(e) => setRescheduleData({ id: appointment.id, newDate: e.target.value })} 
-                    />
-                    <button onClick={rescheduleAppointment} className="reschedule-btn">Reschedule</button>
+                {activeMenu === appointment.id && (
+                  <div className="action-menu">
+                    {appointment.status === "pending" && (
+                      <>
+                        <button onClick={() => approveAppointment(appointment.id)}>
+                          Approve
+                        </button>
+                        <button onClick={() => rejectAppointment(appointment.id)}>
+                          Reject
+                        </button>
+                      </>
+                    )}
+
+                    {appointment.status === "confirmed" && (
+                      <button onClick={() => setRescheduleData({ id: appointment.id, newDate: "" })}>
+                        Reschedule
+                      </button>
+                    )}
+
+                    {appointment.status !== "completed" && (
+                      <button onClick={() => cancelAppointment(appointment.id)}>
+                        Cancel
+                      </button>
+                    )}
+                    
+                    <button onClick={() => deleteAppointment(appointment.id)}>
+                      Delete
+                    </button>
                   </div>
                 )}
 
-                {appointment.status !== "completed" && (
-                  <button onClick={() => cancelAppointment(appointment.id)} className="cancel-btn">Cancel</button>
+                {rescheduleData.id === appointment.id && (
+                  <div className="reschedule-group">
+                    <input 
+                      type="datetime-local" 
+                      onChange={(e) => setRescheduleData({ 
+                        ...rescheduleData, 
+                        newDate: e.target.value 
+                      })} 
+                    />
+                    <button onClick={rescheduleAppointment}>
+                      Confirm Reschedule
+                    </button>
+                    <button onClick={() => setRescheduleData({ id: null, newDate: "" })}>
+                      Cancel
+                    </button>
+                  </div>
                 )}
-                <button onClick={() => deleteAppointment(appointment.id)} className="delete-btn">Delete</button>
               </div>
             </div>
           ))}

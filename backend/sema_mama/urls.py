@@ -10,17 +10,19 @@ def home(request):
 urlpatterns = [
     path("", home),
     path('admin/', admin.site.urls),
-    path('api/users/', include('users.urls')),
+    path('api/users/', include('users.urls', namespace='users')),
+    path('api/appointments/', include('appointments.urls', namespace='appointments')),
+    path('api/content/', include('content.urls', namespace='content')),
+    path('api/educational/', include('educational.urls')),
+    path('api/community/', include('community.urls')),
+    path('api/mama/', include('mama.urls', namespace='mama')),
+    path('api/analytics/', include('analytics.urls', namespace='analytics')),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:
     urlpatterns += [
         path('__debug__/', include('debug_toolbar.urls')),
     ]
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-# Update the static file serving for development
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

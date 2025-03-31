@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
-import { API_BASE_URL } from '../config';  // Add this import
+import { API_BASE_URL, getMediaUrl } from '../config';  // Update import
 import "./Profile.css"; // Import the CSS file
 
 const Profile = () => {
@@ -60,36 +60,45 @@ const Profile = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     setUpdating(true);
-    const token = localStorage.getItem("access"); // Add token declaration
+    setError(''); // Clear any previous errors
+    const token = localStorage.getItem("access");
 
     const formData = new FormData();
     formData.append("username", user.username);
     formData.append("email", user.email);
-    formData.append("phone_number", user.phone_number);
+    if (user.phone_number) {
+        formData.append("phone_number", user.phone_number);
+    }
     if (selectedFile) {
         formData.append("profile_photo", selectedFile);
     }
 
-    // ✅ Log FormData to Check
-    for (let pair of formData.entries()) {
-        console.log(pair[0] + ": " + pair[1]); // Debugging
-    }
-
     try {
-        const response = await fetch("http://127.0.0.1:8000/api/users/me/", {
+        const response = await fetch(`${API_BASE_URL}/api/users/me/`, {
             method: "PUT",
-            headers: { Authorization: `Bearer ${token}` }, // ✅ Do NOT set Content-Type manually
+            headers: { 
+                Authorization: `Bearer ${token}`
+                // Don't set Content-Type - browser will set it automatically for FormData
+            },
             body: formData,
         });
 
         if (!response.ok) {
-            throw new Error("Failed to update profile.");
+            const errorData = await response.json();
+            throw new Error(errorData.detail || "Failed to update profile");
         }
 
+        const updatedUser = await response.json();
+        console.log("Updated profile data:", updatedUser);
+        setUser(updatedUser);
+        setSelectedFile(null);
         alert("Profile updated successfully!");
-        fetchUserProfile();
+        
+        // Reload profile data to ensure we have latest image URL
+        await fetchUserProfile();
     } catch (err) {
-        setError("Profile update failed.");
+        console.error("Update error:", err);
+        setError(err.message || "Profile update failed");
     } finally {
         setUpdating(false);
     }
@@ -129,7 +138,11 @@ const Profile = () => {
         <div className="profile-content">
           <div className="profile-photo-wrapper">
             {user.profile_photo ? (
-              <img src={user.profile_photo} alt={t('profile.photo')} className="profile-photo" />
+              <img 
+                src={getMediaUrl(user.profile_photo)}
+                alt={t('profile.photo')} 
+                className="profile-photo" 
+              />
             ) : (
               <div className="placeholder-photo">{t('profile.noPhoto')}</div>
             )}

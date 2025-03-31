@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
 import './ForumDetail.css';
 
 const ProviderForumDetail = () => {
   const { forumId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [forum, setForum] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -81,14 +82,18 @@ const ProviderForumDetail = () => {
   const handleJoinForum = async () => {
     try {
       const token = localStorage.getItem('access');
-      await axios.post(
-        `http://localhost:8000/api/community/forums/${forumId}/join_forum/`, 
-        { user_id: user.id }, // Send user_id in request body
+      const response = await axios.post(
+        `http://localhost:8000/api/community/forums/${forumId}/join/`, 
+        {},  // Empty body since user is identified by token
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Fetch updated forum details after joining
-      await checkMembershipStatus();
+      if (response.data.status === 'already_member' || response.data.status === 'joined') {
+        // Fetch updated forum details after joining
+        await checkMembershipStatus();
+      } else {
+        setError('Failed to join forum');
+      }
     } catch (err) {
       console.error('Join forum error:', err.response?.data);
       setError('Failed to join forum: ' + (err.response?.data?.detail || err.message));
@@ -201,7 +206,7 @@ const ProviderForumDetail = () => {
         );
         if (response.data.status === 'success') {
           // Update redirect path for provider
-          window.location.href = '/dashboard/provider/community';
+          navigate('/dashboard/provider/community');  // Use navigate instead of window.location
         }
       } catch (err) {
         console.error('Exit forum error:', err.response?.data);

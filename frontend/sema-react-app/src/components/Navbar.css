@@ -9,39 +9,155 @@
 
 /* Full Width Navbar */
 .navbar {
-  width: 100vw;
+  width: 100%;
   position: fixed;
   top: 0;
   left: 0;
   background: rgba(0, 92, 153, 0.9); /* WHO Blue with transparency */
   backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center; /* Centering content */
-  align-items: center;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
+  padding: 0 20px;
 }
 
 /* Navbar Content */
-.navbar > div {
-  width: 100%;
-  max-width: 1200px;
+.nav-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Center all content */
   align-items: center;
-  padding: 15px 10%;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 70px;
+  padding: 0 20px;
+  position: relative; /* For absolute positioning of language selector */
+}
+
+.navbar-logo {
+  text-decoration: none;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.logo-text {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  justify-content: space-evenly; /* Change to space-evenly for equal distribution */
+  width: 80%; /* Increase to 80% of the navbar width */
+  margin: 0 auto;
+  padding: 0 40px; /* Add padding for better spacing */
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 1.1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  text-align: center; /* Center the text */
+  flex: 1; /* Make each link take equal space */
+  margin: 0 20px; /* Add margin for more spacing between links */
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Language Selector Styles */
+.language-selector {
+  position: absolute; /* Position it absolutely */
+  right: 0; /* Adjust position to accommodate wider nav-links */
+  top: 50%; /* Center vertically */
+  transform: translateY(-50%);
+  margin-right: 20px; /* Add margin to prevent overlap */
+}
+
+.language-icon {
+  background: white;
+  color: var(--who-primary-blue);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.language-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Update language dropdown positioning */
+.language-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  min-width: 150px;
+  z-index: 1000;
+}
+
+.language-option {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  color: var(--who-primary-blue);
+  font-size: 0.95rem;
+}
+
+.language-option:hover {
+  background: var(--who-light-blue);
 }
 
 /* Responsive Navbar */
 @media screen and (max-width: 768px) {
-  .navbar > div {
-    flex-direction: column;
-    padding: 15px;
+  .nav-content {
+    padding: 1rem;
   }
 
   .nav-links {
+    gap: 2rem;
+    margin: 1rem 0;
+  }
+
+  .nav-center {
     flex-direction: column;
-    gap: 15px;
+    width: 100%;
+    margin: 1rem 0;
+    gap: 0.5rem;
+  }
+
+  .nav-link {
+    width: 100%;
     text-align: center;
+    padding: 0.75rem;
+  }
+
+  .nav-right {
+    width: 100%;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .language-selector {
+    margin: 0;
   }
 }
