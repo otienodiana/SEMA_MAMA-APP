@@ -19,7 +19,6 @@ function Register() {
   const [success, setSuccess] = useState("");
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
-  const [loading, setLoading] = useState(false); // New state for loading
   const navigate = useNavigate(); // Initialize navigate
 
   // Check if current path is admin route
@@ -27,94 +26,64 @@ function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setError("");
+    setSuccess("");
+
+    if (!acceptedPrivacyPolicy) {
+      setError("Please accept the privacy policy to continue");
+      return;
+    }
+
+    if (!username || !email || !password) {
+      setError("Username, email and password are required");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("username", username.trim());
+    formData.append("email", email.trim());
+    formData.append("password", password);
+    formData.append("role", isAdminRoute ? "admin" : role);
+    
+    if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
+    if (age) formData.append("age", age);
+    if (profilePhoto) formData.append("profile_photo", profilePhoto);  // Changed from profile_picture to profile_photo
 
     try {
-      // Log the API URL being used
-      console.log('API URL:', API_BASE_URL);
-
-      // Create the registration data object (not FormData)
-      const registrationData = {
-        username: username.trim(),
-        email: email.trim(),
-        password: password,
+      console.log("Sending registration data:", {
+        username: username,
+        email: email,
         role: isAdminRoute ? "admin" : role,
-        phone_number: phoneNumber?.trim() || '',
-        age: age || null
-      };
-
-      // Log the request data (excluding password)
-      console.log('Request Data:', {
-        ...registrationData,
-        password: '***'
+        phoneNumber: phoneNumber,
+        age: age,
+        hasPhoto: !!profilePhoto
       });
 
-      // Make the registration request
-      const response = await axios({
-        method: 'POST',
-        url: `${API_BASE_URL}/api/users/register/`,
-        data: registrationData,
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await axios.post(
+        `${API_BASE_URL}/api/users/register/`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         }
-      });
+      );
 
-      console.log('Success Response:', response);
-
-      if (response.data?.id && profilePhoto) {
-        // Handle profile photo upload separately
-        const photoData = new FormData();
-        photoData.append('profile_photo', profilePhoto);
-
-        await axios.patch(
-          `${API_BASE_URL}/api/users/${response.data.id}/`,
-          photoData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
-      }
-
+      console.log("Registration response:", response.data);
       setSuccess("Registration successful!");
-      setTimeout(() => navigate('/login'), 2000);
+      setTimeout(() => navigate(isAdminRoute ? '/admin/login' : '/login'), 2000);
 
     } catch (err) {
-      // Enhanced error logging
-      console.error('Registration Error:', {
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data,
-        headers: err.response?.headers,
-        config: {
-          url: err.config?.url,
-          method: err.config?.method,
-          headers: err.config?.headers,
-          data: err.config?.data
-        }
-      });
-
-      // Handle different error formats
-      let errorMessage = 'Registration failed - ';
-      if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
-          errorMessage += err.response.data;
-        } else if (typeof err.response.data === 'object') {
-          const errors = [];
-          Object.entries(err.response.data).forEach(([key, value]) => {
-            errors.push(`${key}: ${Array.isArray(value) ? value.join(', ') : value}`);
-          });
-          errorMessage += errors.join('; ');
-        }
-      } else {
-        errorMessage += err.message || 'Unknown error occurred';
-      }
-      
+      console.error("Registration error:", err.response?.data || err.message);
+      const errorMessage = err.response?.data?.detail || 
+                         err.response?.data?.password?.[0] ||
+                         "Registration failed. Please try again.";
       setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -127,7 +96,6 @@ function Register() {
 
         {error && <p className="error-message">{error}</p>}
         {success && <p className="success-message">{success}</p>}
-        {loading && <p className="loading-message">Loading...</p>}
 
         <form onSubmit={handleRegister} className="register-form" encType="multipart/form-data">
           <div className="form-group">
@@ -231,7 +199,7 @@ function Register() {
             </label>
           </div>
 
-          <button type="submit" className="submit-button" disabled={loading}>
+          <button type="submit" className="submit-button">
             {t('register.button')}
           </button>
         </form>

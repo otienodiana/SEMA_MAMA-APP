@@ -28,9 +28,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y^ptm_l)$uk3)exhoe0!ui#$a20l_dmdk6^icv^yzr9fq=twk!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = [
+    "sema-mama-app.onrender.com",
+    "sema-react-app.vercel.app",
+    "localhost",
+    "127.0.0.1",
+    "*"  # Add this temporarily for testing
+]
+
 
 # Application definition
 
@@ -139,11 +146,11 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DATABASE_NAME', 'sema_mama_db'),
-        'USER': os.getenv('DATABASE_USER', 'Diana'),
-        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'Dee0000!'),
-        'HOST': os.getenv('DATABASE_HOST', '34.16.6.244'),
-        'PORT': os.getenv('DATABASE_PORT', '3306'),
+        'NAME': 'sema_mama_db',
+        'USER': 'root',
+        'PASSWORD': 'Root123!',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'connect_timeout': 60,
@@ -157,30 +164,33 @@ DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
 
 
 # Simplified CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = False
-
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "https://sema-react-app.vercel.app",
-    "https://sema-react-q5w7t5cy2-otienodianas-projects.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://sema-react-app.vercel.app",
-    "https://sema-react-q5w7t5cy2-otienodianas-projects.vercel.app",
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-
-CORS_ALLOW_HEADERS = ['*']
-
-# Security settings for production
-SECURE_SSL_REDIRECT = False  # Set to True only if SSL is properly configured
-SECURE_PROXY_SSL_HEADER = None  # Remove this if not using proper SSL
-SESSION_COOKIE_SECURE = False  # Set to True only with proper SSL
-CSRF_COOKIE_SECURE = False  # Set to True only with proper SSL
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 
 # Password validation

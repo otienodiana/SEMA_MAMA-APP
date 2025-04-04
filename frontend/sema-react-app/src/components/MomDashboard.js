@@ -3,7 +3,6 @@ import axios from "axios";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { FaEllipsisV } from 'react-icons/fa';
-import config from '../config/config';
 import "./momDashboard.css";
 
 function MomDashboard() {
@@ -18,7 +17,7 @@ function MomDashboard() {
     const fetchEducationalContent = async () => {
       try {
         const token = localStorage.getItem('access');
-        const response = await axios.get(`${config.API_URL}/api/content/contents/`, {
+        const response = await axios.get('http://localhost:8000/api/content/contents/', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
