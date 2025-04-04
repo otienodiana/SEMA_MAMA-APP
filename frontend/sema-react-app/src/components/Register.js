@@ -19,6 +19,7 @@ function Register() {
   const [success, setSuccess] = useState("");
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
+  const [loading, setLoading] = useState(false); // New state for loading
   const navigate = useNavigate(); // Initialize navigate
 
   // Check if current path is admin route
@@ -26,21 +27,25 @@ function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError("");
+    setLoading(true);
+    setError(null);
     setSuccess("");
 
     if (!acceptedPrivacyPolicy) {
       setError("Please accept the privacy policy to continue");
+      setLoading(false);
       return;
     }
 
     if (!username || !email || !password) {
       setError("Username, email and password are required");
+      setLoading(false);
       return;
     }
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters long");
+      setLoading(false);
       return;
     }
 
@@ -71,19 +76,25 @@ function Register() {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          timeout: 10000, // 10 second timeout
+          validateStatus: function (status) {
+            return status < 500; // Accept any status code less than 500
+          }
         }
       );
 
-      console.log("Registration response:", response.data);
-      setSuccess("Registration successful!");
-      setTimeout(() => navigate(isAdminRoute ? '/admin/login' : '/login'), 2000);
+      if (response.status === 201) {
+        setSuccess("Registration successful!");
+        setTimeout(() => navigate(isAdminRoute ? '/admin/login' : '/login'), 2000);
+      } else {
+        setError(response.data.message || 'Registration failed');
+      }
 
     } catch (err) {
-      console.error("Registration error:", err.response?.data || err.message);
-      const errorMessage = err.response?.data?.detail || 
-                         err.response?.data?.password?.[0] ||
-                         "Registration failed. Please try again.";
-      setError(errorMessage);
+      console.error("Registration error:", err);
+      setError(err.response?.data?.message || 'Network error - Please try again');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,6 +107,7 @@ function Register() {
 
         {error && <p className="error-message">{error}</p>}
         {success && <p className="success-message">{success}</p>}
+        {loading && <p className="loading-message">Loading...</p>}
 
         <form onSubmit={handleRegister} className="register-form" encType="multipart/form-data">
           <div className="form-group">
@@ -199,7 +211,7 @@ function Register() {
             </label>
           </div>
 
-          <button type="submit" className="submit-button">
+          <button type="submit" className="submit-button" disabled={loading}>
             {t('register.button')}
           </button>
         </form>

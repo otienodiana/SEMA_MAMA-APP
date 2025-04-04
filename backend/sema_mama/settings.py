@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y^ptm_l)$uk3)exhoe0!ui#$a20l_dmdk6^icv^yzr9fq=twk!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
     "sema-mama-app.onrender.com",
@@ -168,10 +168,13 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://sema-react-app.vercel.app",
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://sema-react-app.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -184,22 +187,14 @@ CORS_ALLOW_METHODS = [
 ]
 
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    '*'
 ]
 
 # Security settings for production
-SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = False  # Set to True only if SSL is properly configured
+SECURE_PROXY_SSL_HEADER = None  # Remove this if not using proper SSL
+SESSION_COOKIE_SECURE = False  # Set to True only with proper SSL
+CSRF_COOKIE_SECURE = False  # Set to True only with proper SSL
 
 
 # Password validation
