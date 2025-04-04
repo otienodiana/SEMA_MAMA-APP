@@ -9,9 +9,10 @@ const config = {
   }
 };
 
-const environment = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+// Always use production environment for deployed frontend
+const environment = 'production';
 console.log('Environment:', environment);
-console.log('API Base URL:', config[environment].API_URL);
+console.log('Using API URL:', config[environment].API_URL);
 
 export const API_BASE_URL = config[environment].API_URL;
 export default config[environment];
