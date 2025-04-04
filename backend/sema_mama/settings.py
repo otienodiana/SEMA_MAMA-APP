@@ -163,19 +163,23 @@ DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
 
 
 # Simplified CORS settings
-CORS_ALLOW_ALL_ORIGINS = False  # Change to False for production
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True  # Temporarily enable all origins
+
 CORS_ALLOWED_ORIGINS = [
     "https://sema-react-app.vercel.app",
+    "https://sema-react-q5w7t5cy2-otienodianas-projects.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://sema-react-app.vercel.app",
+    "https://sema-react-q5w7t5cy2-otienodianas-projects.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -187,7 +191,15 @@ CORS_ALLOW_METHODS = [
 ]
 
 CORS_ALLOW_HEADERS = [
-    '*'
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 # Security settings for production

@@ -75,11 +75,10 @@ function Register() {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json',
           },
+          withCredentials: true,
           timeout: 10000, // 10 second timeout
-          validateStatus: function (status) {
-            return status < 500; // Accept any status code less than 500
-          }
         }
       );
 
@@ -92,7 +91,7 @@ function Register() {
 
     } catch (err) {
       console.error("Registration error:", err);
-      setError(err.response?.data?.message || 'Network error - Please try again');
+      setError(err.response?.data?.message || 'Registration failed - Please try again');
     } finally {
       setLoading(false);
     }
