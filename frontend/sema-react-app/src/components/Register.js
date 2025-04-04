@@ -31,49 +31,88 @@ function Register() {
     setError(null);
 
     try {
-      // Create FormData for the entire registration
-      const formData = new FormData();
-      formData.append('username', username.trim());
-      formData.append('email', email.trim());
-      formData.append('password', password);
-      formData.append('role', isAdminRoute ? "admin" : role);
-      if (phoneNumber) formData.append('phone_number', phoneNumber.trim());
-      if (age) formData.append('age', age);
-      if (profilePhoto) formData.append('profile_photo', profilePhoto);
+      // Log the API URL being used
+      console.log('API URL:', API_BASE_URL);
 
-      console.log('Sending registration data:', {
-        url: `${API_BASE_URL}/api/users/register/`,
-        data: Object.fromEntries(formData),
+      // Create the registration data object (not FormData)
+      const registrationData = {
+        username: username.trim(),
+        email: email.trim(),
+        password: password,
+        role: isAdminRoute ? "admin" : role,
+        phone_number: phoneNumber?.trim() || '',
+        age: age || null
+      };
+
+      // Log the request data (excluding password)
+      console.log('Request Data:', {
+        ...registrationData,
+        password: '***'
       });
 
+      // Make the registration request
       const response = await axios({
         method: 'POST',
         url: `${API_BASE_URL}/api/users/register/`,
-        data: formData,
+        data: registrationData,
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
       });
 
-      console.log('Registration response:', response);
+      console.log('Success Response:', response);
 
-      if (response.status === 201 || response.status === 200) {
-        setSuccess("Registration successful!");
-        setTimeout(() => navigate('/login'), 2000);
+      if (response.data?.id && profilePhoto) {
+        // Handle profile photo upload separately
+        const photoData = new FormData();
+        photoData.append('profile_photo', profilePhoto);
+
+        await axios.patch(
+          `${API_BASE_URL}/api/users/${response.data.id}/`,
+          photoData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
       }
+
+      setSuccess("Registration successful!");
+      setTimeout(() => navigate('/login'), 2000);
+
     } catch (err) {
-      console.error('Full error:', err);
-      console.error('Error response:', err.response);
+      // Enhanced error logging
+      console.error('Registration Error:', {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        headers: err.response?.headers,
+        config: {
+          url: err.config?.url,
+          method: err.config?.method,
+          headers: err.config?.headers,
+          data: err.config?.data
+        }
+      });
+
+      // Handle different error formats
+      let errorMessage = 'Registration failed - ';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage += err.response.data;
+        } else if (typeof err.response.data === 'object') {
+          const errors = [];
+          Object.entries(err.response.data).forEach(([key, value]) => {
+            errors.push(`${key}: ${Array.isArray(value) ? value.join(', ') : value}`);
+          });
+          errorMessage += errors.join('; ');
+        }
+      } else {
+        errorMessage += err.message || 'Unknown error occurred';
+      }
       
-      const errorDetail = err.response?.data?.detail || 
-                         err.response?.data?.message ||
-                         err.response?.data;
-                         
-      setError(typeof errorDetail === 'string' ? 
-        errorDetail : 
-        'Registration failed - Please check your information and try again'
-      );
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
