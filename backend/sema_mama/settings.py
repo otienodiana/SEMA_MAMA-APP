@@ -30,14 +30,7 @@ SECRET_KEY = 'django-insecure-y^ptm_l)$uk3)exhoe0!ui#$a20l_dmdk6^icv^yzr9fq=twk!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [
-    "sema-mama-app.onrender.com",
-    "sema-react-app.vercel.app",
-    "localhost",
-    "127.0.0.1",
-    "*"  # Temporarily allow all hosts for testing
-]
-
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
 
 # Application definition
 
@@ -145,12 +138,16 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 # Database Configuration
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('DATABASE_NAME', 'sema_mama_db'),
+        'USER': os.getenv('DATABASE_USER', 'Diana'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'Dee0000!'),
+        'HOST': os.getenv('DATABASE_HOST', '34.16.6.244'),
+        'PORT': os.getenv('DATABASE_PORT', '3306'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'connect_timeout': 60,
+        }
     }
 }
 
