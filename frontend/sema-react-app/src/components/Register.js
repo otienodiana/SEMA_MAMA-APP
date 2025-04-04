@@ -30,44 +30,74 @@ function Register() {
     setLoading(true);
     setError(null);
 
-    try {
-      const apiUrl = 'https://sema-mama-app.onrender.com/api/users/register/';
-      console.log('Sending request to:', apiUrl);
+    if (!acceptedPrivacyPolicy) {
+      setError("Please accept the privacy policy to continue");
+      setLoading(false);
+      return;
+    }
 
+    if (!username || !email || !password) {
+      setError("Username, email and password are required");
+      setLoading(false);
+      return;
+    }
+
+    try {
       const formData = new FormData();
       formData.append("username", username.trim());
       formData.append("email", email.trim());
       formData.append("password", password);
       formData.append("role", isAdminRoute ? "admin" : role);
+      
+      // Only append optional fields if they have values
       if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
       if (age) formData.append("age", age);
       if (profilePhoto) formData.append("profile_photo", profilePhoto);
 
       const response = await axios({
-        method: 'post',
-        url: apiUrl,
+        method: 'POST',
+        url: `${API_BASE_URL}/api/users/register/`,
         data: formData,
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json'
+        },
+        validateStatus: function (status) {
+          return status >= 200 && status < 500;
         }
       });
 
-      console.log('Registration response:', response);
+      console.log('Server response:', response.data);
 
       if (response.status === 201 || response.status === 200) {
         setSuccess("Registration successful!");
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
+        setTimeout(() => navigate('/login'), 2000);
       } else {
-        throw new Error(response.data?.message || 'Registration failed');
+        throw new Error(response.data?.detail || response.data?.message || 'Registration failed');
       }
     } catch (err) {
-      console.error('Registration error:', err);
-      setError(err.response?.data?.message || 
-               err.response?.data?.detail || 
-               'Registration failed - Please try again');
+      console.error('Registration error details:', {
+        message: err.message,
+        response: err.response?.data
+      });
+      
+      let errorMessage = 'Registration failed - Please try again';
+      if (err.response?.data) {
+        // Handle different error formats
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (typeof err.response.data === 'object') {
+          // Handle field-specific errors
+          errorMessage = Object.entries(err.response.data)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(', ');
+        }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
