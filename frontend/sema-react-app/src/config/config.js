@@ -9,9 +9,9 @@ const config = {
   }
 };
 
-const environment = 'production';  // Force production environment
-console.log('Current environment:', environment);
-console.log('Using API URL:', config[environment].API_URL);
+const environment = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+console.log('Environment:', environment);
+console.log('API Base URL:', config[environment].API_URL);
 
 export const API_BASE_URL = config[environment].API_URL;
 export default config[environment];

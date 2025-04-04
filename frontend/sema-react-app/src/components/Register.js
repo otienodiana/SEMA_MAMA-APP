@@ -30,12 +30,7 @@ function Register() {
     setLoading(true);
     setError(null);
 
-    if (!acceptedPrivacyPolicy) {
-      setError("Please accept the privacy policy to continue");
-      setLoading(false);
-      return;
-    }
-
+    // Basic validation
     if (!username || !email || !password) {
       setError("Username, email and password are required");
       setLoading(false);
@@ -43,60 +38,57 @@ function Register() {
     }
 
     try {
-      const formData = new FormData();
-      formData.append("username", username.trim());
-      formData.append("email", email.trim());
-      formData.append("password", password);
-      formData.append("role", isAdminRoute ? "admin" : role);
-      
-      // Only append optional fields if they have values
-      if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
-      if (age) formData.append("age", age);
-      if (profilePhoto) formData.append("profile_photo", profilePhoto);
+      // Create registration data
+      const registrationData = {
+        username: username.trim(),
+        email: email.trim(),
+        password: password,
+        role: isAdminRoute ? "admin" : role
+      };
 
-      const response = await axios({
-        method: 'POST',
-        url: `${API_BASE_URL}/api/users/register/`,
-        data: formData,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'multipart/form-data',
-        },
-        validateStatus: function (status) {
-          return status >= 200 && status < 500;
+      // Add optional fields only if they have values
+      if (phoneNumber) registrationData.phone_number = phoneNumber.trim();
+      if (age) registrationData.age = age;
+
+      // First, make the user registration request
+      const response = await axios.post(
+        `${API_BASE_URL}/api/users/register/`,
+        registrationData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
         }
-      });
+      );
 
-      console.log('Server response:', response.data);
+      console.log('Registration response:', response.data);
 
-      if (response.status === 201 || response.status === 200) {
-        setSuccess("Registration successful!");
-        setTimeout(() => navigate('/login'), 2000);
-      } else {
-        throw new Error(response.data?.detail || response.data?.message || 'Registration failed');
+      // If registration successful and there's a profile photo, upload it
+      if (response.status === 201 && profilePhoto) {
+        const userId = response.data.id;
+        const photoForm = new FormData();
+        photoForm.append('profile_photo', profilePhoto);
+
+        await axios.patch(
+          `${API_BASE_URL}/api/users/${userId}/`,
+          photoForm,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
       }
+
+      setSuccess("Registration successful!");
+      setTimeout(() => navigate('/login'), 2000);
+
     } catch (err) {
-      console.error('Registration error details:', {
-        message: err.message,
-        response: err.response?.data
-      });
-      
-      let errorMessage = 'Registration failed - Please try again';
-      if (err.response?.data) {
-        // Handle different error formats
-        if (typeof err.response.data === 'string') {
-          errorMessage = err.response.data;
-        } else if (err.response.data.detail) {
-          errorMessage = err.response.data.detail;
-        } else if (err.response.data.message) {
-          errorMessage = err.response.data.message;
-        } else if (typeof err.response.data === 'object') {
-          // Handle field-specific errors
-          errorMessage = Object.entries(err.response.data)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(', ');
-        }
-      }
+      console.error('Registration error:', err.response?.data);
+      const errorMessage = err.response?.data?.detail || 
+                          err.response?.data?.message || 
+                          'Registration failed - Please try again';
       setError(errorMessage);
     } finally {
       setLoading(false);
