@@ -154,19 +154,9 @@ DATABASES = {
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'connect_timeout': 60,
-            'ssl': {
-                'ca': os.path.join(BASE_DIR, 'ssl', 'server-ca.pem'),
-                'cert': os.path.join(BASE_DIR, 'ssl', 'client-cert.pem'),
-                'key': os.path.join(BASE_DIR, 'ssl', 'client-key.pem')
-            }
         }
     }
 }
-
-# Ensure SSL directory exists
-ssl_dir = os.path.join(BASE_DIR, 'ssl')
-if not os.path.exists(ssl_dir):
-    os.makedirs(ssl_dir)
 
 # Debug Mode
 DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
