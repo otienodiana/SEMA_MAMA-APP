@@ -29,69 +29,45 @@ function Register() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess("");
-
-    if (!acceptedPrivacyPolicy) {
-      setError("Please accept the privacy policy to continue");
-      setLoading(false);
-      return;
-    }
-
-    if (!username || !email || !password) {
-      setError("Username, email and password are required");
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long");
-      setLoading(false);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("username", username.trim());
-    formData.append("email", email.trim());
-    formData.append("password", password);
-    formData.append("role", isAdminRoute ? "admin" : role);
-    
-    if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
-    if (age) formData.append("age", age);
-    if (profilePhoto) formData.append("profile_photo", profilePhoto);  // Changed from profile_picture to profile_photo
 
     try {
-      console.log("Sending registration data:", {
-        username: username,
-        email: email,
-        role: isAdminRoute ? "admin" : role,
-        phoneNumber: phoneNumber,
-        age: age,
-        hasPhoto: !!profilePhoto
+      const apiUrl = 'https://sema-mama-app.onrender.com/api/users/register/';
+      console.log('Sending request to:', apiUrl);
+
+      const formData = new FormData();
+      formData.append("username", username.trim());
+      formData.append("email", email.trim());
+      formData.append("password", password);
+      formData.append("role", isAdminRoute ? "admin" : role);
+      if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
+      if (age) formData.append("age", age);
+      if (profilePhoto) formData.append("profile_photo", profilePhoto);
+
+      const response = await axios({
+        method: 'post',
+        url: apiUrl,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json'
+        }
       });
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/users/register/`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json',
-          },
-          withCredentials: true,
-          timeout: 10000, // 10 second timeout
-        }
-      );
+      console.log('Registration response:', response);
 
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 200) {
         setSuccess("Registration successful!");
-        setTimeout(() => navigate(isAdminRoute ? '/admin/login' : '/login'), 2000);
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
       } else {
-        setError(response.data.message || 'Registration failed');
+        throw new Error(response.data?.message || 'Registration failed');
       }
-
     } catch (err) {
-      console.error("Registration error:", err);
-      setError(err.response?.data?.message || 'Registration failed - Please try again');
+      console.error('Registration error:', err);
+      setError(err.response?.data?.message || 
+               err.response?.data?.detail || 
+               'Registration failed - Please try again');
     } finally {
       setLoading(false);
     }

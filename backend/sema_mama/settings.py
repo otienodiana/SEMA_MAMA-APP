@@ -34,7 +34,8 @@ ALLOWED_HOSTS = [
     "sema-mama-app.onrender.com",
     "sema-react-app.vercel.app",
     "localhost",
-    "127.0.0.1"
+    "127.0.0.1",
+    "*"  # Temporarily allow all hosts for testing
 ]
 
 
@@ -163,7 +164,8 @@ DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
 
 
 # Simplified CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # Temporarily enable all origins
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = False
 
 CORS_ALLOWED_ORIGINS = [
     "https://sema-react-app.vercel.app",
@@ -175,32 +177,11 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://sema-react-app.vercel.app",
     "https://sema-react-q5w7t5cy2-otienodianas-projects.vercel.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
 ]
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
+CORS_ALLOW_HEADERS = ['*']
 
 # Security settings for production
 SECURE_SSL_REDIRECT = False  # Set to True only if SSL is properly configured
