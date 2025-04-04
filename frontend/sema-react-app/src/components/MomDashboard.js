@@ -3,6 +3,7 @@ import axios from "axios";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { FaEllipsisV } from 'react-icons/fa';
+import config from '../config/config';
 import "./momDashboard.css";
 
 function MomDashboard() {
@@ -17,7 +18,7 @@ function MomDashboard() {
     const fetchEducationalContent = async () => {
       try {
         const token = localStorage.getItem('access');
-        const response = await axios.get('http://localhost:8000/api/content/contents/', {
+        const response = await axios.get(`${config.API_URL}/api/content/contents/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -46,8 +47,8 @@ function MomDashboard() {
           <li><Link to="educational-contents">{t('dashboard.resources')}</Link></li>
           <li><Link to="community">{t('dashboard.community')}</Link></li>
           <li><Link to="self-assessment">My Daily Logs</Link></li>
-          <li><Link to="settings">{t('dashboard.settings')}</Link></li>
           <li><Link to="appointments">{t('dashboard.appointments')}</Link></li>
+          <li><Link to="settings">{t('dashboard.settings')}</Link></li>
           <li><Link to="logout">{t('dashboard.logout')}</Link></li>
         </ul>
       </nav>
@@ -59,7 +60,6 @@ function MomDashboard() {
           <div className="error-message">{error}</div>
         ) : (
           <div className="educational-content">
-            <h2>Educational Resources</h2>
             <div className="content-grid">
               {educationalContent.map(content => (
                 <div key={content.id} className="content-card">

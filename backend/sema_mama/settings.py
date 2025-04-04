@@ -34,8 +34,7 @@ ALLOWED_HOSTS = [
     "sema-mama-app.onrender.com",
     "sema-react-app.vercel.app",
     "localhost",
-    "127.0.0.1",
-    "*"  # Add this temporarily for testing
+    "127.0.0.1"
 ]
 
 
@@ -167,8 +166,13 @@ DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
 CORS_ALLOW_ALL_ORIGINS = True  # For development only
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
+    "https://sema-react-app.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://sema-react-app.vercel.app",
 ]
 
 CORS_ALLOW_METHODS = [
