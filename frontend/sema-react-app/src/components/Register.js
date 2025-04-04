@@ -30,124 +30,50 @@ function Register() {
     setLoading(true);
     setError(null);
 
-    // Validation logging
-    console.log('Form Data:', {
-      username,
-      email,
-      password: password ? '****' : 'missing',
-      phoneNumber,
-      role,
-      age,
-      hasProfilePhoto: !!profilePhoto,
-      acceptedPrivacyPolicy
-    });
-
-    // Basic validation
-    if (!username || !email || !password) {
-      const missingFields = [];
-      if (!username) missingFields.push('username');
-      if (!email) missingFields.push('email');
-      if (!password) missingFields.push('password');
-      
-      const errorMsg = `Required fields missing: ${missingFields.join(', ')}`;
-      console.error('Validation Error:', errorMsg);
-      setError(errorMsg);
-      setLoading(false);
-      return;
-    }
-
     try {
-      console.log('Making registration request to:', `${API_BASE_URL}/api/users/register/`);
+      // Create FormData for the entire registration
+      const formData = new FormData();
+      formData.append('username', username.trim());
+      formData.append('email', email.trim());
+      formData.append('password', password);
+      formData.append('role', isAdminRoute ? "admin" : role);
+      if (phoneNumber) formData.append('phone_number', phoneNumber.trim());
+      if (age) formData.append('age', age);
+      if (profilePhoto) formData.append('profile_photo', profilePhoto);
 
-      const registrationData = {
-        username: username.trim(),
-        email: email.trim(),
-        password: password,
-        role: isAdminRoute ? "admin" : role,
-        ...(phoneNumber && { phone_number: phoneNumber.trim() }),
-        ...(age && { age: parseInt(age, 10) })
-      };
-
-      console.log('Registration payload:', {
-        ...registrationData,
-        password: '****' // Hide password in logs
+      console.log('Sending registration data:', {
+        url: `${API_BASE_URL}/api/users/register/`,
+        data: Object.fromEntries(formData),
       });
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/users/register/`,
-        registrationData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
+      const response = await axios({
+        method: 'POST',
+        url: `${API_BASE_URL}/api/users/register/`,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
         }
-      );
-
-      console.log('Server Response:', {
-        status: response.status,
-        data: response.data,
-        headers: response.headers
       });
+
+      console.log('Registration response:', response);
 
       if (response.status === 201 || response.status === 200) {
-        // Handle profile photo upload if exists
-        if (profilePhoto && response.data.id) {
-          console.log('Uploading profile photo for user:', response.data.id);
-          const photoForm = new FormData();
-          photoForm.append('profile_photo', profilePhoto);
-
-          try {
-            const photoResponse = await axios.patch(
-              `${API_BASE_URL}/api/users/${response.data.id}/`,
-              photoForm,
-              {
-                headers: {
-                  'Content-Type': 'multipart/form-data'
-                }
-              }
-            );
-            console.log('Photo upload response:', photoResponse.data);
-          } catch (photoErr) {
-            console.error('Photo upload failed:', photoErr);
-            // Continue since main registration succeeded
-          }
-        }
-
         setSuccess("Registration successful!");
         setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err) {
-      console.error('Registration Error Details:', {
-        message: err.message,
-        response: {
-          status: err.response?.status,
-          statusText: err.response?.statusText,
-          data: err.response?.data,
-          headers: err.response?.headers
-        },
-        request: {
-          url: err.config?.url,
-          method: err.config?.method,
-          headers: err.config?.headers
-        }
-      });
-
-      let errorMessage = 'Registration failed - ';
-      if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
-          errorMessage += err.response.data;
-        } else if (err.response.data.detail) {
-          errorMessage += err.response.data.detail;
-        } else if (typeof err.response.data === 'object') {
-          errorMessage += Object.entries(err.response.data)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(', ');
-        }
-      } else {
-        errorMessage += err.message || 'Unknown error occurred';
-      }
-      setError(errorMessage);
+      console.error('Full error:', err);
+      console.error('Error response:', err.response);
+      
+      const errorDetail = err.response?.data?.detail || 
+                         err.response?.data?.message ||
+                         err.response?.data;
+                         
+      setError(typeof errorDetail === 'string' ? 
+        errorDetail : 
+        'Registration failed - Please check your information and try again'
+      );
     } finally {
       setLoading(false);
     }
