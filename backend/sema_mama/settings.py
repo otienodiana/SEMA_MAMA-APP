@@ -146,17 +146,27 @@ WSGI_APPLICATION = 'sema_mama.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sema_mama_db',
-        'USER': 'root',
-        'PASSWORD': 'Root123!',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': os.getenv('DB_NAME', 'sema_mama_db'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'Root123!'),
+        'HOST': os.getenv('DB_HOST', '34.16.6.244'),  # Use your Google Cloud SQL IP
+        'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'connect_timeout': 60,
+            'ssl': {
+                'ca': os.path.join(BASE_DIR, 'ssl', 'server-ca.pem'),
+                'cert': os.path.join(BASE_DIR, 'ssl', 'client-cert.pem'),
+                'key': os.path.join(BASE_DIR, 'ssl', 'client-key.pem')
+            }
         }
     }
 }
+
+# Ensure SSL directory exists
+ssl_dir = os.path.join(BASE_DIR, 'ssl')
+if not os.path.exists(ssl_dir):
+    os.makedirs(ssl_dir)
 
 # Debug Mode
 DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
