@@ -30,27 +30,49 @@ function Register() {
     setLoading(true);
     setError(null);
 
+    // Validation logging
+    console.log('Form Data:', {
+      username,
+      email,
+      password: password ? '****' : 'missing',
+      phoneNumber,
+      role,
+      age,
+      hasProfilePhoto: !!profilePhoto,
+      acceptedPrivacyPolicy
+    });
+
     // Basic validation
     if (!username || !email || !password) {
-      setError("Username, email and password are required");
+      const missingFields = [];
+      if (!username) missingFields.push('username');
+      if (!email) missingFields.push('email');
+      if (!password) missingFields.push('password');
+      
+      const errorMsg = `Required fields missing: ${missingFields.join(', ')}`;
+      console.error('Validation Error:', errorMsg);
+      setError(errorMsg);
       setLoading(false);
       return;
     }
 
     try {
-      // Create registration data
+      console.log('Making registration request to:', `${API_BASE_URL}/api/users/register/`);
+
       const registrationData = {
         username: username.trim(),
         email: email.trim(),
         password: password,
-        role: isAdminRoute ? "admin" : role
+        role: isAdminRoute ? "admin" : role,
+        ...(phoneNumber && { phone_number: phoneNumber.trim() }),
+        ...(age && { age: parseInt(age, 10) })
       };
 
-      // Add optional fields only if they have values
-      if (phoneNumber) registrationData.phone_number = phoneNumber.trim();
-      if (age) registrationData.age = age;
+      console.log('Registration payload:', {
+        ...registrationData,
+        password: '****' // Hide password in logs
+      });
 
-      // First, make the user registration request
       const response = await axios.post(
         `${API_BASE_URL}/api/users/register/`,
         registrationData,
@@ -62,33 +84,69 @@ function Register() {
         }
       );
 
-      console.log('Registration response:', response.data);
+      console.log('Server Response:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers
+      });
 
-      // If registration successful and there's a profile photo, upload it
-      if (response.status === 201 && profilePhoto) {
-        const userId = response.data.id;
-        const photoForm = new FormData();
-        photoForm.append('profile_photo', profilePhoto);
+      if (response.status === 201 || response.status === 200) {
+        // Handle profile photo upload if exists
+        if (profilePhoto && response.data.id) {
+          console.log('Uploading profile photo for user:', response.data.id);
+          const photoForm = new FormData();
+          photoForm.append('profile_photo', profilePhoto);
 
-        await axios.patch(
-          `${API_BASE_URL}/api/users/${userId}/`,
-          photoForm,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
+          try {
+            const photoResponse = await axios.patch(
+              `${API_BASE_URL}/api/users/${response.data.id}/`,
+              photoForm,
+              {
+                headers: {
+                  'Content-Type': 'multipart/form-data'
+                }
+              }
+            );
+            console.log('Photo upload response:', photoResponse.data);
+          } catch (photoErr) {
+            console.error('Photo upload failed:', photoErr);
+            // Continue since main registration succeeded
           }
-        );
+        }
+
+        setSuccess("Registration successful!");
+        setTimeout(() => navigate('/login'), 2000);
       }
-
-      setSuccess("Registration successful!");
-      setTimeout(() => navigate('/login'), 2000);
-
     } catch (err) {
-      console.error('Registration error:', err.response?.data);
-      const errorMessage = err.response?.data?.detail || 
-                          err.response?.data?.message || 
-                          'Registration failed - Please try again';
+      console.error('Registration Error Details:', {
+        message: err.message,
+        response: {
+          status: err.response?.status,
+          statusText: err.response?.statusText,
+          data: err.response?.data,
+          headers: err.response?.headers
+        },
+        request: {
+          url: err.config?.url,
+          method: err.config?.method,
+          headers: err.config?.headers
+        }
+      });
+
+      let errorMessage = 'Registration failed - ';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage += err.response.data;
+        } else if (err.response.data.detail) {
+          errorMessage += err.response.data.detail;
+        } else if (typeof err.response.data === 'object') {
+          errorMessage += Object.entries(err.response.data)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(', ');
+        }
+      } else {
+        errorMessage += err.message || 'Unknown error occurred';
+      }
       setError(errorMessage);
     } finally {
       setLoading(false);
