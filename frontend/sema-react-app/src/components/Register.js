@@ -30,13 +30,6 @@ function Register() {
     setSuccess("");
 
     try {
-      // Form validation
-      if (!username || !email || !password) {
-        setError("Username, email and password are required");
-        return;
-      }
-
-      // Create FormData object
       const formData = new FormData();
       formData.append("username", username.trim());
       formData.append("email", email.trim());
@@ -46,14 +39,20 @@ function Register() {
       if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
       if (age) formData.append("age", age);
       
-      // Handle profile photo
-      if (profilePhoto instanceof File) {
+      if (profilePhoto) {
+        // Validate file size and type
+        if (profilePhoto.size > 5 * 1024 * 1024) {
+          setError("File size must be less than 5MB");
+          return;
+        }
+        
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!allowedTypes.includes(profilePhoto.type)) {
+          setError("Only JPEG, JPG and PNG files are allowed");
+          return;
+        }
+        
         formData.append("profile_photo", profilePhoto);
-      }
-
-      // Log form data for debugging
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
       }
 
       const response = await axios.post(
@@ -63,16 +62,22 @@ function Register() {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          // Add timeout and retry logic
+          timeout: 15000,
+          validateStatus: status => status < 500
         }
       );
 
-      console.log("Registration response:", response.data);
-      setSuccess("Registration successful!");
-      setTimeout(() => navigate('/login'), 2000);
+      if (response.status === 201) {
+        setSuccess("Registration successful!");
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError(response.data.error || "Registration failed");
+      }
       
     } catch (err) {
       console.error('Registration Error:', err);
-      setError(err.response?.data?.error || "Registration failed. Please try again.");
+      setError("Network error or server timeout. Please try again.");
     }
   };
 

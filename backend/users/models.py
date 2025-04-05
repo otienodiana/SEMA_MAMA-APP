@@ -90,5 +90,16 @@ class User(AbstractUser):
             self.profile_photo = profile_photo
         self.save()
 
+    def save(self, *args, **kwargs):
+        if self.profile_photo:
+            # Ensure unique filenames
+            if not self.id:
+                super().save(*args, **kwargs)
+            
+            if hasattr(self.profile_photo, 'name'):
+                self.profile_photo.name = f'profile_{self.id}_{self.profile_photo.name}'
+        
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = 'users_user'

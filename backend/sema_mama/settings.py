@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'debug_toolbar',
+    'cloudinary_storage',
+    'cloudinary',
     
     # Custom apps in dependency order
     'users',
@@ -248,6 +250,19 @@ os.makedirs(MEDIA_ROOT, exist_ok=True)
 PROFILE_PHOTOS_DIR = os.path.join(MEDIA_ROOT, 'profile_photos')
 os.makedirs(PROFILE_PHOTOS_DIR, exist_ok=True)
 
+# Check if we're in production environment
+if os.environ.get('ENVIRONMENT') == 'production':
+    # Use cloudinary for file storage in production
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET')
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    # Use local file storage in development
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -384,3 +399,17 @@ if 'debug_toolbar.middleware.DebugToolbarMiddleware' in MIDDLEWARE:
     MIDDLEWARE = list(dict.fromkeys(MIDDLEWARE))
 
 APPEND_SLASH = False  # Add this setting
+
+# Cloudinary settings
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dyvgzvj6k',
+    'API_KEY': '274119447111446',
+    'API_SECRET': 'xUYYuiVHh4ni-A1cszib0keCTUI'
+}
+
+# Storage settings
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Media settings
+MEDIA_URL = '/media/'  
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

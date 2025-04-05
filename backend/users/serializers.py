@@ -2,6 +2,9 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -85,27 +88,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            # Extract profile photo and password
             profile_photo = validated_data.pop('profile_photo', None)
             password = validated_data.pop('password')
             
-            # Create user
             user = User(**validated_data)
             user.set_password(password)
-            user.save()
-
-            # Handle profile photo if provided
+            
             if profile_photo:
-                try:
-                    file_name = f"profile_photos/{user.id}_{profile_photo.name}"
-                    file_path = default_storage.save(file_name, profile_photo)
-                    user.profile_photo = file_path
-                    user.save(update_fields=['profile_photo'])
-                except Exception as e:
-                    print(f"Error saving profile photo: {str(e)}")
-
+                user.profile_photo = profile_photo
+            
+            user.save()
             return user
             
         except Exception as e:
-            print(f"Error in create(): {str(e)}")
+            logger.error(f"Error creating user: {str(e)}")
             raise
