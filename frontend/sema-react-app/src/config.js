@@ -13,7 +13,7 @@ console.log('API Base URL:', API_BASE_URL);
 
 // API endpoints configuration
 export const API_ENDPOINTS = {
-    REGISTER: '/api/users/register/',  // Make sure this matches exactly
+    REGISTER: '/api/users/register/',  
     LOGIN: '/api/users/login/',
     PROFILE: '/api/users/me/',
 };
