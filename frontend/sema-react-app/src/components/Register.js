@@ -34,7 +34,6 @@ function Register() {
       return;
     }
 
-<<<<<<< HEAD
     if (!username || !email || !password) {
       setError("Username, email and password are required");
       return;
@@ -45,20 +44,7 @@ function Register() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("username", username.trim());
-    formData.append("email", email.trim());
-    formData.append("password", password);
-    formData.append("role", isAdminRoute ? "admin" : role);
-    
-    if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
-    if (age) formData.append("age", age);
-    if (profilePhoto) formData.append("profile_photo", profilePhoto);  
-
-=======
->>>>>>> ce9985fb06e6a37a56a4eeac647c9fad339dc188
     try {
-      // Create FormData object to handle file uploads
       const formData = new FormData();
       formData.append('username', username.trim());
       formData.append('email', email.trim());
@@ -70,49 +56,23 @@ function Register() {
       if (profilePhoto) formData.append('profile_photo', profilePhoto);
 
       const response = await axios.post(
-        `${API_BASE_URL}${API_ENDPOINTS.REGISTER}`,
+        `${API_BASE_URL}/api/users/register/`,
         formData,
         {
-<<<<<<< HEAD
-=======
           headers: {
             'Content-Type': 'multipart/form-data',
-          },
->>>>>>> ce9985fb06e6a37a56a4eeac647c9fad339dc188
-          withCredentials: true
+            'Accept': 'application/json'
+          }
         }
       );
-      
 
       if (response.data) {
         setSuccess("Registration successful!");
-        // Add a small delay before redirecting
-        setTimeout(() => {
-          navigate(isAdminRoute ? '/admin/login' : '/login');
-        }, 2000);
+        setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err) {
       console.error("Registration error:", err);
-      let errorMessage = "Registration failed. Please try again.";
-      
-      if (err.response?.data) {
-        // Handle specific error messages from backend
-        if (typeof err.response.data === 'string') {
-          errorMessage = err.response.data;
-        } else if (err.response.data.detail) {
-          errorMessage = err.response.data.detail;
-        } else if (err.response.data.message) {
-          errorMessage = err.response.data.message;
-        } else if (typeof err.response.data === 'object') {
-          // Handle field-specific errors
-          const errors = Object.entries(err.response.data)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('\n');
-          errorMessage = errors;
-        }
-      }
-      
-      setError(errorMessage);
+      setError(err.response?.data?.message || 'Registration failed');
     }
   };
 
