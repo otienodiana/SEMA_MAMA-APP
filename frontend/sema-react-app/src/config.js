@@ -14,7 +14,7 @@ console.log('API Base URL:', API_BASE_URL);
 // API endpoints configuration
 export const API_ENDPOINTS = {
     LOGIN: '/api/users/login/',
-    REGISTER: '/api/users/register/',
+    REGISTER: '/api/users/register/', // Add trailing slash
     PROFILE: '/api/users/me/',
 };
 

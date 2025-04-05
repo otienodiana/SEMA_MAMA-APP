@@ -74,26 +74,20 @@ class RegisterUserView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     parser_classes = (MultiPartParser, FormParser)
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         try:
-            # Log the incoming request data
             print("Registration request data:", request.data)
-            print("Files:", request.FILES)
-
             serializer = self.get_serializer(data=request.data)
             
-            if not serializer.is_valid():
-                print("Validation errors:", serializer.errors)  # Add logging
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            if serializer.is_valid():
+                user = serializer.save()
+                return Response({
+                    "detail": "Registration successful",
+                    "user": UserSerializer(user, context={'request': request}).data
+                }, status=status.HTTP_201_CREATED)
             
-            user = serializer.save()
-            return Response({
-                "detail": "Registration successful",
-                "user": UserSerializer(user, context={'request': request}).data
-            }, status=status.HTTP_201_CREATED)
+            print("Validation errors:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
             print(f"Registration error: {str(e)}")

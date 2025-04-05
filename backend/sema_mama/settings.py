@@ -176,18 +176,17 @@ DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
     "https://sema-react-app.vercel.app",
-    "https://sema-mama-app.vercel.app"  # Add your production domain
+    "http://localhost:3000",
 ]
 
 CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -382,3 +381,5 @@ WATCHMAN_ENABLE_PAID_FEATURES = False
 
 if 'debug_toolbar.middleware.DebugToolbarMiddleware' in MIDDLEWARE:
     MIDDLEWARE = list(dict.fromkeys(MIDDLEWARE))
+
+APPEND_SLASH = False  # Add this setting
