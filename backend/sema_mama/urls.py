@@ -10,7 +10,7 @@ def home(request):
 urlpatterns = [
     path("", home),
     path('admin/', admin.site.urls),
-    path('api/users/', include('users.urls', namespace='users')),
+    path('api/users/', include('users.urls')),  # Verify this path
     path('api/appointments/', include('appointments.urls', namespace='appointments')),
     path('api/content/', include('content.urls', namespace='content')),
     path('api/educational/', include('educational.urls')),
