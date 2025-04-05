@@ -65,12 +65,13 @@ function Register() {
       });
 
       const response = await axios.post(
-        `${API_BASE_URL}/api/users/register/`,
+        `${API_BASE_URL}/users/register`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
           },
+          withCredentials: true
         }
       );
 

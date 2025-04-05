@@ -3,11 +3,16 @@ import axios from 'axios';
 console.log("Environment:", process.env.REACT_APP_ENV);
 console.log("API Base URL:", process.env.REACT_APP_API_URL);
 
+const apiConfig = {
+  development: 'http://localhost:8000/api',
+  production: 'https://sema-mama-app.onrender.com/api'
+};
+
 const getApiUrl = () => {
-  if (window.location.hostname === 'sema-react-app.vercel.app') {
-    return 'https://sema-mama-app.onrender.com/api';
-  }
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+  console.log('Environment:', process.env.NODE_ENV);
+  const baseUrl = apiConfig[process.env.NODE_ENV] || apiConfig.development;
+  console.log('Using API URL:', baseUrl);
+  return baseUrl;
 };
 
 export const API_BASE_URL = getApiUrl();
@@ -19,7 +24,8 @@ export const api = axios.create({
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true
 });
 
 // Add request interceptor to handle auth tokens
