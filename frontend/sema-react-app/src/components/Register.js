@@ -44,16 +44,25 @@ function Register() {
       return;
     }
 
+    const formData = new FormData();
+    formData.append("username", username.trim());
+    formData.append("email", email.trim());
+    formData.append("password", password);
+    formData.append("role", isAdminRoute ? "admin" : role);
+    
+    if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
+    if (age) formData.append("age", age);
+    if (profilePhoto) formData.append("profile_photo", profilePhoto);  // Changed from profile_picture to profile_photo
+
     try {
-      const formData = new FormData();
-      formData.append('username', username.trim());
-      formData.append('email', email.trim());
-      formData.append('password', password);
-      formData.append('role', isAdminRoute ? "admin" : role);
-      
-      if (phoneNumber) formData.append('phone_number', phoneNumber.trim());
-      if (age) formData.append('age', age);
-      if (profilePhoto) formData.append('profile_photo', profilePhoto);
+      console.log("Sending registration data:", {
+        username: username,
+        email: email,
+        role: isAdminRoute ? "admin" : role,
+        phoneNumber: phoneNumber,
+        age: age,
+        hasPhoto: !!profilePhoto
+      });
 
       const response = await axios.post(
         `${API_BASE_URL}/api/users/register/`,
@@ -61,18 +70,20 @@ function Register() {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
-          }
+          },
         }
       );
 
-      if (response.data) {
-        setSuccess("Registration successful!");
-        setTimeout(() => navigate('/login'), 2000);
-      }
+      console.log("Registration response:", response.data);
+      setSuccess("Registration successful!");
+      setTimeout(() => navigate(isAdminRoute ? '/admin/login' : '/login'), 2000);
+
     } catch (err) {
-      console.error("Registration error:", err);
-      setError(err.response?.data?.message || 'Registration failed');
+      console.error("Registration error:", err.response?.data || err.message);
+      const errorMessage = err.response?.data?.detail || 
+                         err.response?.data?.password?.[0] ||
+                         "Registration failed. Please try again.";
+      setError(errorMessage);
     }
   };
 
