@@ -17,9 +17,8 @@ urlpatterns = [
     path('api/community/', include('community.urls')),
     path('api/mama/', include('mama.urls', namespace='mama')),
     path('api/analytics/', include('analytics.urls', namespace='analytics')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:

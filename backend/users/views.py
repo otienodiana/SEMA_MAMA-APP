@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated  # Fixed import syntax
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -24,7 +24,9 @@ from django.utils import timezone
 from django.db.models import Count
 from community.models import Post, Comment
 from django.conf import settings
+import logging
 
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -765,35 +767,42 @@ def list_moms(request):
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
+import logging
+
+logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
 def register_user(request):
     try:
+        logger.debug(f"Registration request data: {request.data}")
+        logger.debug(f"Registration request files: {request.FILES}")
+
         # Create a mutable copy of the data
-        data = request.data.copy()
+        data = request.data.dict()
         
-        # Handle profile photo separately
-        profile_photo = request.FILES.get('profile_photo')
-        if profile_photo:
-            data['profile_photo'] = profile_photo
+        # Handle profile photo
+        if 'profile_photo' in request.FILES:
+            data['profile_photo'] = request.FILES['profile_photo']
         
         serializer = UserRegistrationSerializer(data=data)
+        
         if serializer.is_valid():
             user = serializer.save()
             return Response({
                 "message": "Registration successful",
                 "user": UserSerializer(user).data
             }, status=status.HTTP_201_CREATED)
-        return Response(
-            {"error": serializer.errors}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        
+        logger.error(f"Registration validation errors: {serializer.errors}")
+        return Response({
+            "error": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+        
     except Exception as e:
-        import traceback
-        print("Registration error:", str(e))
-        print("Traceback:", traceback.format_exc())
-        return Response(
-            {"error": str(e)}, 
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        logger.exception("Registration error")
+        return Response({
+            "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
