@@ -770,15 +770,29 @@ from rest_framework.decorators import api_view
 @api_view(['POST'])
 def register_user(request):
     try:
-        serializer = UserRegistrationSerializer(data=request.data)
+        # Create a mutable copy of the data
+        data = request.data.copy()
+        
+        # Handle profile photo separately
+        profile_photo = request.FILES.get('profile_photo')
+        if profile_photo:
+            data['profile_photo'] = profile_photo
+        
+        serializer = UserRegistrationSerializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
             return Response({
                 "message": "Registration successful",
                 "user": UserSerializer(user).data
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": serializer.errors}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
     except Exception as e:
+        import traceback
+        print("Registration error:", str(e))
+        print("Traceback:", traceback.format_exc())
         return Response(
             {"error": str(e)}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

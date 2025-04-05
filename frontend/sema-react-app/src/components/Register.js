@@ -53,7 +53,10 @@ function Register() {
     
     if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
     if (age) formData.append("age", age);
-    if (profilePhoto) formData.append("profile_photo", profilePhoto);  // Changed from profile_picture to profile_photo
+    // Only append profile_photo if a file was actually selected
+    if (profilePhoto && profilePhoto instanceof File) {
+      formData.append("profile_photo", profilePhoto);
+    }
 
     // Add debug logging
     const url = `${API_BASE_URL}${API_ENDPOINTS.REGISTER}`;
