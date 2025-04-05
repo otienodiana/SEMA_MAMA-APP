@@ -52,7 +52,7 @@ function Register() {
     
     if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
     if (age) formData.append("age", age);
-    if (profilePhoto) formData.append("profile_photo", profilePhoto);  // Changed from profile_picture to profile_photo
+    if (profilePhoto) formData.append("profile_photo", profilePhoto);  
 
     try {
       console.log("Sending registration data:", {
@@ -68,12 +68,10 @@ function Register() {
         `${API_BASE_URL}/users/register`,
         formData,
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
           withCredentials: true
         }
       );
+      
 
       console.log("Registration response:", response.data);
       setSuccess("Registration successful!");
