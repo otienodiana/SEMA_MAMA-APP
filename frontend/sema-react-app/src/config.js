@@ -1,74 +1,73 @@
 import axios from 'axios';
 
-console.log("Environment:", process.env.REACT_APP_ENV);
-console.log("API Base URL:", process.env.REACT_APP_API_URL);
+// Environment detection
+const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 
-const apiConfig = {
-  development: 'http://localhost:8000/api',
-  production: 'https://sema-mama-app.onrender.com/api'
+// Base URL configuration
+export const API_BASE_URL = isProd 
+    ? 'https://sema-mama-app.onrender.com'
+    : 'http://localhost:8000';
+
+console.log('Current environment:', isProd ? 'production' : 'development');
+console.log('API Base URL:', API_BASE_URL);
+
+// API endpoints configuration
+export const API_ENDPOINTS = {
+    LOGIN: '/api/users/login/',
+    REGISTER: '/api/users/register/',
+    PROFILE: '/api/users/me/',
 };
 
-const getApiUrl = () => {
-  console.log('Environment:', process.env.NODE_ENV);
-  const baseUrl = apiConfig[process.env.NODE_ENV] || apiConfig.development;
-  console.log('Using API URL:', baseUrl);
-  return baseUrl;
+// Default headers configuration
+export const API_CONFIG = {
+    baseHeaders: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
 };
 
-export const API_BASE_URL = getApiUrl();
-
-// Create axios instance with base configuration
-
+// Enhanced axios instance configuration
 export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-  },
-  withCredentials: true
+    baseURL: API_BASE_URL,
+    headers: API_CONFIG.baseHeaders,
+    withCredentials: true,
+    timeout: 10000, // 10 second timeout
 });
 
-// Add request interceptor to handle auth tokens
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// Enhanced request interceptor
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('access');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        // Log requests in development
+        if (!isProd) {
+            console.log(`${config.method?.toUpperCase()} ${config.url}`, config);
+        }
+        return config;
+    },
+    (error) => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
+    }
+);
 
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (!isProd) {
+            console.error('Response error:', error.response || error);
+        }
+        return Promise.reject(error);
+    }
+);
+
+// Media URL helper
 export const getMediaUrl = (path) => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
-    
-    // Add leading slash and ensure proper media URL structure
     const cleanPath = path.replace(/^\/?(media\/)?/, '');
     return `${API_BASE_URL}/media/${cleanPath}`;
-};
-
-export const API_ENDPOINTS = {
-  login: "/api/users/login/",
-  register: "/api/users/register/",
-  profile: "/api/users/me/",
-  users: "/api/users/users/",
-  community: "/api/community/forums/",
-  forumDetails: (id) => `/api/community/forums/${id}/`,
-  joinForum: (id) => `/api/community/forums/${id}/join/`,
-  exitForum: (id) => `/api/community/forums/${id}/exit/`,
-  chat: {
-    users: '/api/mama/chat/users/',
-    history: (userId) => `/api/mama/chat/history/${userId}/`,
-    send: '/api/mama/chat/send/'
-  }
-};
-
-export const API_CONFIG = {
-  baseHeaders: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-  },
-  fetchOptions: {
-    mode: 'cors',
-    credentials: 'include',
-  },
 };
