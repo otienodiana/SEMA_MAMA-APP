@@ -1,11 +1,15 @@
 import axios from 'axios';
 
-const isProd = process.env.REACT_APP_ENV === 'production';
+// Environment detection
+const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 
 // Base URL configuration
-export const API_BASE_URL = process.env.REACT_APP_API_URL || (isProd 
+export const API_BASE_URL = isProd 
     ? 'https://sema-mama-app.onrender.com'
-    : 'http://localhost:8000');
+    : 'http://localhost:8000';
+
+console.log('Current environment:', isProd ? 'production' : 'development');
+console.log('API Base URL:', API_BASE_URL);
 
 // API endpoints configuration
 export const API_ENDPOINTS = {
@@ -22,23 +26,43 @@ export const API_CONFIG = {
     }
 };
 
-// Axios instance configuration
+// Enhanced axios instance configuration
 export const api = axios.create({
     baseURL: API_BASE_URL,
     headers: API_CONFIG.baseHeaders,
-    withCredentials: true
+    withCredentials: true,
+    timeout: 10000, // 10 second timeout
 });
 
-// Request interceptor for authentication
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('access');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+// Enhanced request interceptor
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('access');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        // Log requests in development
+        if (!isProd) {
+            console.log(`${config.method?.toUpperCase()} ${config.url}`, config);
+        }
+        return config;
+    },
+    (error) => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
     }
-    return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+);
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (!isProd) {
+            console.error('Response error:', error.response || error);
+        }
+        return Promise.reject(error);
+    }
+);
 
 // Media URL helper
 export const getMediaUrl = (path) => {
