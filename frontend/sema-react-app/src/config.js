@@ -1,27 +1,35 @@
+import axios from 'axios';
+
 console.log("Environment:", process.env.REACT_APP_ENV);
 console.log("API Base URL:", process.env.REACT_APP_API_URL);
 
 const getApiUrl = () => {
-  // First try window.ENV (set in index.html)
-  if (window.ENV?.REACT_APP_API_URL) {
-    return window.ENV.REACT_APP_API_URL;
-  }
-  
-  // Then try process.env
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-
-  // Use production URL if on vercel domain
   if (window.location.hostname === 'sema-react-app.vercel.app') {
-    return 'https://sema-mama-app.onrender.com';
+    return 'https://sema-mama-app.onrender.com/api';
   }
-  
-  // Fallback for development
-  return 'http://127.0.0.1:8000';
+  return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 };
 
-export const API_BASE_URL = 'http://localhost:8000';
+export const API_BASE_URL = getApiUrl();
+
+// Create axios instance with base configuration
+
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
+});
+
+// Add request interceptor to handle auth tokens
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export const getMediaUrl = (path) => {
     if (!path) return '';
