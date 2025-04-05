@@ -55,18 +55,23 @@ function Register() {
         formData.append("profile_photo", profilePhoto);
       }
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/users/register/`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-          // Add timeout and retry logic
-          timeout: 15000,
-          validateStatus: status => status < 500
-        }
-      );
+      console.log('Sending registration request with:', {
+        url: `${API_BASE_URL}/api/users/register`,
+        data: Object.fromEntries(formData.entries())
+      });
+
+      const response = await axios({
+        method: 'post',
+        url: `${API_BASE_URL}/api/users/register`,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+        },
+        withCredentials: true
+      });
+
+      console.log('Registration response:', response);
 
       if (response.status === 201) {
         setSuccess("Registration successful!");
@@ -76,8 +81,8 @@ function Register() {
       }
       
     } catch (err) {
-      console.error('Registration Error:', err);
-      setError("Network error or server timeout. Please try again.");
+      console.error('Registration Error:', err.response || err);
+      setError(err.response?.data?.detail || "Registration failed. Please try again.");
     }
   };
 
