@@ -51,8 +51,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'debug_toolbar',
-    'cloudinary_storage',
-    'cloudinary',
     
     # Custom apps in dependency order
     'users',
@@ -63,6 +61,26 @@ INSTALLED_APPS = [
     'community',
     'educational.apps.EducationalConfig',
 ]
+
+# Try to import cloudinary, if available add it to INSTALLED_APPS
+try:
+    import cloudinary
+    import cloudinary_storage
+    INSTALLED_APPS.extend([
+        'cloudinary_storage',
+        'cloudinary',
+    ])
+    
+    # Cloudinary settings
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', 'dyvgzvj6k'),
+        'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '274119447111446'),
+        'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', 'xUYYuiVHh4ni-A1cszib0keCTUI')
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+except ImportError:
+    # If cloudinary is not installed, use default file storage
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -180,6 +198,7 @@ CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://sema-react-app.vercel.app",
+    "https://sema-react-1d7c9qdsr-otienodianas-projects.vercel.app",
     "http://localhost:3000",
 ]
 
@@ -193,15 +212,15 @@ CORS_ALLOW_METHODS = [
 ]
 
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    "accept",
+    "accept-encoding",
+    "authorization", 
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 
@@ -399,16 +418,6 @@ if 'debug_toolbar.middleware.DebugToolbarMiddleware' in MIDDLEWARE:
     MIDDLEWARE = list(dict.fromkeys(MIDDLEWARE))
 
 APPEND_SLASH = False  # Add this setting
-
-# Cloudinary settings
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dyvgzvj6k',
-    'API_KEY': '274119447111446',
-    'API_SECRET': 'xUYYuiVHh4ni-A1cszib0keCTUI'
-}
-
-# Storage settings
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Media settings
 MEDIA_URL = '/media/'  

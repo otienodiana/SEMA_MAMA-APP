@@ -75,10 +75,12 @@ class RegisterUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
     parser_classes = (MultiPartParser, FormParser)
+    http_method_names = ['post', 'options']  # Explicitly specify allowed methods
 
     def post(self, request, *args, **kwargs):
         try:
-            print("Registration request data:", request.data)
+            print("Registration request data:", request.data)  # Debug log
+            print("Request headers:", request.headers)  # Debug log
             serializer = self.get_serializer(data=request.data)
             
             if serializer.is_valid():
@@ -88,11 +90,11 @@ class RegisterUserView(generics.CreateAPIView):
                     "user": UserSerializer(user, context={'request': request}).data
                 }, status=status.HTTP_201_CREATED)
             
-            print("Validation errors:", serializer.errors)
+            print("Validation errors:", serializer.errors)  # Debug log
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
-            print(f"Registration error: {str(e)}")
+            print(f"Registration error: {str(e)}")  # Debug log
             return Response(
                 {"detail": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
