@@ -777,16 +777,18 @@ logger = logging.getLogger(__name__)
 @parser_classes([MultiPartParser, FormParser])
 def register_user(request):
     try:
-        logger.debug(f"Registration request data: {request.data}")
-        logger.debug(f"Registration request files: {request.FILES}")
+        # Log request data for debugging
+        logger.info(f"Registration request data: {request.data}")
+        logger.info(f"Registration request files: {request.FILES}")
 
-        # Create a mutable copy of the data
-        data = request.data.dict()
+        # Create mutable copy of data
+        data = request.data.copy()
         
         # Handle profile photo
         if 'profile_photo' in request.FILES:
             data['profile_photo'] = request.FILES['profile_photo']
         
+        # Create serializer with data
         serializer = UserRegistrationSerializer(data=data)
         
         if serializer.is_valid():
@@ -796,6 +798,7 @@ def register_user(request):
                 "user": UserSerializer(user).data
             }, status=status.HTTP_201_CREATED)
         
+        # Log validation errors
         logger.error(f"Registration validation errors: {serializer.errors}")
         return Response({
             "error": serializer.errors

@@ -75,41 +75,37 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'role', 'phone_number', 'age', 'profile_photo']
+        fields = ['username', 'email', 'password', 'role', 'phone_number', 
+                 'age', 'profile_photo']
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'required': True},
             'role': {'required': True}
         }
 
-    def validate_profile_photo(self, value):
-        if value:
-            # Validate file size (max 5MB)
-            if value.size > 5 * 1024 * 1024:
-                raise serializers.ValidationError("Profile photo size should not exceed 5MB")
-            
-            # Validate file extension
-            valid_extensions = ['.jpg', '.jpeg', '.png']
-            ext = os.path.splitext(value.name)[1].lower()
-            if ext not in valid_extensions:
-                raise serializers.ValidationError("Only JPG, JPEG and PNG files are allowed")
-        return value
-
     def create(self, validated_data):
-        profile_photo = validated_data.pop('profile_photo', None)
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+        try:
+            # Extract profile photo and password
+            profile_photo = validated_data.pop('profile_photo', None)
+            password = validated_data.pop('password')
+            
+            # Create user
+            user = User(**validated_data)
+            user.set_password(password)
+            user.save()
 
-        if profile_photo:
-            try:
-                # Save profile photo after user is created
-                file_name = f"profile_photos/{user.id}_{profile_photo.name}"
-                file_path = default_storage.save(file_name, profile_photo)
-                user.profile_photo = file_path
-                user.save(update_fields=['profile_photo'])
-            except Exception as e:
-                print(f"Error saving profile photo: {str(e)}")
+            # Handle profile photo if provided
+            if profile_photo:
+                try:
+                    file_name = f"profile_photos/{user.id}_{profile_photo.name}"
+                    file_path = default_storage.save(file_name, profile_photo)
+                    user.profile_photo = file_path
+                    user.save(update_fields=['profile_photo'])
+                except Exception as e:
+                    print(f"Error saving profile photo: {str(e)}")
 
-        return user
+            return user
+            
+        except Exception as e:
+            print(f"Error in create(): {str(e)}")
+            raise

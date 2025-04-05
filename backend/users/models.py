@@ -14,12 +14,11 @@ class Role(models.Model):
 class User(AbstractUser):
     """Custom user model with role-based access control."""
     
-    ROLE_CHOICES = (
-        ('admin', 'Administrator'),
-        ('healthcare_provider', 'Healthcare Provider'),
-        ('moderator', 'Moderator'),
+    ROLE_CHOICES = [
         ('mom', 'Mom'),
-    )
+        ('healthcare_provider', 'Healthcare Provider'),
+        ('admin', 'Admin')
+    ]
 
     phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='mom', null=False)
@@ -90,3 +89,6 @@ class User(AbstractUser):
         if profile_photo:
             self.profile_photo = profile_photo
         self.save()
+
+    class Meta:
+        db_table = 'users_user'

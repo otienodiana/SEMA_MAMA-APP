@@ -30,48 +30,30 @@ function Register() {
     setSuccess("");
 
     try {
-      // Validate required fields
+      // Form validation
       if (!username || !email || !password) {
         setError("Username, email and password are required");
         return;
       }
 
-      // Validate password length
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters long");
-        return;
-      }
-
+      // Create FormData object
       const formData = new FormData();
       formData.append("username", username.trim());
       formData.append("email", email.trim());
       formData.append("password", password);
-      formData.append("role", isAdminRoute ? "admin" : role);
+      formData.append("role", role);
       
       if (phoneNumber) formData.append("phone_number", phoneNumber.trim());
       if (age) formData.append("age", age);
       
       // Handle profile photo
       if (profilePhoto instanceof File) {
-        // Validate file size (5MB)
-        if (profilePhoto.size > 5 * 1024 * 1024) {
-          setError("Profile photo size should not exceed 5MB");
-          return;
-        }
-        
-        // Validate file type
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-        if (!validTypes.includes(profilePhoto.type)) {
-          setError("Only JPG, JPEG and PNG files are allowed");
-          return;
-        }
-        
         formData.append("profile_photo", profilePhoto);
       }
 
       // Log form data for debugging
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
 
       const response = await axios.post(
@@ -84,6 +66,7 @@ function Register() {
         }
       );
 
+      console.log("Registration response:", response.data);
       setSuccess("Registration successful!");
       setTimeout(() => navigate('/login'), 2000);
       
