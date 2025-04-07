@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -37,24 +37,45 @@ const HomePage = () => {
   const cards = [
     {
       path: "/community",
-      image: communityImage,
-      alt: 'alt.communitySupport',
-      title: 'home.talkToMoms',
-      desc: 'home.talkToMomsDesc'
+      image: mamaImage,
+      alt: 'Community Support',
+      title: 'Connect with Other Moms',
+      desc: 'Join our vibrant community of mothers to share experiences and find support.'
+    },
+    {
+      path: "/support",
+      image: supportImage,
+      alt: 'Support Services',
+      title: 'Support Services',
+      desc: 'Access comprehensive support services for your pregnancy journey.'
     },
     {
       path: "/resources",
-      image: supportImage,
-      alt: 'alt.resources',
-      title: 'home.resources',
-      desc: 'home.resourcesDesc'
+      image: communityImage,
+      alt: 'Resources',
+      title: 'Helpful Resources',
+      desc: 'Find expert-curated resources and guides for pregnancy and motherhood.'
     },
     {
-      path: "/appointments",
+      path: "/healthcare",
       image: professionalImage,
-      alt: 'alt.professionalHelp',
-      title: 'home.professionalHelp',
-      desc: 'home.professionalHelpDesc'
+      alt: 'Healthcare',
+      title: 'Healthcare Access',
+      desc: 'Connect with healthcare professionals for personalized care.'
+    },
+    {
+      path: "/mental-health",
+      image: mentalHealthImage,
+      alt: 'Mental Health',
+      title: 'Mental Wellness',
+      desc: 'Get support for your mental health during pregnancy and postpartum.'
+    },
+    {
+      path: "/pregnancy-tips",
+      image: pregnancyTipsImage,
+      alt: 'Pregnancy Tips',
+      title: 'Pregnancy Guide',
+      desc: 'Essential tips and guidance for a healthy pregnancy.'
     }
   ];
 
@@ -62,12 +83,38 @@ const HomePage = () => {
     {
       image: mentalHealthImage,
       title: 'Mental Health Support',
-      description: 'Access resources for emotional wellbeing'
+      description: 'Access comprehensive resources for emotional well-being during pregnancy and postpartum. Get expert guidance on managing stress, anxiety, and depression.',
+      link: '/mental-health'
     },
     {
       image: pregnancyTipsImage,
-      title: 'Pregnancy Tips',
-      description: 'Essential guidance for your journey'
+      title: 'Pregnancy Care Guide',
+      description: 'Essential tips and information for a healthy pregnancy. Learn about nutrition, exercise, and important milestones throughout your journey.',
+      link: '/pregnancy-tips'
+    },
+    {
+      image: supportImage,
+      title: 'Community Support',
+      description: 'Connect with other moms, share experiences, and get advice from our supportive community. Join discussions and find local support groups.',
+      link: '/community'
+    }
+  ];
+
+  const videos = [
+    {
+      url: "https://www.youtube.com/embed/CBbYbOni_Kg",
+      title: "Understanding Postpartum Care",
+      description: "Learn essential tips and practices for postpartum care and recovery. This comprehensive guide will help you navigate the postpartum period with confidence."
+    },
+    {
+      url: "https://www.youtube.com/embed/dMw6m3MJ-uE",
+      title: "Mental Health During Pregnancy",
+      description: "Understanding and managing mental health throughout your pregnancy journey. Get expert advice on emotional well-being during pregnancy."
+    },
+    {
+      url: "https://www.youtube.com/embed/3jYYT_rf7Sw",
+      title: "Breastfeeding Tips",
+      description: "Helpful guidance and tips for successful breastfeeding practices. Learn proper techniques and common solutions to breastfeeding challenges."
     }
   ];
 
@@ -132,55 +179,16 @@ const HomePage = () => {
     navigate('/login');
   };
 
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-    },
-    header: {
-      fontSize: '2.5rem',
-      color: '#008DC9',
-      marginBottom: '1rem',
-      textAlign: 'center',
-    },
-    subtitle: {
-      fontSize: '1.2rem',
-      color: '#6c757d',
-      marginBottom: '2rem',
-      textAlign: 'center',
-    },
-    startButton: {
-      padding: '12px 24px',
-      background: '#008DC9',
-      color: 'white',
-      border: 'none',
-      borderRadius: '5px',
-      fontSize: '1.1rem',
-      cursor: 'pointer',
-      transition: 'background 0.3s ease',
-      '&:hover': {
-        background: '#006d9f',
-      },
-    },
-  };
-
   return (
-    <div className="home-container" style={{ paddingTop: '80px' }}>
+    <div className="home-container">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="hero-section">
+      <section className="hero-section" style={{ backgroundImage: `url(${communityImage})` }}>
         <div className="hero-overlay"></div>
-        <div className="hero-content" style={{ textAlign: 'center' }}>
-          <h1 style={{ color: '#FFFFFF' }}>Sema Mama</h1>
-          <p className="hero-message" style={{ color: '#FFFFFF' }}>
-            {t('home.message')}
-          </p>
+        <div className="hero-content">
+          <h1 className="hero-title">Sema Mama</h1>
+          <p className="hero-message">{t('home.message')}</p>
           {!isAuthenticated && (
             <Link to="/login" className="cta-button">
               {t('home.joinCommunity')}
@@ -189,38 +197,56 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Quick Access Cards with Auto-Switching */}
+      {/* Quick Access Cards with Enhanced Carousel */}
       <section className="support-options">
         <h2>{t('home.helpTitle')}</h2>
         <div className="support-cards">
-          <div className="card-container">
-            <Link 
-              to={handleAuthenticatedLink(cards[currentCardIndex].path)} 
-              className="support-card"
-              style={{
-                opacity: 1,
-                transition: 'opacity 0.5s ease-in-out'
-              }}
-            >
-              <img 
-                src={cards[currentCardIndex].image} 
-                alt={t(cards[currentCardIndex].alt)} 
-                className="card-image" 
-              />
-              <div className="card-content">
-                <h3>{t(cards[currentCardIndex].title)}</h3>
-                <p>{t(cards[currentCardIndex].desc)}</p>
-              </div>
-            </Link>
-          </div>
-          <div className="card-indicators">
-            {cards.map((_, index) => (
-              <span
+          <div className="carousel-container">
+            {cards.map((card, index) => (
+              <Link 
                 key={index}
-                className={`card-dot ${currentCardIndex === index ? 'active' : ''}`}
-                onClick={() => setCurrentCardIndex(index)}
-              />
+                to={handleAuthenticatedLink(card.path)} 
+                className={`support-card ${index === currentCardIndex ? 'active' : ''}`}
+                style={{
+                  transform: `translateX(${(index - currentCardIndex) * 100}%)`,
+                  opacity: index === currentCardIndex ? 1 : 0.5
+                }}
+              >
+                <img 
+                  src={card.image} 
+                  alt={t(card.alt)} 
+                  className="card-image" 
+                />
+                <div className="card-content">
+                  <h3>{t(card.title)}</h3>
+                  <p>{t(card.desc)}</p>
+                </div>
+              </Link>
             ))}
+          </div>
+          
+          <div className="carousel-controls">
+            <button 
+              className="carousel-button prev"
+              onClick={() => setCurrentCardIndex((prev) => (prev - 1 + cards.length) % cards.length)}
+            >
+              &#8249;
+            </button>
+            <div className="card-indicators">
+              {cards.map((_, index) => (
+                <span
+                  key={index}
+                  className={`card-dot ${currentCardIndex === index ? 'active' : ''}`}
+                  onClick={() => setCurrentCardIndex(index)}
+                />
+              ))}
+            </div>
+            <button 
+              className="carousel-button next"
+              onClick={() => setCurrentCardIndex((prev) => (prev + 1) % cards.length)}
+            >
+              &#8250;
+            </button>
           </div>
         </div>
       </section>
@@ -229,59 +255,35 @@ const HomePage = () => {
       <section className="featured-section">
         <h2>{t('featured.title')}</h2>
         <div className="video-grid">
-          <div className="video-item">
-            <iframe
-              src="https://www.youtube.com/embed/CBbYbOni_Kg"
-              title="Understanding Postpartum Care"
-              allowFullScreen
-            ></iframe>
-            <h3>Understanding Postpartum Care</h3>
-          </div>
-          <div className="video-item">
-            <iframe
-              src="https://www.youtube.com/embed/dMw6m3MJ-uE"
-              title="Mental Health During Pregnancy"
-              allowFullScreen
-            ></iframe>
-            <h3>Mental Health During Pregnancy</h3>
-          </div>
-          <div className="video-item">
-            <iframe
-              src="https://www.youtube.com/embed/3jYYT_rf7Sw"
-              title="Breastfeeding Tips"
-              allowFullScreen
-            ></iframe>
-            <h3>Breastfeeding Tips</h3>
-          </div>
+          {videos.map((video, index) => (
+            <div key={index} className="video-item">
+              <iframe
+                src={video.url}
+                title={video.title}
+                allowFullScreen
+              ></iframe>
+              <div className="video-content">
+                <h3>{video.title}</h3>
+                <p>{video.description}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Additional Resources Gallery with Auto-Switching */}
+      {/* Additional Resources Gallery */}
       <section className="resources-preview">
         <h2>{t('resources.quickAccess')}</h2>
         <div className="resources-grid">
-          <div 
-            className="resource-item"
-            style={{
-              opacity: 1,
-              transition: 'opacity 0.5s ease-in-out'
-            }}
-          >
-            <img 
-              src={resources[currentResourceIndex].image} 
-              alt={resources[currentResourceIndex].title} 
-            />
-            <h3>{resources[currentResourceIndex].title}</h3>
-            <p>{resources[currentResourceIndex].description}</p>
-          </div>
-        </div>
-        <div className="resource-indicators">
-          {resources.map((_, index) => (
-            <span
-              key={index}
-              className={`resource-dot ${currentResourceIndex === index ? 'active' : ''}`}
-              onClick={() => setCurrentResourceIndex(index)}
-            />
+          {resources.map((resource, index) => (
+            <Link to={resource.link} key={index} className="resource-item">
+              <img src={resource.image} alt={resource.title} />
+              <div className="resource-content">
+                <h3>{resource.title}</h3>
+                <p>{resource.description}</p>
+                <span className="resource-link">Learn More →</span>
+              </div>
+            </Link>
           ))}
         </div>
       </section>

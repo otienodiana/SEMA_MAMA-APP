@@ -55,23 +55,18 @@ function Register() {
         formData.append("profile_photo", profilePhoto);
       }
 
-      console.log('Sending registration request with:', {
-        url: `${API_BASE_URL}/api/users/register`,
-        data: Object.fromEntries(formData.entries())
-      });
-
-      const response = await axios({
-        method: 'post',
-        url: `${API_BASE_URL}/api/users/register`,
-        data: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json',
-        },
-        withCredentials: true
-      });
-
-      console.log('Registration response:', response);
+      const response = await axios.post(
+        `${API_BASE_URL}/api/users/register/`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          // Add timeout and retry logic
+          timeout: 15000,
+          validateStatus: status => status < 500
+        }
+      );
 
       if (response.status === 201) {
         setSuccess("Registration successful!");
@@ -81,8 +76,8 @@ function Register() {
       }
       
     } catch (err) {
-      console.error('Registration Error:', err.response || err);
-      setError(err.response?.data?.detail || "Registration failed. Please try again.");
+      console.error('Registration Error:', err);
+      setError("Network error or server timeout. Please try again.");
     }
   };
 
@@ -93,8 +88,8 @@ function Register() {
           {isAdminRoute ? t('register.adminTitle') : t('register.title')}
         </h2>
 
-        {error && <p className="error-message">{error}</p>}
-        {success && <p className="success-message">{success}</p>}
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
 
         <form onSubmit={handleRegister} className="register-form" encType="multipart/form-data">
           <div className="form-group">
@@ -184,9 +179,10 @@ function Register() {
                 type="checkbox"
                 checked={acceptedPrivacyPolicy}
                 onChange={() => setShowPrivacyPolicy(true)}
+                className="privacy-checkbox"
               />
-              I accept the {' '}
-              <span 
+              <span className="privacy-text">I accept the</span>
+              <button 
                 className="privacy-link"
                 onClick={(e) => {
                   e.preventDefault();
@@ -194,7 +190,7 @@ function Register() {
                 }}
               >
                 Privacy Policy
-              </span>
+              </button>
             </label>
           </div>
 
