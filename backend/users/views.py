@@ -69,36 +69,30 @@ class UserProfileView(APIView):
         user = request.user
         user.delete()
         return Response({"message": "Profile deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
-# User Registration
+#  User Registration
 class RegisterUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
     parser_classes = (MultiPartParser, FormParser)
-    http_method_names = ['post', 'options']  # Explicitly restrict methods
 
     def post(self, request, *args, **kwargs):
         try:
-            logger.info("Registration request received")
-            logger.info(f"Headers: {request.headers}")
-            logger.info(f"Data: {request.data}")
-            logger.info(f"Files: {request.FILES}")
-
+            print("Registration request data:", request.data)
             serializer = self.get_serializer(data=request.data)
+            
             if serializer.is_valid():
                 user = serializer.save()
-                logger.info(f"User created successfully: {user.username}")
                 return Response({
                     "detail": "Registration successful",
                     "user": UserSerializer(user, context={'request': request}).data
                 }, status=status.HTTP_201_CREATED)
             
-            logger.error(f"Validation errors: {serializer.errors}")
+            print("Validation errors:", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
-            logger.exception("Registration error")
+            print(f"Registration error: {str(e)}")
             return Response(
                 {"detail": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
