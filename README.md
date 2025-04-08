@@ -1,44 +1,71 @@
 # SEMA_MAMA-APP
 
 ## Project Description
-Sema Mama is a digital health platform that provides accessible, community-driven support for mothers experiencing postpartum depression in Nairobi, Kenya. Unlike existing solutions, Sema Mama offers multilingual, culturally sensitive SMS-based support, real-time emotional assistance through voice and video calls, and integration with local health workers to allow for sustained support of mental health.
+Sema Mama is a digital health platform that provides accessible, community-driven support for mothers experiencing postpartum depression in Kenya. Unlike existing solutions, Sema Mama offers multilingual, culturally sensitive SMS-based support, real-time emotional assistance (in future) through  integration with local health workers to allow for sustained support of mental health.
 
 ## Problem it Solves
-Sema Mama fills in the gaps through direct emotional support using voice and video calls so that mothers get to professionals and peers in need. It also provides multilingual, culturally relevant SMS-based mental health support that is easily accessible and free of cost, enabling guidance and assurance among women from low-resource areas. Working together with community-based health workers, Sema Mama facilitates further follow-up on mental health screening and interventions at household levels so that the mothers continue to get help. Consequently, Sema Mama ensures these postpartum mental health support systems are made accessible to every expectant mother, regardless of distance or status.
+Sema Mama fills in the gaps through direct emotional support using virtual appointments and forum discussions  so that mothers get to professionals and peers in need. It also provides multilingual, culturally relevant SMS-based mental health support that is easily accessible and free of cost, enabling guidance and assurance among women from different areas. Working together with community-based health workers, Sema Mama facilitates further follow-up on mental health screening and interventions at household levels so that the mothers continue to get help. Consequently, Sema Mama ensures these postpartum mental health support systems are made accessible to every expectant mother, regardless of distance or status.
 
 ## GitHub Repository Link
 [GitHub Repository](https://github.com/otienodiana/SEMA_MAMA-APP.git)
 
 ## Prerequisites
-Before you begin, ensure that you have the following installed:
+Before you begin, ensure you have the following installed:
+
+### Backend Requirements
 - [Python](https://www.python.org/) (version 3.11.4)
 - [pip](https://pip.pypa.io/) (Python package installer)
 - [Django](https://www.djangoproject.com/) (version 4.2.7)
-- MySQL (for database management)
-- Node.js (if working with the frontend)
-- Git (for version control)
-- WSL (if using Windows)
+- [MySQL](https://dev.mysql.com/downloads/installer/) (version 8.0 or higher)
+- [Git](https://git-scm.com/downloads) (version 2.x or higher)
+
+### Frontend Requirements  
+- [Node.js](https://nodejs.org/) (version 16.x or higher)
+- [npm](https://www.npmjs.com/) (version 8.x or higher)
+- [React](https://reactjs.org/) (version 18.x)
+
+### Optional Tools
+- [VS Code](https://code.visualstudio.com/) (recommended IDE)
+- [MySQL Workbench](https://www.mysql.com/products/workbench/) (for database management)
+- [Postman](https://www.postman.com/) (for API testing)
 
 ## Getting Started
+
+### Backend Setup
+
 1. **Clone the repository:**
     ```bash
     git clone https://github.com/otienodiana/SEMA_MAMA-APP.git
+    cd SEMA_MAMA-APP
     ```
-2. **Create a Virtual Environment:**
+
+2. **Set up MySQL Database:**
+    ```sql
+    CREATE DATABASE sema_mama_db;
+    CREATE USER 'Diana'@'localhost' IDENTIFIED BY 'Dee0000!';
+    GRANT ALL PRIVILEGES ON sema_mama_db.* TO 'Diana'@'localhost';
+    FLUSH PRIVILEGES;
+    ```
+
+3. **Create and activate virtual environment:**
     ```bash
+    # Windows
     python -m venv venv
+    .\venv\Scripts\activate
+
+    # Linux/Mac
+    python3 -m venv venv
+    source venv/bin/activate
     ```
-3. **Activate the Virtual Environment:**
-    - On Windows:
-        ```bash
-        .\venv\Scripts\activate
-        ```
-4. **Install Dependencies:**
+
+4. **Install backend dependencies:**
     ```bash
+    cd backend
     pip install -r requirements.txt
     ```
-5. **Configure Environment Variables:**
-    Create a `.env` file in the root directory and add the following:
+
+5. **Configure environment:**
+    Create `.env` file in backend directory:
     ```plaintext
     DEBUG=True
     SECRET_KEY=your_secret_key_here
@@ -48,23 +75,51 @@ Before you begin, ensure that you have the following installed:
     DATABASE_HOST=localhost
     DATABASE_PORT=3306
     ALLOWED_HOSTS=127.0.0.1,localhost,172.17.146.93
+    
+    # Additional settings
+    EMAIL_HOST=smtp.gmail.com
+    EMAIL_PORT=587
+    EMAIL_USE_TLS=True
+    EMAIL_HOST_USER=your-email@gmail.com
+    EMAIL_HOST_PASSWORD=your-app-specific-password
     ```
-6. **Apply Migrations:**
+
+6. **Apply database migrations:**
     ```bash
+    python manage.py makemigrations
     python manage.py migrate
     ```
-7. **Create Superuser (for Admin Access):**
+
+7. **Create superuser account:**
     ```bash
     python manage.py createsuperuser
     ```
-    Follow the prompts to create an admin user.
-8. **Run the Development Server:**
+
+8. **Run backend server:**
     ```bash
     python manage.py runserver
     ```
-    The app will be accessible at `http://127.0.0.1:8000`.
-9. **Access the Admin Panel:**
-    Visit `http://127.0.0.1:8000/admin` in your web browser and log in with the superuser credentials.
+
+### Frontend Setup
+
+1. **Install frontend dependencies:**
+    ```bash
+    cd frontend/sema-react-app
+    npm install
+    ```
+
+2. **Configure frontend environment:**
+    Create `.env` file in frontend directory:
+    ```plaintext
+    REACT_APP_API_URL=http://localhost:8000/api
+    REACT_APP_DEBUG=true
+    ```
+
+3. **Run frontend development server:**
+    ```bash
+    npm start
+    ```
+    The app will be accessible at `http://localhost:3000`
 
 ## Usage
 - Visit `http://127.0.0.1:8000` in your web browser to access the SEMA-MAMA Django app.
@@ -101,6 +156,67 @@ The frontend of Sema Mama is deployed on **Vercel**, the backend is deployed on 
 ### Connecting Services
 - Ensure the frontend interacts correctly with the backend by updating API URLs in the frontend code.
 - Update the backend to use the correct database credentials from Google Cloud.
+
+## Development
+
+### Backend Development
+
+- **Run tests:**
+    ```bash
+    python manage.py test
+    ```
+
+- **Create new app:**
+    ```bash
+    python manage.py startapp appname
+    ```
+
+- **Generate database migrations:**
+    ```bash
+    python manage.py makemigrations appname
+    ```
+
+- **Check migration status:**
+    ```bash
+    python manage.py showmigrations
+    ```
+
+### Frontend Development
+
+- **Run tests:**
+    ```bash
+    npm test
+    ```
+
+- **Build for production:**
+    ```bash
+    npm run build
+    ```
+
+- **Run linter:**
+    ```bash
+    npm run lint
+    ```
+
+### API Documentation
+After running the backend server, access the API documentation:
+- Swagger UI: `http://localhost:8000/api/docs/`
+- ReDoc: `http://localhost:8000/api/redoc/`
+
+### Common Issues & Solutions
+
+1. **Database Connection Issues:**
+   - Verify MySQL service is running
+   - Check credentials in .env file
+   - Ensure MySQL user has correct privileges
+
+2. **Node Module Issues:**
+   - Delete node_modules and package-lock.json
+   - Run `npm install` again
+   
+3. **Python Dependencies:**
+   - Update pip: `python -m pip install --upgrade pip`
+   - If installation fails, try: `pip install -r requirements.txt --no-cache-dir`
 
 ## Project Folder Structure
 ```
